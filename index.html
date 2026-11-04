@@ -451,7 +451,7 @@ const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth
 function josa(name,a,b){const c=name.charCodeAt(name.length-1);if(c>=0xAC00&&c<=0xD7A3)return name+(((c-0xAC00)%28)?a:b);return name+b}
 let petName=store.get('petName','콩이')||'콩이';
 const Nga=()=>josa(petName,'이','가'),Nneun=()=>josa(petName,'은','는'),Nreul=()=>josa(petName,'을','를'),Nwa=()=>josa(petName,'과','와');
-const fill=s=>s.replace(/\{N가\}/g,Nga()).replace(/\{N는\}/g,Nneun()).replace(/\{N를\}/g,Nreul()).replace(/\{N와\}/g,Nwa()).replace(/\{N\}/g,petName);
+const fill=s=>s.replace(/\{N네\}/g,petName+'네').replace(/\{N가\}/g,Nga()).replace(/\{N는\}/g,Nneun()).replace(/\{N를\}/g,Nreul()).replace(/\{N와\}/g,Nwa()).replace(/\{N\}/g,petName);
 const reduced=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- cat svg ---------- */
