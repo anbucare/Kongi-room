@@ -474,7 +474,7 @@ $('#catSvg').innerHTML=`<svg viewBox="0 0 120 100" aria-hidden="true">
 const scene=$('#scene'),catEl=$('#cat'),bubble=$('#bubble'),bowl=$('#bowl');
 let run=store.get('run',null); // {state:'focus'|'done'|'break', endAt, dur, demo}
 let log=store.get('log',null); if(!log||log.date!==todayKey()) log={date:todayKey(),items:[]};
-let ui='setup', phase='idle', idleTimer=null, lookTimer=null, audioCtx=null, moveId=0, curX=13, curY=35;
+let ui='setup', phase='idle', idleTimer=null, lookTimer=null, audioCtx=null, moveId=0, curX=13, curY=35, isSulking=store.get('sulking',false);
 
 /* ---------- cat movement ---------- */
 const FLOOR=6;
@@ -589,7 +589,26 @@ setInterval(tick,250);
 function start(sec,demo){
   run={state:'focus',endAt:Date.now()+sec*1000,dur:sec,demo:!!demo};store.set('run',run);phase='idle';
   ensureAudio();wake();hush();bowl.dataset.level=0;
-  moveCat('sofa','sleep',1);setStatus(demo?'{N는} 소파에서 자고 있어요 (30초 체험)':'{N는} 소파에서 자고 있어요');
+  catEl.classList.remove('petable');
+  const wasSulking = isSulking || store.get('sulking', false) || (log.items.length && log.items[log.items.length-1].type==='stop');
+  isSulking=false;store.del('sulking');
+
+  if(wasSulking){
+    moveCat('sofa','stretch',1);
+    say('야옹!', 2400);
+    hearts(3);
+    caption(fill('{N가} "다시 왔구나!" 하고 시원하게 기지개를 켜며 반겨줘요.'));
+    setStatus(demo?'{N가} 반갑게 기지개를 켜고 자러 가요 (30초 체험)':'{N가} 기지개를 켜고 편안하게 소파에 누웠어요');
+    setTimeout(()=>{
+      if(run&&run.state==='focus'){
+        setPose('sleep');
+        setStatus(demo?'{N는} 소파에서 자고 있어요 (30초 체험)':'{N는} 소파에서 자고 있어요');
+      }
+    }, 2400);
+  } else {
+    moveCat('sofa','sleep',1);
+    setStatus(demo?'{N는} 소파에서 자고 있어요 (30초 체험)':'{N는} 소파에서 자고 있어요');
+  }
   show('focus');tick();scheduleIdle();
 }
 function enterWait(){phase='wait';clearTimeout(idleTimer);
@@ -641,11 +660,17 @@ function doStop(){
   const elapsed=run?Math.round((run.dur*1000-(run.endAt-Date.now()))/60000):0;
   clearTimeout(idleTimer);run=null;store.del('run');phase='idle';hush();$('#stopModal').hidden=true;
   log.items.push({type:'stop',min:elapsed});store.set('log',log);renderLog();
-  caption('{N가} 문 쪽으로 걸어가요…');
+  isSulking=true;store.set('sulking',true);
+  caption(fill('{N가} 소파 구석으로 걸어가요…'));
   const id=moveId+1;
-  moveCat('door','sit',1).then(()=>{if(moveId!==id)return;clearTimeout(lookTimer);
-    lookTimer=setTimeout(()=>{if(moveId!==id)return;setFace(-1);say('…',2500);caption('{N가} 문 앞에서 한 번 뒤돌아봤어요. 다음 타이머를 켜면 돌아와요.')},900)});
-  $('#setupMsg').textContent=fill('이번 세션의 밥그릇은 빈 채로 남았어요. 다음 타이머를 켜면 {N가} 돌아와요.');
+  moveCat('sofa','back',1).then(()=>{
+    if(moveId!==id)return;
+    clearTimeout(lookTimer);
+    say('힝…', 2800);
+    catEl.classList.add('petable');
+    caption(fill('{N가} "벌써 끝난 거야…?" 하고 소파 구석에서 삐진 척 등을 돌렸어요. 다음 타이머를 켜면 반겨줄 거예요.'));
+  });
+  $('#setupMsg').textContent=fill('{N가} 조금 서운해하고 있어요. 다음 타이머를 켜면 기지개를 켜며 반겨줄 거예요!');
   show('setup');
 }
 
@@ -734,15 +759,22 @@ $$('.chip').forEach(b=>b.addEventListener('click',()=>{$$('.chip').forEach(c=>c.
 $('#customMin').addEventListener('input',e=>{$$('.chip').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.min===+e.target.value)))});
 $('#startBtn').addEventListener('click',()=>{let v=parseInt($('#customMin').value,10);if(!(v>=5)){v=5;$('#customMin').value=5}if(v>180){v=180;$('#customMin').value=180}start(v*60,false)});
 $('#demoBtn').addEventListener('click',()=>start(30,true));
-$('#stopBtn').addEventListener('click',()=>{$('#stopMsg').textContent=fill('지금 멈추면 이번 세션의 밥그릇은 빈 채로 남아요. {N는} 다음 타이머를 켜면 돌아옵니다.');$('#stopModal').hidden=false;$('#keepBtn').focus()});
+$('#stopBtn').addEventListener('click',()=>{$('#stopMsg').textContent=fill('지금 멈추면 {N가} 소파 구석에서 조금 서운해할 수 있어요. 이번 세션의 밥그릇도 빈 채로 남습니다. 그래도 멈출까요?');$('#stopModal').hidden=false;$('#keepBtn').focus()});
 $('#keepBtn').addEventListener('click',()=>{$('#stopModal').hidden=true});
 $('#confirmStop').addEventListener('click',doStop);
 $('#treatBtn').addEventListener('click',()=>{ensureAudio();giveTreat()});
 $$('[data-break]').forEach(b=>b.addEventListener('click',()=>startBreak(+b.dataset.break*60)));
 $('#nextBtn').addEventListener('click',()=>{$('#setupMsg').textContent=fill('바로 이어서 갈까요? {N는} 소파에서 쉬고 있어요.');show('setup')});
 $('#skipBreak').addEventListener('click',endBreak);
-catEl.addEventListener('click',()=>{if(!(run&&run.state==='break'))return;hearts(3);say('골골…',1500);
-  if(catEl.dataset.pose==='sit'){setPose('lie');clearTimeout(catEl.p);catEl.p=setTimeout(()=>{if(run&&run.state==='break')setPose('sit')},2400)}});
+catEl.addEventListener('click',()=>{
+  if(run&&run.state==='break'){
+    hearts(3);say('골골…',1500);
+    if(catEl.dataset.pose==='sit'){setPose('lie');clearTimeout(catEl.p);catEl.p=setTimeout(()=>{if(run&&run.state==='break')setPose('sit')},2400)}
+  } else if(!run && isSulking){
+    hearts(1);say('힝…',1600);
+    caption(fill('{N가} 슬쩍 뒤돌아보더니 다시 웅크려요. 집중을 시작하면 기운을 차릴 거예요.'));
+  }
+});
 $('#petName').value=petName;
 const sizeName=()=>{const i=$('#petName');i.style.width=(i.value.length*1.15+.9)+'em'};sizeName();$('#petName').addEventListener('input',sizeName);
 $('#petName').addEventListener('change',e=>{const v=e.target.value.trim()||'콩이';petName=v;e.target.value=v;store.set('petName',v);renderLog();tick()});
@@ -763,7 +795,20 @@ if(run&&run.state==='focus'){
     tick()}
 }else if(run&&run.state==='done'){moveCat('bowl','wait',1,{instant:true});complete(false)}
 else if(run&&run.state==='break'){if(run.endAt<=Date.now()){run=null;store.del('run');moveCat('sofa','lie',1,{instant:true});show('setup')}else{moveCat('rug','sit',-1,{instant:true});catEl.classList.add('petable');$('#breakStatus').textContent=fill('{N를} 눌러서 쓰다듬어 보세요.');caption('쉬는 시간. {N를} 눌러서 쓰다듬어 보세요');show('break');tick()}}
-else{moveCat('sofa','sleep',1,{instant:true});caption('{N는} 소파에서 자고 있어요');show('setup')}
+else{
+  const lastStop=isSulking || store.get('sulking', false) || (log.items.length && log.items[log.items.length-1].type==='stop');
+  if(lastStop){
+    isSulking=true;
+    moveCat('sofa','back',1,{instant:true});
+    catEl.classList.add('petable');
+    caption(fill('{N가} 소파 구석에서 등을 돌리고 쉬고 있어요'));
+    $('#setupMsg').textContent=fill('{N가} 조금 서운해하고 있어요. 타이머를 시작하면 기지개를 켜며 반겨줄 거예요!');
+  } else {
+    moveCat('sofa','sleep',1,{instant:true});
+    caption(fill('{N는} 소파에서 자고 있어요'));
+  }
+  show('setup');
+}
 })();
 </script>
 <script>
