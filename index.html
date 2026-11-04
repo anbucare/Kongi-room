@@ -25,6 +25,39 @@ img{max-width:100%}
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gaegu:wght@400;700&family=DM+Mono:wght@400;500&display=swap">
 <style>
+
+/* ---------- Weather / Rain ---------- */
+.scene.rainy{--sky1:#728394;--sky2:#9db0bf;--shade:rgba(30,45,60,.18)}
+.scene.rainy .window{background:linear-gradient(var(--sky1),var(--sky2))}
+.scene.rainy .window .sun,.scene.rainy .window .moon,.scene.rainy .window .stars,.scene.rainy .window .bird{opacity:0!important}
+.window .rain{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .5s}
+.scene.rainy .window .rain{opacity:1}
+.rain .drop{position:absolute;width:1.5px;height:14px;background:rgba(255,255,255,.75);border-radius:1px;transform:rotate(14deg);animation:raindrop .55s linear infinite}
+@keyframes raindrop{0%{transform:translate(0,-18px) rotate(14deg);opacity:0}25%{opacity:.9}100%{transform:translate(-8px,110px) rotate(14deg);opacity:0}}
+.rain .bead{position:absolute;border-radius:50%;background:rgba(255,255,255,.65);box-shadow:0 1px 2px rgba(0,0,0,.25)}
+#rainBtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+
+/* ---------- Wall Shelf & Treasures ---------- */
+.shelf{left:39%;top:18%;width:16%;height:14%;position:absolute;cursor:pointer;transition:transform .2s}
+.shelf:hover{transform:translateY(-2px)}
+.shelf .shelf-board{position:absolute;left:0;right:0;bottom:18%;height:12%;background:#7b5234;border-radius:3px;box-shadow:0 .3cqw .6cqw rgba(0,0,0,.2)}
+.shelf::before,.shelf::after{content:"";position:absolute;bottom:0;width:9%;height:20%;background:#67432d;clip-path:polygon(0 0, 100% 0, 0 100%)}
+.shelf::before{left:12%}.shelf::after{right:12%;clip-path:polygon(0 0, 100% 0, 100% 100%)}
+.shelf-items{position:absolute;left:4%;right:4%;bottom:30%;display:flex;align-items:flex-end;justify-content:center;gap:3px;font-size:2.2cqw}
+.shelf-item{display:inline-block;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));user-select:none}
+@keyframes popIn{0%{transform:scale(0) translateY(10px);opacity:0}80%{transform:scale(1.2) translateY(-2px)}100%{transform:scale(1) translateY(0);opacity:1}}
+
+/* ---------- Polaroid Album Modal ---------- */
+.polaroid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;max-height:60vh;overflow-y:auto;padding:10px 4px}
+.polaroid-card{background:#fff;padding:10px 10px 18px 10px;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);transform:rotate(calc(var(--rot, 0) * 1deg));transition:transform .2s, box-shadow .2s;color:#333;text-align:center;cursor:pointer}
+.polaroid-card:hover{transform:scale(1.04) rotate(0deg);box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:2}
+.polaroid-thumb{width:100%;aspect-ratio:4/3;background:#e9dfd0;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;overflow:hidden}
+.polaroid-caption{margin-top:10px;font-family:var(--hand);font-size:16px;color:#443;line-height:1.25}
+.polaroid-date{font-size:11px;color:#887;margin-top:4px;font-family:var(--mono)}
+.tab-row{display:flex;gap:8px;border-bottom:1.5px solid var(--line);margin-bottom:14px;padding-bottom:8px}
+.tab-btn{background:transparent;border:0;font:inherit;font-weight:700;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px}
+.tab-btn.active{color:var(--fg);background:var(--soft)}
+
 /* Layout: a window into the room on the left, a quiet control panel on the right; stacks on phones. */
 :root{
   --bg:#ece3d4; --fg:#372c25; --muted:#857566; --panel:#f6f0e6; --line:#d8c9b4;
@@ -265,6 +298,8 @@ footer .empty{color:var(--muted);font-size:13.5px}
         <option value="sunset">노을</option>
         <option value="night">밤</option>
       </select>
+      <button class="btn secondary" id="rainBtn" type="button" aria-pressed="false" title="빗소리와 창문 비 효과">🌧️ 빗소리</button>
+      <button class="btn secondary" id="albumBtn" type="button">📸 집중 앨범</button>
       <button class="btn secondary" id="shareBtn" type="button">오늘의 방 카드</button>
     </div>
   </header>
@@ -274,8 +309,9 @@ footer .empty{color:var(--muted);font-size:13.5px}
       <div class="wall"></div>
       <div class="floor"></div>
       <div class="baseboard"></div>
-      <div class="window"><div class="stars"></div><div class="sun"></div><div class="moon"></div><div class="hill"></div><div class="bird"></div></div>
+      <div class="window"><div class="stars"></div><div class="sun"></div><div class="moon"></div><div class="hill"></div><div class="bird"></div><div class="rain" id="rain"></div></div>
       <div class="curtain l"></div><div class="curtain r"></div>
+      <div class="shelf" id="shelf" title="콩이가 모아온 보물 선반 (클릭해서 보기)"><div class="shelf-board"></div><div class="shelf-items" id="shelfItems"></div></div>
       <div class="door"><div class="knob"></div></div>
       <div class="rug"></div>
       <div class="sofa"><div class="leg l"></div><div class="leg r"></div><div class="back"></div><div class="seat"></div><div class="arm l"></div><div class="arm r"></div><div class="cushion"></div></div>
@@ -369,6 +405,24 @@ footer .empty{color:var(--muted);font-size:13.5px}
       <button class="btn" id="keepBtn" type="button">계속 집중하기</button>
       <button class="btn quiet" id="confirmStop" type="button">멈추기</button>
     </div>
+  </div>
+</div>
+
+<div class="modal" id="shelfModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shelfTitle">
+    <h3 id="shelfTitle">🌿 콩이의 보물 선반</h3>
+    <p id="shelfSubtitle">콩이가 완주 선물로 물어다 둔 소중한 조각들이에요.</p>
+    <div id="shelfDetailList" style="display:flex;flex-direction:column;gap:10px;margin:14px 0"></div>
+    <div class="btn-row"><button class="btn secondary" id="closeShelf" type="button">닫기</button></div>
+  </div>
+</div>
+
+<div class="modal" id="albumModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="albumTitle" style="max-width:680px">
+    <h3 id="albumTitle">📸 콩이와 함께한 집중 앨범</h3>
+    <p>완주할 때마다 콩이와 보낸 따뜻한 시간들이 사진으로 남습니다.</p>
+    <div class="polaroid-grid" id="albumGrid"></div>
+    <div class="btn-row" style="margin-top:14px"><button class="btn secondary" id="closeAlbum" type="button">닫기</button></div>
   </div>
 </div>
 
@@ -475,6 +529,224 @@ const scene=$('#scene'),catEl=$('#cat'),bubble=$('#bubble'),bowl=$('#bowl');
 let run=store.get('run',null); // {state:'focus'|'done'|'break', endAt, dur, demo}
 let log=store.get('log',null); if(!log||log.date!==todayKey()) log={date:todayKey(),items:[]};
 let ui='setup', phase='idle', idleTimer=null, lookTimer=null, audioCtx=null, moveId=0, curX=13, curY=35, isSulking=store.get('sulking',false);
+
+
+/* ---------- Weather (Rain ASMR) ---------- */
+let rainSource=null, rainGain=null;
+
+function toggleRain(enable){
+  const on = typeof enable === 'boolean' ? enable : !scene.classList.contains('rainy');
+  scene.classList.toggle('rainy', on);
+  $('#rainBtn').setAttribute('aria-pressed', String(on));
+  $('#rainBtn').textContent = on ? '🌧️ 비 내리는 중' : '🌧️ 빗소리';
+  store.set('rain', on);
+  ensureAudio();
+  if(on){
+    setupRainDrops();
+    startRainAudio();
+    caption(fill('창밖에 잔잔한 비가 내리기 시작했어요. 빗소리가 {N네} 방을 채웁니다.'));
+  } else {
+    stopRainAudio();
+    caption('비가 그치고 창밖이 개었습니다.');
+  }
+}
+
+function setupRainDrops(){
+  const rainEl = $('#rain');
+  if(!rainEl || rainEl.children.length) return;
+  for(let i=0; i<18; i++){
+    const d = document.createElement('div');
+    d.className = 'drop';
+    d.style.left = (Math.random()*96) + '%';
+    d.style.top = (Math.random()*60) + '%';
+    d.style.animationDelay = (Math.random()*1.5) + 's';
+    d.style.animationDuration = (0.45 + Math.random()*0.3) + 's';
+    rainEl.appendChild(d);
+  }
+  for(let i=0; i<10; i++){
+    const b = document.createElement('div');
+    b.className = 'bead';
+    const sz = 2.5 + Math.random()*3;
+    b.style.width = sz + 'px';
+    b.style.height = (sz*1.2) + 'px';
+    b.style.left = (Math.random()*92) + '%';
+    b.style.top = (Math.random()*85) + '%';
+    rainEl.appendChild(b);
+  }
+}
+
+function startRainAudio(){
+  if(!audioCtx) return;
+  try{
+    if(rainSource) stopRainAudio();
+    const bufferSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      lastOut = (lastOut + (0.025 * white)) / 1.025;
+      data[i] = lastOut * 3.2;
+    }
+    rainSource = audioCtx.createBufferSource();
+    rainSource.buffer = buffer;
+    rainSource.loop = true;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 850;
+
+    rainGain = audioCtx.createGain();
+    rainGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+    rainGain.gain.exponentialRampToValueAtTime(0.09, audioCtx.currentTime + 1.2);
+
+    rainSource.connect(filter);
+    filter.connect(rainGain);
+    rainGain.connect(audioCtx.destination);
+    rainSource.start();
+  }catch(e){}
+}
+
+function stopRainAudio(){
+  if(rainGain && audioCtx){
+    try{
+      rainGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      setTimeout(()=>{
+        if(rainSource){rainSource.stop();rainSource.disconnect();rainSource=null;}
+      }, 450);
+    }catch(e){if(rainSource){rainSource.stop();rainSource=null;}}
+  }
+}
+
+/* ---------- Treasures & Shelf (가변 보상) ---------- */
+const TREASURES = [
+  { id: 'leaf', name: '가을 단풍잎', icon: '🍂', desc: '창가에서 물어온 바스락거리는 고운 단풍잎' },
+  { id: 'yarn', name: '알록달록 털실', icon: '🧶', desc: '굴리며 놀다 선반에 얹어둔 폭신한 털실 뭉치' },
+  { id: 'acorn', name: '통통한 도토리', icon: '🌰', desc: '산책길에서 소중하게 주워온 매끄러운 도토리' },
+  { id: 'cap', name: '반짝이는 병뚜껑', icon: '🔘', desc: '은색으로 빛나서 콩이가 특별히 아끼는 보물' },
+  { id: 'flower', name: '작은 노란 들꽃', icon: '🌼', desc: '햇살 냄새가 은은하게 배어있는 들꽃' },
+  { id: 'feather', name: '보드라운 파랑 깃털', icon: '🪶', desc: '창밖을 스쳐 날아가던 새가 남기고 간 깃털' }
+];
+
+function getShelfItems(){
+  return store.get('shelf', []);
+}
+
+function renderShelf(){
+  const items = getShelfItems();
+  const el = $('#shelfItems');
+  if(!el) return;
+  el.innerHTML = '';
+  items.forEach(it => {
+    const span = document.createElement('span');
+    span.className = 'shelf-item';
+    span.textContent = it.icon;
+    span.title = `${it.name}: ${it.desc}`;
+    el.appendChild(span);
+  });
+}
+
+function showShelfModal(){
+  const items = getShelfItems();
+  const list = $('#shelfDetailList');
+  list.innerHTML = '';
+  $('#shelfSubtitle').textContent = fill(`{N가} 완주 선물로 물어다 둔 소중한 보물들이에요. (${items.length}/${TREASURES.length})`);
+  
+  TREASURES.forEach(t => {
+    const owned = items.some(i => i.id === t.id);
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '12px';
+    row.style.padding = '8px 12px';
+    row.style.background = owned ? 'var(--soft)' : 'var(--panel)';
+    row.style.borderRadius = '8px';
+    row.style.border = '1px solid var(--line)';
+    row.style.opacity = owned ? '1' : '0.45';
+    
+    row.innerHTML = `
+      <div style="font-size:26px;width:34px;text-align:center">${owned ? t.icon : '❓'}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px">${owned ? t.name : '아직 발견하지 못한 보물'}</div>
+        <div style="font-size:12px;color:var(--muted)">${owned ? t.desc : fill('{N와} 집중 타이머를 완주하다 보면 콩이가 물어올지도 몰라요.')}</div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--accent)">${owned ? '보관 중' : '미발견'}</div>
+    `;
+    list.appendChild(row);
+  });
+  $('#shelfModal').hidden = false;
+}
+
+async function checkTreasureReward(id){
+  const owned = getShelfItems();
+  const unowned = TREASURES.filter(t => !owned.some(o => o.id === t.id));
+  if(!unowned.length) return; // all collected
+
+  // Reward on first session or 35% chance
+  const shouldReward = owned.length === 0 || Math.random() < 0.35;
+  if(!shouldReward) return;
+
+  const picked = unowned[Math.floor(Math.random() * unowned.length)];
+  owned.push(picked);
+  store.set('shelf', owned);
+  renderShelf();
+
+  await sleep(600); if(moveId !== id) return;
+  say('선물!', 3200);
+  hearts(4);
+  caption(fill(`{N가} 어디선가 [${picked.icon} ${picked.name}]을(를) 물어와 방 선반에 올려두었어요!`));
+}
+
+/* ---------- Polaroid Album ---------- */
+function recordAlbum(sessionRun){
+  let album = store.get('album', []);
+  const mins = sessionRun.demo ? 0 : Math.round(sessionRun.dur/60);
+  const now = new Date();
+  const item = {
+    id: Date.now(),
+    dateStr: `${now.getMonth()+1}월 ${now.getDate()}일`,
+    timeStr: `${now.getHours()}:${now.getMinutes()<10?'0':''}${now.getMinutes()}`,
+    min: mins,
+    demo: !!sessionRun.demo,
+    tod: tod(),
+    rain: scene.classList.contains('rainy'),
+    note: sessionRun.demo ? '30초 체험 세션 완료' : `${mins}분 집중 완주 · ${petName}와 함께한 시간`
+  };
+  album.unshift(item);
+  if(album.length > 50) album = album.slice(0, 50);
+  store.set('album', album);
+}
+
+function renderAlbum(){
+  const album = store.get('album', []);
+  const grid = $('#albumGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  if(!album.length){
+    grid.innerHTML = fill('<div style="grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--muted)">아직 완주한 집중 기록이 없어요.<br>타이머를 완주하면 {N와} 보낸 순간이 사진으로 남아요!</div>');
+    return;
+  }
+  album.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'polaroid-card';
+    card.style.setProperty('--rot', ((idx % 5) - 2) * 1.8);
+    
+    const skyBg = item.rain ? 'linear-gradient(#728394,#9db0bf)' :
+      item.tod === 'night' ? 'linear-gradient(#141a38,#2b365f)' :
+      item.tod === 'sunset' ? 'linear-gradient(#f3a46b,#7d4f7f)' :
+      item.tod === 'morning' ? 'linear-gradient(#bfe0f4,#fbe7c2)' :
+      'linear-gradient(#9fd0ef,#e3f1f8)';
+
+    card.innerHTML = `
+      <div class="polaroid-thumb" style="background:${skyBg}">
+        <span style="font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))">${item.rain ? '🌧️ 🐱' : item.tod==='night' ? '🌙 🐾' : item.tod==='sunset' ? '🌅 🐾' : '☀️ 🐾'}</span>
+      </div>
+      <div class="polaroid-caption">${item.note}</div>
+      <div class="polaroid-date">${item.dateStr} ${item.timeStr}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
 
 /* ---------- cat movement ---------- */
 const FLOOR=6;
@@ -635,6 +907,8 @@ async function giveTreat(){
   await sleep(300);if(moveId!==id)return;
   setPose('lick');caption('{N가} 입맛을 다셔요');hearts(3);
   log.items.push({type:'done',min:run.demo?0:Math.round(run.dur/60),demo:!!run.demo});store.set('log',log);renderLog();
+  recordAlbum(run);
+  checkTreasureReward(id);
   const last=run;run=null;store.del('run');phase='idle';
   $('#afterMsg').textContent=fill(last.demo?'체험 세션이라 시간은 쌓이지 않지만, 책은 한 권 올라갔어요. {N가} 기분이 좋아 보여요.':'책이 한 권 쌓였어요. {N가} 기분이 좋아 보여요.');
   show('after');btn.disabled=false;
@@ -713,11 +987,34 @@ function drawCard(){
   x.fillStyle=P[4];x.fillRect(rx,ry,rw,rh*.72);
   x.fillStyle=dark?'#5a3f33':'#b98a5c';x.fillRect(rx,ry+rh*.72,rw,rh*.28);
   x.fillStyle='rgba(0,0,0,.14)';x.fillRect(rx,ry+rh*.72-10,rw,12);
+  const isRain = scene.classList.contains('rainy');
   const wx=rx+rw*.07,wy=ry+rh*.08,ww=rw*.25,wh=rh*.34;
-  const sg=x.createLinearGradient(0,wy,0,wy+wh);sg.addColorStop(0,P[2]);sg.addColorStop(1,P[3]);
+  const sg=x.createLinearGradient(0,wy,0,wy+wh);
+  if(isRain){ sg.addColorStop(0,'#728394');sg.addColorStop(1,'#9db0bf'); }
+  else { sg.addColorStop(0,P[2]);sg.addColorStop(1,P[3]); }
   x.fillStyle='#efe4d2';x.fillRect(wx-10,wy-10,ww+20,wh+20);x.fillStyle=sg;x.fillRect(wx,wy,ww,wh);
-  x.fillStyle=dark?'#f4f0d8':'#ffe9a8';x.beginPath();x.arc(wx+ww*.72,wy+wh*.3,ww*.1,0,7);x.fill();
+  if(!isRain){
+    x.fillStyle=dark?'#f4f0d8':'#ffe9a8';x.beginPath();x.arc(wx+ww*.72,wy+wh*.3,ww*.1,0,7);x.fill();
+  } else {
+    x.save();x.strokeStyle='rgba(255,255,255,0.7)';x.lineWidth=3;x.lineCap='round';
+    for(let i=0;i<10;i++){
+      const rx1=wx+12+(i*22)%(ww-24), ry1=wy+10+(i*17)%(wh-25);
+      x.beginPath();x.moveTo(rx1,ry1);x.lineTo(rx1-4,ry1+15);x.stroke();
+    }
+    x.restore();
+  }
   x.fillStyle='#efe4d2';x.fillRect(wx+ww/2-5,wy,10,wh);x.fillRect(wx,wy+wh/2-5,ww,10);
+  
+  // Wall shelf on card
+  const shX=rx+rw*.39, shY=ry+rh*.18, shW=rw*.16;
+  x.fillStyle='#7b5234';x.beginPath();x.roundRect(shX,shY,shW,9,3);x.fill();
+  const shItems = getShelfItems();
+  if(shItems.length){
+    x.font='22px sans-serif';x.textAlign='center';
+    shItems.slice(0,3).forEach((it, idx)=>{
+      x.fillText(it.icon, shX + 16 + idx * 24, shY - 4);
+    });
+  }
   const sx=rx+rw*.04,sy=ry+rh*.46,sw=rw*.36,sh=rh*.24;
   x.fillStyle='#6f8f7a';x.beginPath();x.roundRect(sx+sw*.05,sy,sw*.9,sh*.58,24);x.fill();
   x.fillStyle='#7fa08a';x.beginPath();x.roundRect(sx,sy+sh*.46,sw,sh*.44,18);x.fill();
@@ -782,10 +1079,16 @@ $('#todSel').value=store.get('tod','auto');
 $('#todSel').addEventListener('change',e=>{store.set('tod',e.target.value);applyTod()});
 $('#shareBtn').addEventListener('click',()=>{const go=()=>{drawCard();$('#shareModal').hidden=false};(document.fonts&&document.fonts.ready?document.fonts.ready.then(go,go):go())});
 $('#closeShare').addEventListener('click',()=>{$('#shareModal').hidden=true});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#shareModal').hidden=true;$('#stopModal').hidden=true}});
+$('#rainBtn').addEventListener('click',()=>toggleRain());
+$('#shelf').addEventListener('click',showShelfModal);
+$('#closeShelf').addEventListener('click',()=>{$('#shelfModal').hidden=true});
+$('#albumBtn').addEventListener('click',()=>{renderAlbum();$('#albumModal').hidden=false;});
+$('#closeAlbum').addEventListener('click',()=>{$('#albumModal').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#shareModal').hidden=true;$('#stopModal').hidden=true;$('#shelfModal').hidden=true;$('#albumModal').hidden=true;}});
 
 /* ---------- boot ---------- */
-applyTod();renderLog();
+applyTod();renderLog();renderShelf();
+if(store.get('rain',false)){toggleRain(true);}
 if(run&&run.state==='focus'){
   const rem=run.endAt-Date.now();
   if(rem<=0){moveCat('bowl','wait',1,{instant:true});complete(false)}
