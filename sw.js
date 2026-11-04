@@ -1,5 +1,5 @@
 /* 콩이네 방 service worker: caches the app shell so the timer opens offline. */
-const VERSION = 'kongi-v2';
+const VERSION = 'kongi-v3';
 const SHELL = [
   './',
   './index.html',
@@ -14,7 +14,8 @@ const SHELL = [
   './assets/cat_sit.png',
   './assets/cat_back.png',
   './assets/cat_stretch.png',
-  './assets/cat_eat.png'
+  './assets/cat_eat.png',
+  './assets/pixel_bowl.png'
 ];
 
 self.addEventListener('install', (e) => {

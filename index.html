@@ -60,13 +60,21 @@ img{max-width:100%}
 
 
 /* ---------- Lo-Fi Pixel Art Enhancements ---------- */
-.pixel-cat{position:absolute;width:17%;cursor:pointer;transform-origin:bottom center;transition:left .45s ease-out, bottom .45s ease-out;image-rendering:pixelated;z-index:20}
-.pixel-cat img{width:100%;height:auto;display:block;image-rendering:pixelated;animation:pixelBreathe 3.4s ease-in-out infinite}
+.pixel-cat{position:absolute;width:17%;cursor:pointer;transform-origin:bottom center;
+  transition:left .65s cubic-bezier(.25,1,.5,1), bottom .65s cubic-bezier(.25,1,.5,1);
+  image-rendering:pixelated;z-index:20}
+.pixel-cat img{width:100%;height:auto;display:block;image-rendering:pixelated;
+  transition:opacity .2s ease-in-out;animation:pixelBreathe 3.4s ease-in-out infinite}
 .pixel-cat .zzz{position:absolute;left:55%;top:-15%;font:700 3.2cqw var(--hand);color:#ffe9a8;text-shadow:0 2px 4px rgba(0,0,0,.6);display:none;pointer-events:none}
 .pixel-cat[data-pose="sleep"] .zzz{display:block}
 .pixel-cat[data-pose="sleep"] .zzz span{position:absolute;left:0;animation:zz 2.6s ease-in-out infinite;opacity:0}
 .pixel-cat[data-pose="sleep"] .zzz span:nth-child(2){animation-delay:.85s;font-size:.8em}
 .pixel-cat[data-pose="sleep"] .zzz span:nth-child(3){animation-delay:1.7s;font-size:.65em}
+
+.pixel-cat .bubble{position:absolute;bottom:102%;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:30}
+
+#bowl{position:absolute;left:42%;bottom:5.5%;width:7%;cursor:pointer;transition:opacity .2s;z-index:12}
+#bowl img{width:100%;height:auto;display:block;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
 
 @keyframes pixelBreathe{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.025,.975) translateY(1px)}100%{transform:scale(1) translateY(0)}}
 
@@ -366,14 +374,16 @@ footer .empty{color:var(--muted);font-size:13.5px}
 
       <!-- The Cat (Pixel Art Kongi) -->
       <div class="pixel-cat" id="cat" data-pose="sleep" data-spot="sofa" style="left:21%;bottom:25%">
+        <div class="bubble" id="bubble" hidden>…</div>
         <img id="catImg" src="assets/cat_sleep.png" alt="콩이">
         <div class="zzz"><span>z</span><span>z</span><span>z</span></div>
       </div>
 
-      <div class="bowl" id="bowl" data-level="0" style="left:38%;bottom:6%"><div class="food"></div></div>
-      <div class="treat" id="treat" style="left:41%;bottom:12%"></div>
+      <!-- Cozy Pixel Food Bowl -->
+      <div id="bowl" title="콩이의 밥그릇">
+        <img src="assets/pixel_bowl.png" alt="밥그릇">
+      </div>
 
-      <div class="bubble" id="bubble" hidden style="left:28%;bottom:44%">…</div>
       <div class="caption" id="caption">콩이는 소파에서 자고 있어요</div>
     </section>
 
@@ -866,7 +876,7 @@ function renderAlbum(){
 
 /* ---------- cat movement ---------- */
 const FLOOR=6;
-const SPOTS={sofa:{x:21,y:25},win:{x:32,y:48},rug:{x:44,y:10},mid:{x:46,y:10},bowl:{x:35,y:6},eat:{x:38,y:6},door:{x:85,y:10}};
+const SPOTS={sofa:{x:21,y:25},win:{x:32,y:48},rug:{x:42,y:8},mid:{x:42,y:8},bowl:{x:42,y:8},eat:{x:37,y:5.5},door:{x:85,y:10}};
 const SPRITES={
   sleep:'assets/cat_sleep.png',
   lie:'assets/cat_sleep.png',
@@ -882,11 +892,20 @@ const SPRITES={
 function setPose(p){
   catEl.dataset.pose=p;
   const img=$('#catImg');
-  if(img && SPRITES[p]){ img.src=SPRITES[p]; }
+  if(img && SPRITES[p] && img.getAttribute('src')!==SPRITES[p]){
+    img.style.opacity='0';
+    setTimeout(()=>{
+      img.src=SPRITES[p];
+      img.style.opacity='1';
+    },160);
+  }
   if(p==='sleep'||p==='back'){ catEl.style.width='18%'; }
   else if(p==='stretch'){ catEl.style.width='19%'; }
   else if(p==='eat'){ catEl.style.width='17%'; }
   else{ catEl.style.width='16%'; }
+
+  const b=$('#bowl');
+  if(b){ b.style.display=(p==='eat')?'none':'block'; }
 }
 function setFace(f){catEl.classList.toggle('flip',f===-1)}
 function setXY(x,y,tr){catEl.style.transition=tr||'none';catEl.style.left=x+'%';catEl.style.bottom=y+'%';curX=x;curY=y;
