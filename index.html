@@ -585,7 +585,7 @@ function frontHead(tf){return `<g transform="${tf||''}"><g class="head">
   <ellipse class="tongue" cx="63" cy="54" rx="2.4" ry="3"/>
   <path class="whisk" d="M38 46 h13 M38 50 l13 -1 M75 45 h13 M75 49 l13 1"/>
 </g></g>`}
-$('#catSvg').innerHTML=`<svg viewBox="0 0 120 100" aria-hidden="true">
+if($('#catSvg')) $('#catSvg').innerHTML=`<svg viewBox="0 0 120 100" aria-hidden="true">
 <g class="p-sit">
   <path class="tail" d="M34 88 C 12 86, 8 62, 24 54"/>
   <path class="body" d="M34 96 C 30 66, 42 46, 62 46 C 84 46, 92 68, 90 96 Z"/>
