@@ -79,7 +79,7 @@ img{max-width:100%}
 @keyframes pixelBreathe{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.025,.975) translateY(1px)}100%{transform:scale(1) translateY(0)}}
 
 /* Window Rain Overlay */
-.window-rain{position:absolute;left:21%;top:7%;width:44%;height:41%;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .5s;z-index:5}
+.window-rain{position:absolute;left:31.5%;top:11%;width:28.5%;height:28.5%;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .5s;z-index:5;border-radius:2px}
 .scene.rainy .window-rain{opacity:1}
 
 /* Interactive Native Hotspots */
@@ -450,7 +450,7 @@ footer .empty{color:var(--muted);font-size:13.5px}
   <footer>
     <span class="sum" id="logSum"></span>
     <div class="items" id="logItems"></div>
-    <span class="empty" id="logEmpty">아직 쌓인 책이 없어요. 한 세션을 마치면 책상 위에 책이 한 권 올라가요.</span>
+    <span class="empty" id="logEmpty">아직 쌓인 책이 없어요. 한 세션을 마치면 아래 책꽂이에 책이 한 권 꽂혀요.</span>
   </footer>
 </div>
 
@@ -705,29 +705,52 @@ function startRainAudio(){
   if(!audioCtx) return;
   try{
     if(rainSource) stopRainAudio();
-    const bufferSize = audioCtx.sampleRate * 2;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const sr = audioCtx.sampleRate;
+    const dur = 3;
+    const bufferSize = sr * dur;
+    const buffer = audioCtx.createBuffer(1, bufferSize, sr);
     const data = buffer.getChannelData(0);
-    let lastOut = 0.0;
+
+    // Cozy pink noise + droplet clicks against glass
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + (0.025 * white)) / 1.025;
-      data[i] = lastOut * 3.2;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.07;
+      b6 = white * 0.115926;
+
+      // Subtle random window droplet clicks (pitter-patter)
+      const isDrop = Math.random() < 0.0022;
+      const dropClick = isDrop ? (Math.random() * 0.35 + 0.15) : 0;
+
+      data[i] = pink + dropClick;
     }
+
     rainSource = audioCtx.createBufferSource();
     rainSource.buffer = buffer;
     rainSource.loop = true;
 
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 850;
+    // Highpass cuts wind rumble completely; lowpass keeps it gentle
+    const hp = audioCtx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1100;
+
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 6800;
 
     rainGain = audioCtx.createGain();
     rainGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-    rainGain.gain.exponentialRampToValueAtTime(0.09, audioCtx.currentTime + 1.2);
+    rainGain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 1.0);
 
-    rainSource.connect(filter);
-    filter.connect(rainGain);
+    rainSource.connect(hp);
+    hp.connect(lp);
+    lp.connect(rainGain);
     rainGain.connect(audioCtx.destination);
     rainSource.start();
   }catch(e){}
