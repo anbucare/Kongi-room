@@ -73,7 +73,7 @@ img{max-width:100%}
 
 .pixel-cat .bubble{position:absolute;bottom:102%;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:30}
 
-#bowl{position:absolute;left:42%;bottom:5.5%;width:7%;cursor:pointer;transition:opacity .2s;z-index:12}
+#bowl{position:absolute;left:45.5%;bottom:6.5%;width:7%;cursor:pointer;transition:opacity .2s;z-index:12}
 #bowl img{width:100%;height:auto;display:block;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
 
 @keyframes pixelBreathe{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.025,.975) translateY(1px)}100%{transform:scale(1) translateY(0)}}
@@ -706,12 +706,12 @@ function startRainAudio(){
   try{
     if(rainSource) stopRainAudio();
     const sr = audioCtx.sampleRate;
-    const dur = 3;
+    const dur = 4; // 4s seamless soft rain loop
     const bufferSize = sr * dur;
     const buffer = audioCtx.createBuffer(1, bufferSize, sr);
     const data = buffer.getChannelData(0);
 
-    // Cozy pink noise + droplet clicks against glass
+    // Warm pink noise generator
     let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
@@ -721,32 +721,41 @@ function startRainAudio(){
       b3 = 0.86650 * b3 + white * 0.3104856;
       b4 = 0.55000 * b4 + white * 0.5329522;
       b5 = -0.7616 * b5 - white * 0.0168980;
-      const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.07;
+      const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
       b6 = white * 0.115926;
 
-      // Subtle random window droplet clicks (pitter-patter)
-      const isDrop = Math.random() < 0.0022;
-      const dropClick = isDrop ? (Math.random() * 0.35 + 0.15) : 0;
+      // Soft rain wave breathing (very subtle)
+      const swell = 0.92 + 0.08 * Math.sin((i / bufferSize) * Math.PI * 2);
 
-      data[i] = pink + dropClick;
+      // Cozy muffled "후둑... 후둑..." raindrops (warm 350-580Hz resonance, not sharp clicks)
+      if (Math.random() < 0.00035) {
+        const dropLen = Math.floor(sr * 0.035);
+        const dropFreq = 340 + Math.random() * 240;
+        for (let j = 0; j < dropLen && i + j < bufferSize; j++) {
+          const env = Math.exp(-j / (sr * 0.008));
+          data[i + j] += Math.sin((2 * Math.PI * dropFreq * j) / sr) * 0.14 * env;
+        }
+      }
+
+      data[i] += pink * swell;
     }
 
     rainSource = audioCtx.createBufferSource();
     rainSource.buffer = buffer;
     rainSource.loop = true;
 
-    // Highpass cuts wind rumble completely; lowpass keeps it gentle
+    // Filters: Highpass at 300Hz (no wind rumble), Lowpass at 1650Hz (warm, peaceful muffled room ASMR)
     const hp = audioCtx.createBiquadFilter();
     hp.type = 'highpass';
-    hp.frequency.value = 1100;
+    hp.frequency.value = 300;
 
     const lp = audioCtx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 6800;
+    lp.frequency.value = 1650;
 
     rainGain = audioCtx.createGain();
     rainGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-    rainGain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 1.0);
+    rainGain.gain.exponentialRampToValueAtTime(0.055, audioCtx.currentTime + 1.2);
 
     rainSource.connect(hp);
     hp.connect(lp);
@@ -896,7 +905,7 @@ function renderAlbum(){
 
 /* ---------- cat movement ---------- */
 const FLOOR=6;
-const SPOTS={sofa:{x:21,y:25},win:{x:32,y:48},rug:{x:42,y:8},mid:{x:42,y:8},bowl:{x:42,y:8},eat:{x:37,y:5.5},door:{x:85,y:10}};
+const SPOTS={sofa:{x:24.5,y:23},win:{x:34,y:45},rug:{x:44,y:7.5},mid:{x:42,y:7.5},bowl:{x:37.5,y:7.5},eat:{x:42,y:6.5},door:{x:80,y:7.5}};
 const SPRITES={
   sleep:'assets/cat_sleep.png',
   lie:'assets/cat_sleep.png',
@@ -930,32 +939,64 @@ function setPose(p){
 function setFace(f){catEl.classList.toggle('flip',f===-1)}
 function setXY(x,y,tr){catEl.style.transition=tr||'none';catEl.style.left=x+'%';catEl.style.bottom=y+'%';curX=x;curY=y;
   bubble.style.left=(x+9)+'%';bubble.style.bottom=(y+19)+'%'}
-async function moveCat(spot,pose,face,opts){
-  opts=opts||{};const id=++moveId;const t=SPOTS[spot];
-  catEl.classList.remove('walking','jump');
-  if(catEl.dataset.spot===spot&&!opts.force){setPose(pose);setFace(face);return}
-  catEl.dataset.spot=spot;
-  if(opts.instant||reduced()){setXY(t.x,t.y);setPose(pose);setFace(face);return}
-  const dir=t.x<curX?-1:1;
-  if(curY>FLOOR){ // hop down to the floor first
-    setPose('sit');setFace(dir);catEl.classList.add('jump');
-    setXY(curX+dir*5,FLOOR,'bottom 420ms cubic-bezier(.35,0,.85,1), left 420ms ease-out');
-    await sleep(440);if(id!==moveId)return;catEl.classList.remove('jump');
+async function moveCat(spot, pose, face, opts){
+  opts = opts || {};
+  const id = ++moveId;
+  const target = SPOTS[spot] || SPOTS.rug;
+  catEl.dataset.spot = spot;
+
+  if (opts.instant || reduced()) {
+    setXY(target.x, target.y);
+    setFace(face !== undefined ? face : 1);
+    setPose(pose);
+    return;
   }
-  const dist=Math.abs(t.x-curX);
-  if(dist>1.5){
-    const dur=Math.max(450,dist*55);
-    setFace(dir);setPose('walk');catEl.classList.add('walking');
-    setXY(t.x,FLOOR,`left ${dur}ms linear`);
-    await sleep(dur+40);if(id!==moveId)return;
-    catEl.classList.remove('walking');
+
+  // 1. Hop down from sofa cushion to floor
+  if (curY > 15 && target.y <= 12) {
+    setFace(1); // face room
+    setPose('stretch');
+    setXY(28, 7.5, 'left 460ms ease-out, bottom 460ms cubic-bezier(.35,0,.7,1)');
+    await sleep(480);
+    if (moveId !== id) return;
   }
-  if(t.y>FLOOR){ // hop up
-    setPose('sit');catEl.classList.add('jump');
-    setXY(t.x,t.y,'bottom 460ms cubic-bezier(.2,0,.55,1)');
-    await sleep(480);if(id!==moveId)return;catEl.classList.remove('jump');
+
+  // 2. Climb from floor up to sofa cushion
+  if (curY <= 12 && target.y > 15) {
+    // Walk over to the front of sofa first
+    const dirToSofa = 28 < curX ? -1 : 1;
+    setFace(dirToSofa);
+    setPose('sit');
+    const walkDist = Math.abs(28 - curX);
+    if (walkDist > 1.5) {
+      const dur = Math.max(300, walkDist * 30);
+      setXY(28, 7.5, `left ${dur}ms ease-in-out`);
+      await sleep(dur + 30);
+      if (moveId !== id) return;
+    }
+    // Natural leap up onto sofa cushion
+    setFace(-1);
+    setPose('stretch');
+    setXY(target.x, target.y, 'left 500ms cubic-bezier(.2,.8,.4,1), bottom 500ms cubic-bezier(.2,.8,.4,1)');
+    await sleep(520);
+    if (moveId !== id) return;
+    setFace(face !== undefined ? face : 1);
+    setPose(pose);
+    return;
   }
-  setPose(pose);setFace(face);
+
+  // 3. Floor-to-floor horizontal motion (e.g. rug <-> bowl)
+  const dir = target.x < curX ? -1 : 1;
+  setFace(dir);
+  setPose('sit');
+  const dist = Math.abs(target.x - curX);
+  const dur = Math.max(340, dist * 32);
+  setXY(target.x, target.y, `left ${dur}ms ease-in-out, bottom ${dur}ms ease-in-out`);
+  await sleep(dur + 30);
+  if (moveId !== id) return;
+
+  setFace(face !== undefined ? face : 1);
+  setPose(pose);
 }
 function say(t,ms){bubble.textContent=t;bubble.hidden=false;clearTimeout(say.t);if(ms)say.t=setTimeout(()=>{bubble.hidden=true},ms)}
 function hush(){bubble.hidden=true}
