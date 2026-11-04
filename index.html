@@ -1136,19 +1136,33 @@ const BOOK=['#b2574f','#4f6d8a','#7a8a4f','#c9933e','#6a5a8a','#8a5a3c'];
 function renderLog(){
   const done=log.items.filter(i=>i.type==='done'),stops=log.items.filter(i=>i.type==='stop');
   const mins=done.reduce((a,b)=>a+b.min,0);
-  const books=$('#books');books.innerHTML='';
-  done.slice(0,9).forEach((b,i)=>{const d=document.createElement('div');d.className='book';d.style.background=BOOK[i%BOOK.length];
-    d.style.width=(72+((i*37)%28))+'%';d.style.marginLeft=((i*13)%14)+'%';books.appendChild(d)});
-  if(done.length>9){const m=document.createElement('span');m.className='more';m.textContent='+'+(done.length-9);books.appendChild(m)}
+  const books=$('#books');
+  if(books){
+    books.innerHTML='';
+    done.slice(0,9).forEach((b,i)=>{const d=document.createElement('div');d.className='book';d.style.background=BOOK[i%BOOK.length];
+      d.style.width=(72+((i*37)%28))+'%';d.style.marginLeft=((i*13)%14)+'%';books.appendChild(d);});
+    if(done.length>9){const m=document.createElement('span');m.className='more';m.textContent='+'+(done.length-9);books.appendChild(m);}
+  }
   const h=Math.floor(mins/60),m=mins%60;const tstr=(h?h+'시간 ':'')+(m||!h?m+'분':'');
-  $('#todaySum').textContent=done.length?`오늘 ${done.length}세션 · ${tstr}`:'';
-  $('#logSum').textContent=done.length||stops.length?`오늘 ${done.length}세션 · ${tstr}`+(stops.length?` · 빈 밥그릇 ${stops.length}`:''):'';
-  const it=$('#logItems');it.innerHTML='';
-  log.items.forEach((x,i)=>{const d=document.createElement('span');
-    if(x.type==='done'){d.className='lg-book';d.style.background=BOOK[i%BOOK.length];d.title=x.demo?'체험 세션':x.min+'분 집중'}
-    else{d.className='lg-stop';d.title='중간에 멈춤 ('+x.min+'분)'}
-    it.appendChild(d)});
-  $('#logEmpty').hidden=log.items.length>0;
+  const ts=$('#todaySum');if(ts)ts.textContent=done.length?`오늘 ${done.length}세션 · ${tstr}`:'';
+  const ls=$('#logSum');if(ls)ls.textContent=done.length||stops.length?`오늘 ${done.length}세션 · ${tstr}`+(stops.length?` · 빈 밥그릇 ${stops.length}`:''):'';
+  const it=$('#logItems');
+  if(it){
+    it.innerHTML='';
+    log.items.forEach((x,i)=>{
+      const d=document.createElement('span');
+      if(x.type==='done'){
+        d.className='lg-book';
+        d.style.background=BOOK[i%BOOK.length];
+        d.title=x.demo?'30초 체험 세션':x.min+'분 집중 완주';
+      }else{
+        d.className='lg-stop';
+        d.title='중간에 멈춤 ('+x.min+'분)';
+      }
+      it.appendChild(d);
+    });
+  }
+  const le=$('#logEmpty');if(le)le.hidden=log.items.length>0;
 }
 
 /* ---------- time of day ---------- */
