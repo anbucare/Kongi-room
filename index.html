@@ -58,6 +58,38 @@ img{max-width:100%}
 .tab-btn{background:transparent;border:0;font:inherit;font-weight:700;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px}
 .tab-btn.active{color:var(--fg);background:var(--soft)}
 
+
+/* ---------- Lo-Fi Pixel Art Enhancements ---------- */
+.pixel-cat{position:absolute;width:17%;cursor:pointer;transform-origin:bottom center;transition:left .45s ease-out, bottom .45s ease-out;image-rendering:pixelated;z-index:20}
+.pixel-cat img{width:100%;height:auto;display:block;image-rendering:pixelated;animation:pixelBreathe 3.4s ease-in-out infinite}
+.pixel-cat .zzz{position:absolute;left:55%;top:-15%;font:700 3.2cqw var(--hand);color:#ffe9a8;text-shadow:0 2px 4px rgba(0,0,0,.6);display:none;pointer-events:none}
+.pixel-cat[data-pose="sleep"] .zzz{display:block}
+.pixel-cat[data-pose="sleep"] .zzz span{position:absolute;left:0;animation:zz 2.6s ease-in-out infinite;opacity:0}
+.pixel-cat[data-pose="sleep"] .zzz span:nth-child(2){animation-delay:.85s;font-size:.8em}
+.pixel-cat[data-pose="sleep"] .zzz span:nth-child(3){animation-delay:1.7s;font-size:.65em}
+
+@keyframes pixelBreathe{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.025,.975) translateY(1px)}100%{transform:scale(1) translateY(0)}}
+
+/* Window Rain Overlay */
+.window-rain{position:absolute;left:21%;top:7%;width:44%;height:41%;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .5s;z-index:5}
+.scene.rainy .window-rain{opacity:1}
+
+/* Interactive Native Hotspots */
+.hotspot{position:absolute;cursor:pointer;border-radius:4px;transition:transform .2s, background .2s;z-index:15}
+.hotspot:hover{outline:2px dashed rgba(255,235,160,.85);background:rgba(255,235,160,.12);transform:scale(1.05)}
+.hotspot-badge{position:absolute;top:-8px;right:-8px;font-size:15px;animation:floatBadge 2s ease-in-out infinite alternate;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+@keyframes floatBadge{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+
+.steam-box{position:absolute;left:43.8%;top:46%;width:3%;height:5%;pointer-events:none;z-index:16}
+.steam-p{position:absolute;width:3px;height:3px;background:rgba(255,255,255,.6);border-radius:50%;animation:steamRise 2.4s infinite ease-out}
+.steam-p:nth-child(2){left:4px;animation-delay:.8s;animation-duration:2.8s}
+.steam-p:nth-child(3){left:8px;animation-delay:1.5s;animation-duration:2.1s}
+@keyframes steamRise{0%{opacity:0;transform:translate(0,0) scale(1)}30%{opacity:.85}100%{opacity:0;transform:translate(-3px,-22px) scale(2.6)}}
+
+/* Tool & Radio Cards */
+.tool-card{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--soft);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:inherit;transition:transform .2s,border-color .2s}
+.tool-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+
 /* Layout: a window into the room on the left, a quiet control panel on the right; stacks on phones. */
 :root{
   --bg:#ece3d4; --fg:#372c25; --muted:#857566; --panel:#f6f0e6; --line:#d8c9b4;
@@ -94,8 +126,8 @@ main{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px;
 
 /* ---------- The room ---------- */
 .scene{position:relative;aspect-ratio:16/10;max-width:100%;overflow:hidden;border-radius:18px;container-type:inline-size;
-  --wall:#ead6bf;--wall2:#d9bf9f;--floor:#b98a5c;--floor2:#a4784b;--sky1:#9fd0ef;--sky2:#e3f1f8;--shade:transparent;--lamp:0;--moon:0;--sun:1;
-  background:var(--wall);box-shadow:0 10px 30px rgba(0,0,0,.12)}
+  background:#1a1520 url('assets/room_bg.webp') no-repeat center center / cover;
+  image-rendering:pixelated;box-shadow:0 12px 36px rgba(0,0,0,.25);border:2px solid var(--line)}
 .scene.t-morning{--wall:#f2e0c8;--wall2:#e4c9a8;--sky1:#bfe0f4;--sky2:#fbe7c2;--shade:rgba(255,225,170,.14)}
 .scene.t-sunset{--wall:#e6c3a2;--wall2:#d3a683;--floor:#a97548;--floor2:#946340;--sky1:#f3a46b;--sky2:#7d4f7f;--shade:rgba(255,120,60,.14);--lamp:.6;--sun:.5}
 .scene.t-night{--wall:#4a3b47;--wall2:#3a2d38;--floor:#5a3f33;--floor2:#4a3329;--sky1:#141a38;--sky2:#2b365f;--shade:rgba(15,10,40,.26);--lamp:1;--moon:1;--sun:0}
@@ -306,28 +338,43 @@ footer .empty{color:var(--muted);font-size:13.5px}
 
   <main>
     <section class="scene t-day" id="scene" aria-label="고양이가 있는 방">
-      <div class="wall"></div>
-      <div class="floor"></div>
-      <div class="baseboard"></div>
-      <div class="window"><div class="stars"></div><div class="sun"></div><div class="moon"></div><div class="hill"></div><div class="bird"></div><div class="rain" id="rain"></div></div>
-      <div class="curtain l"></div><div class="curtain r"></div>
-      <div class="shelf" id="shelf" title="콩이가 모아온 보물 선반 (클릭해서 보기)"><div class="shelf-board"></div><div class="shelf-items" id="shelfItems"></div></div>
-      <div class="door"><div class="knob"></div></div>
-      <div class="rug"></div>
-      <div class="sofa"><div class="leg l"></div><div class="leg r"></div><div class="back"></div><div class="seat"></div><div class="arm l"></div><div class="arm r"></div><div class="cushion"></div></div>
-      <div class="desk"><div class="leg l"></div><div class="leg r"></div><div class="top"></div>
-        <div class="lamp"><div class="glow"></div><div class="pole"></div><div class="base"></div><div class="shade"></div></div>
-        <div class="books" id="books"></div>
+      <!-- Window Rain Overlay -->
+      <div class="window-rain" id="windowRain">
+        <div class="rain" id="rain"></div>
       </div>
-      <div class="bowl" id="bowl" data-level="0"><div class="food"></div></div>
-      <div class="treat" id="treat"></div>
-      <div class="cat" id="cat" data-pose="sleep" data-spot="sofa">
-        <div class="wrap" id="catSvg"></div>
+
+      <!-- Steaming Coffee Mug Hotspot -->
+      <div class="steam-box">
+        <div class="steam-p"></div><div class="steam-p"></div><div class="steam-p"></div>
+      </div>
+      <div class="hotspot" id="hotspotCoffee" style="left:42.5%;top:48%;width:4.5%;height:6%" title="☕ 김이 모락모락 나는 따뜻한 머그잔 (클릭)"></div>
+
+      <!-- Wall Shelf for Treasures -->
+      <div class="hotspot" id="shelf" style="left:51%;top:57%;width:16%;height:9%" title="🌿 콩이의 보물 선반 (클릭해서 보기)">
+        <div class="shelf-items" id="shelfItems" style="position:absolute;left:0;right:0;bottom:10%;display:flex;justify-content:center;gap:4px;font-size:20px"></div>
+      </div>
+
+      <!-- Desk Notebook Hotspot (Productivity Tools) -->
+      <div class="hotspot" id="hotspotBook" style="left:78%;top:56%;width:7.5%;height:6%" title="📖 콩이의 추천 집중 도구 (클릭)">
+        <span class="hotspot-badge">📖</span>
+      </div>
+
+      <!-- Retro Radio Hotspot (Lo-Fi Music) -->
+      <div class="hotspot" id="hotspotRadio" style="left:90%;top:22%;width:7%;height:7.5%" title="📻 콩이의 Lo-Fi 라디오 (클릭)">
+        <span class="hotspot-badge">🎵</span>
+      </div>
+
+      <!-- The Cat (Pixel Art Kongi) -->
+      <div class="pixel-cat" id="cat" data-pose="sleep" data-spot="sofa" style="left:21%;bottom:25%">
+        <img id="catImg" src="assets/cat_sleep.png" alt="콩이">
         <div class="zzz"><span>z</span><span>z</span><span>z</span></div>
       </div>
-      <div class="shade-ov"></div>
-      <div class="bubble" id="bubble" hidden>…</div>
-      <div class="caption" id="caption"></div>
+
+      <div class="bowl" id="bowl" data-level="0" style="left:38%;bottom:6%"><div class="food"></div></div>
+      <div class="treat" id="treat" style="left:41%;bottom:12%"></div>
+
+      <div class="bubble" id="bubble" hidden style="left:28%;bottom:44%">…</div>
+      <div class="caption" id="caption">콩이는 소파에서 자고 있어요</div>
     </section>
 
     <section class="panel" id="panel">
@@ -405,6 +452,75 @@ footer .empty{color:var(--muted);font-size:13.5px}
       <button class="btn" id="keepBtn" type="button">계속 집중하기</button>
       <button class="btn quiet" id="confirmStop" type="button">멈추기</button>
     </div>
+  </div>
+</div>
+
+
+<div class="modal" id="radioModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="radioTitle" style="max-width:540px">
+    <h3 id="radioTitle">📻 콩이의 Lo-Fi 라디오</h3>
+    <p>공부하거나 일할 때 잡생각을 지워주는 편안한 사운드 트랙이에요.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0">
+      <a class="tool-card" href="https://www.youtube.com/watch?v=jfKfPfyJRdk" target="_blank" rel="noopener">
+        <div style="font-size:28px">🎧</div>
+        <div style="flex:1">
+          <div style="font-weight:700">Lofi Girl — beats to relax/study to</div>
+          <div style="font-size:12.5px;color:var(--muted)">전 세계 수험생과 개발자들의 집중 메이트 (YouTube)</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700">듣기 ↗</div>
+      </a>
+      <a class="tool-card" href="https://www.youtube.com/watch?v=5yx6BWlEVcY" target="_blank" rel="noopener">
+        <div style="font-size:28px">☕</div>
+        <div style="flex:1">
+          <div style="font-weight:700">Chillhop Radio — jazzy & lofi hip hop</div>
+          <div style="font-size:12.5px;color:var(--muted)">따뜻하고 차분한 재즈 힙합 비트 모음</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700">듣기 ↗</div>
+      </a>
+      <div class="tool-card" id="radioRainToggle" style="cursor:pointer">
+        <div style="font-size:28px">🌧️</div>
+        <div style="flex:1">
+          <div style="font-weight:700">창밖 잔잔한 빗소리 ASMR</div>
+          <div style="font-size:12.5px;color:var(--muted)">방 안의 실시간 빗소리 오디오 켜기 / 끄기</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" id="radioRainStatus">토글</div>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn secondary" id="closeRadio" type="button">닫기</button></div>
+  </div>
+</div>
+
+<div class="modal" id="toolsModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="toolsTitle" style="max-width:540px">
+    <h3 id="toolsTitle">📖 콩이의 추천 집중 도구</h3>
+    <p>공부와 일의 효율을 2배로 올려주는 엄선된 생산성 앱들이에요.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0">
+      <a class="tool-card" href="https://www.notion.so" target="_blank" rel="noopener">
+        <div style="font-size:28px">📝</div>
+        <div style="flex:1">
+          <div style="font-weight:700">Notion (노션)</div>
+          <div style="font-size:12.5px;color:var(--muted)">공부 계획, 스터디 노트, 일일 루틴을 한눈에 정리하는 올인원 툴</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700">알아보기 ↗</div>
+      </a>
+      <a class="tool-card" href="https://www.yeolpumta.com" target="_blank" rel="noopener">
+        <div style="font-size:28px">⏰</div>
+        <div style="flex:1">
+          <div style="font-weight:700">열품타 (열정품은타이머)</div>
+          <div style="font-size:12.5px;color:var(--muted)">스터디윗미 1위! 친구들과 함께 공부 시간을 경쟁하고 자극받기</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700">알아보기 ↗</div>
+      </a>
+      <a class="tool-card" href="https://www.flexcil.com" target="_blank" rel="noopener">
+        <div style="font-size:28px">✍️</div>
+        <div style="flex:1">
+          <div style="font-weight:700">Flexcil (플렉슬) / Goodnotes</div>
+          <div style="font-size:12.5px;color:var(--muted)">아이패드·태블릿 수험생 필수 PDF 필기 및 오답노트 도구</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700">알아보기 ↗</div>
+      </a>
+    </div>
+    <div class="btn-row"><button class="btn secondary" id="closeTools" type="button">닫기</button></div>
   </div>
 </div>
 
@@ -750,9 +866,28 @@ function renderAlbum(){
 
 /* ---------- cat movement ---------- */
 const FLOOR=6;
-const SPOTS={sofa:{x:13,y:35},win:{x:11,y:44},rug:{x:42,y:FLOOR},mid:{x:28,y:FLOOR},bowl:{x:59,y:FLOOR},eat:{x:64,y:FLOOR},door:{x:76,y:FLOOR}};
-function setPose(p){catEl.dataset.pose=p;catEl.classList.toggle('closed',p==='sleep'||p==='stretch');catEl.classList.toggle('happy',p==='lick');
-  if(p!=='sit'&&p!=='lie'&&p!=='wait'&&p!=='back')catEl.classList.remove('look-l','look-r','yawn')}
+const SPOTS={sofa:{x:21,y:25},win:{x:32,y:48},rug:{x:44,y:10},mid:{x:46,y:10},bowl:{x:35,y:6},eat:{x:38,y:6},door:{x:85,y:10}};
+const SPRITES={
+  sleep:'assets/cat_sleep.png',
+  lie:'assets/cat_sleep.png',
+  sit:'assets/cat_sit.png',
+  wait:'assets/cat_sit.png',
+  back:'assets/cat_back.png',
+  stretch:'assets/cat_stretch.png',
+  eat:'assets/cat_eat.png',
+  lick:'assets/cat_sit.png',
+  groom:'assets/cat_sit.png',
+  walk:'assets/cat_sit.png'
+};
+function setPose(p){
+  catEl.dataset.pose=p;
+  const img=$('#catImg');
+  if(img && SPRITES[p]){ img.src=SPRITES[p]; }
+  if(p==='sleep'||p==='back'){ catEl.style.width='18%'; }
+  else if(p==='stretch'){ catEl.style.width='19%'; }
+  else if(p==='eat'){ catEl.style.width='17%'; }
+  else{ catEl.style.width='16%'; }
+}
 function setFace(f){catEl.classList.toggle('flip',f===-1)}
 function setXY(x,y,tr){catEl.style.transition=tr||'none';catEl.style.left=x+'%';catEl.style.bottom=y+'%';curX=x;curY=y;
   bubble.style.left=(x+9)+'%';bubble.style.bottom=(y+19)+'%'}
@@ -1080,6 +1215,18 @@ $('#todSel').addEventListener('change',e=>{store.set('tod',e.target.value);apply
 $('#shareBtn').addEventListener('click',()=>{const go=()=>{drawCard();$('#shareModal').hidden=false};(document.fonts&&document.fonts.ready?document.fonts.ready.then(go,go):go())});
 $('#closeShare').addEventListener('click',()=>{$('#shareModal').hidden=true});
 $('#rainBtn').addEventListener('click',()=>toggleRain());
+$('#hotspotRadio').addEventListener('click',()=>{$('#radioModal').hidden=false;$('#radioRainStatus').textContent=scene.classList.contains('rainy')?'켜짐':'꺼짐'});
+$('#closeRadio').addEventListener('click',()=>{$('#radioModal').hidden=true});
+$('#radioRainToggle').addEventListener('click',()=>{toggleRain();$('#radioRainStatus').textContent=scene.classList.contains('rainy')?'켜짐':'꺼짐'});
+
+$('#hotspotBook').addEventListener('click',()=>{$('#toolsModal').hidden=false});
+$('#closeTools').addEventListener('click',()=>{$('#toolsModal').hidden=true});
+
+$('#hotspotCoffee').addEventListener('click',()=>{
+  say('따뜻해… ☕', 2600);
+  hearts(2);
+  caption(fill('{N가} 커피 향을 맡으며 킁킁거려요. 잠시 따뜻한 차 한 잔 마시며 쉬어가세요.'));
+});
 $('#shelf').addEventListener('click',showShelfModal);
 $('#closeShelf').addEventListener('click',()=>{$('#shelfModal').hidden=true});
 $('#albumBtn').addEventListener('click',()=>{renderAlbum();$('#albumModal').hidden=false;});
