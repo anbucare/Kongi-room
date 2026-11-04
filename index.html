@@ -1050,27 +1050,29 @@ function complete(withSound){
 async function giveTreat(){
   const btn=$('#treatBtn');btn.disabled=true;hush();phase='eating';
   const t=$('#treat');if(t){t.classList.remove('drop');void t.offsetWidth;t.classList.add('drop');}
-  const id=moveId+1;
-  await sleep(700);if(bowl)bowl.dataset.level=3;if(t)t.classList.remove('drop');
-  await moveCat('eat','eat',1);if(moveId!==id)return;
+  await sleep(400);
+  if(bowl)bowl.dataset.level=3;
+  await moveCat('eat','eat',1);
   caption('냠냠, 오독오독…');
   for(let lv=3;lv>0;lv--){
-    for(let k=0;k<3;k++){await sleep(420);if(moveId!==id)return;crunch();if(k===1)crumbs()}
-    bowl.dataset.level=lv-1;
+    for(let k=0;k<3;k++){await sleep(350);crunch();if(k===1)crumbs();}
+    if(bowl)bowl.dataset.level=lv-1;
   }
-  await sleep(300);if(moveId!==id)return;
+  await sleep(200);
   setPose('lick');caption('{N가} 입맛을 다셔요');hearts(3);
-  log.items.push({type:'done',min:run.demo?0:Math.round(run.dur/60),demo:!!run.demo});store.set('log',log);renderLog();
-  recordAlbum(run);
-  checkTreasureReward(id);
-  const last=run;run=null;store.del('run');phase='idle';
-  $('#afterMsg').textContent=fill(last.demo?'체험 세션이라 시간은 쌓이지 않지만, 책은 한 권 올라갔어요. {N가} 기분이 좋아 보여요.':'책이 한 권 쌓였어요. {N가} 기분이 좋아 보여요.');
+  const wasDemo = !!(run && run.demo);
+  log.items.push({type:'done',min:wasDemo?0:Math.round((run?run.dur:30)/60),demo:wasDemo});
+  store.set('log',log);renderLog();
+  if(run)recordAlbum(run);
+  checkTreasureReward(moveId);
+  run=null;store.del('run');phase='idle';
+  $('#afterMsg').textContent=fill(wasDemo?'체험 세션이라 시간은 쌓이지 않지만, 책은 한 권 올라갔어요. {N가} 기분이 좋아 보여요.':'책이 한 권 쌓였어요. {N가} 기분이 좋아 보여요.');
   show('after');btn.disabled=false;
-  await sleep(1500);if(moveId!==id)return;
+  await sleep(1500);
   setPose('groom');caption('{N가} 앞발로 세수를 해요');hearts(4);
-  await sleep(2400);if(moveId!==id)return;
-  await moveCat('sofa','lie',1);if(moveId!==id+1)return;
-  caption('{N가} 배부른 얼굴로 소파에 누웠어요');
+  await sleep(2000);
+  await moveCat('sofa','sleep',1);
+  caption('{N가} 배부른 얼굴로 소파에서 자요');
 }
 function startBreak(sec){
   run={state:'break',endAt:Date.now()+sec*1000,dur:sec,demo:false};store.set('run',run);
