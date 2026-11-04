@@ -1,5 +1,5 @@
 /* 콩이네 방 service worker: caches the app shell so the timer opens offline. */
-const VERSION = 'kongi-v5';
+const VERSION = 'kongi-v6';
 const SHELL = [
   './',
   './index.html',
@@ -33,10 +33,26 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // Own files: cache first, then network, and refresh the cache in the background.
+
+  // Own files
   if (url.origin === self.location.origin) {
+    // HTML / root navigation: network-first so updates reflect immediately, fall back to cache offline
+    if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/')) {
+      e.respondWith(
+        fetch(req).then((res) => {
+          if (res && res.ok) {
+            const clone = res.clone();
+            caches.open(VERSION).then((c) => c.put(req, clone));
+          }
+          return res;
+        }).catch(() => caches.match(req))
+      );
+      return;
+    }
+
+    // Static assets (images, icons): cache-first, update in background
     e.respondWith(
-      caches.match(req, { ignoreSearch: true }).then((hit) => {
+      caches.match(req).then((hit) => {
         const fetching = fetch(req).then((res) => {
           if (res && res.ok) caches.open(VERSION).then((c) => c.put(req, res.clone()));
           return res;
@@ -46,7 +62,8 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
-  // Fonts: network first, fall back to whatever was cached earlier.
+
+  // External fonts: network first, fallback to cache
   if (url.hostname.endsWith('gstatic.com') || url.hostname.endsWith('googleapis.com')) {
     e.respondWith(
       fetch(req).then((res) => {
