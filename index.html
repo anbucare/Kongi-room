@@ -1049,9 +1049,9 @@ function complete(withSound){
 }
 async function giveTreat(){
   const btn=$('#treatBtn');btn.disabled=true;hush();phase='eating';
-  const t=$('#treat');t.classList.remove('drop');void t.offsetWidth;t.classList.add('drop');
+  const t=$('#treat');if(t){t.classList.remove('drop');void t.offsetWidth;t.classList.add('drop');}
   const id=moveId+1;
-  await sleep(700);bowl.dataset.level=3;t.classList.remove('drop');
+  await sleep(700);if(bowl)bowl.dataset.level=3;if(t)t.classList.remove('drop');
   await moveCat('eat','eat',1);if(moveId!==id)return;
   caption('냠냠, 오독오독…');
   for(let lv=3;lv>0;lv--){
