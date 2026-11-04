@@ -803,21 +803,17 @@ function showShelfModal(){
   $('#shelfModal').hidden = false;
 }
 
-async function checkTreasureReward(id){
+async function checkTreasureReward(){
   const owned = getShelfItems();
   const unowned = TREASURES.filter(t => !owned.some(o => o.id === t.id));
-  if(!unowned.length) return; // all collected
-
-  // Reward on first session or 35% chance
+  if(!unowned.length) return;
   const shouldReward = owned.length === 0 || Math.random() < 0.35;
   if(!shouldReward) return;
-
   const picked = unowned[Math.floor(Math.random() * unowned.length)];
   owned.push(picked);
   store.set('shelf', owned);
   renderShelf();
-
-  await sleep(600); if(moveId !== id) return;
+  await sleep(600);
   say('선물!', 3200);
   hearts(4);
   caption(fill(`{N가} 어디선가 [${picked.icon} ${picked.name}]을(를) 물어와 방 선반에 올려두었어요!`));
@@ -825,6 +821,7 @@ async function checkTreasureReward(id){
 
 /* ---------- Polaroid Album ---------- */
 function recordAlbum(sessionRun){
+  if(!sessionRun)return;
   let album = store.get('album', []);
   const mins = sessionRun.demo ? 0 : Math.round(sessionRun.dur/60);
   const now = new Date();
@@ -1050,29 +1047,36 @@ function complete(withSound){
 async function giveTreat(){
   const btn=$('#treatBtn');btn.disabled=true;hush();phase='eating';
   const t=$('#treat');if(t){t.classList.remove('drop');void t.offsetWidth;t.classList.add('drop');}
-  await sleep(400);
-  if(bowl)bowl.dataset.level=3;
-  await moveCat('eat','eat',1);
-  caption('냠냠, 오독오독…');
-  for(let lv=3;lv>0;lv--){
-    for(let k=0;k<3;k++){await sleep(350);crunch();if(k===1)crumbs();}
-    if(bowl)bowl.dataset.level=lv-1;
+  try{
+    await sleep(350);
+    if(bowl)bowl.dataset.level=3;
+    await moveCat('eat','eat',1);
+    caption('냠냠, 오독오독…');
+    for(let lv=3;lv>0;lv--){
+      for(let k=0;k<3;k++){await sleep(320);crunch();if(k===1)crumbs();}
+      if(bowl)bowl.dataset.level=lv-1;
+    }
+    await sleep(200);
+    setPose('lick');caption('{N가} 입맛을 다셔요');hearts(3);
+    const wasDemo = !!(run && run.demo);
+    log.items.push({type:'done',min:wasDemo?0:Math.round((run?run.dur:30)/60),demo:wasDemo});
+    store.set('log',log);renderLog();
+    if(run)recordAlbum(run);
+    checkTreasureReward();
+    run=null;store.del('run');phase='idle';
+    $('#afterMsg').textContent=fill(wasDemo?'체험 세션이라 시간은 쌓이지 않지만, 책은 한 권 올라갔어요. {N가} 기분이 좋아 보여요.':'책이 한 권 쌓였어요. {N가} 기분이 좋아 보여요.');
+    show('after');
+    await sleep(1500);
+    setPose('groom');caption('{N가} 앞발로 세수를 해요');hearts(4);
+    await sleep(2000);
+    await moveCat('sofa','sleep',1);
+    caption('{N가} 배부른 얼굴로 소파에서 자요');
+  }catch(e){
+    console.error('giveTreat error:', e);
+    show('after');
+  }finally{
+    btn.disabled=false;
   }
-  await sleep(200);
-  setPose('lick');caption('{N가} 입맛을 다셔요');hearts(3);
-  const wasDemo = !!(run && run.demo);
-  log.items.push({type:'done',min:wasDemo?0:Math.round((run?run.dur:30)/60),demo:wasDemo});
-  store.set('log',log);renderLog();
-  if(run)recordAlbum(run);
-  checkTreasureReward(moveId);
-  run=null;store.del('run');phase='idle';
-  $('#afterMsg').textContent=fill(wasDemo?'체험 세션이라 시간은 쌓이지 않지만, 책은 한 권 올라갔어요. {N가} 기분이 좋아 보여요.':'책이 한 권 쌓였어요. {N가} 기분이 좋아 보여요.');
-  show('after');btn.disabled=false;
-  await sleep(1500);
-  setPose('groom');caption('{N가} 앞발로 세수를 해요');hearts(4);
-  await sleep(2000);
-  await moveCat('sofa','sleep',1);
-  caption('{N가} 배부른 얼굴로 소파에서 자요');
 }
 function startBreak(sec){
   run={state:'break',endAt:Date.now()+sec*1000,dur:sec,demo:false};store.set('run',run);
