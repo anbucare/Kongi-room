@@ -8,6 +8,10 @@
    └─ 사람        →  302 → https://anbucare.github.io/Kongi-room/?s=3&m=125&... (친구의 방 화면)
 ```
 
+## 지금 상태와 주의할 점
+
+Worker는 `https://kongi-room-share.anbu-pilot.workers.dev` 에 배포되어 있고 동작합니다. 다만 **사이트의 공유 링크는 현재 Worker 주소를 쓰지 않습니다** (`app.js` 의 `RESULT_BASE=''`). 검진 도구가 "공유 링크가 다른 사이트(workers.dev)로 간다"고 보고 공유 점수를 크게 깎았기 때문입니다. 링크가 사이트와 같은 주소에 있어야 점수를 유지하면서 결과별 미리보기를 얻을 수 있는데, 그 조건은 **자기 도메인을 Cloudflare에 연결하고 같은 도메인의 `/r*` 경로를 이 Worker에 맡기는 것**입니다. 도메인이 생기면 `wrangler.toml` 에 route 한 줄을 추가하고 `RESULT_BASE` 를 `https://<도메인>/r` 로 바꾸면 됩니다. 그 전까지 Worker 주소는 `RESULT_WORKER` 상수에만 보관합니다.
+
 ## 두 가지 그림 방식
 
 | 방식 | 설정 | 그림에 들어가는 것 | 요금제 |
