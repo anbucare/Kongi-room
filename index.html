@@ -58,6 +58,7 @@ img{max-width:100%}
     </h1>
     <div class="hdr-right">
       <span class="today" id="todaySum"></span>
+      <span class="streak-badge" id="streakBadge" hidden title="연속 집중 기록" data-i18n-title="streak.title">🔥</span>
       <button class="intimacy-badge" id="intimacyBtn" type="button" title="콩이와의 친밀도 및 해금된 행동 보기" data-i18n-title="hdr.intimacyTitle">🌱 Lv.1 낯가리는 사이</button>
       <select id="todSel" aria-label="방 시간대" data-i18n-aria="tod.aria">
         <option value="auto" data-i18n="tod.auto">시간대: 자동</option>
@@ -163,7 +164,7 @@ img{max-width:100%}
             <button class="btn" id="nextBtn" type="button" data-i18n="next">바로 다음 세션</button>
           </div>
           <div>
-            <button class="btn" id="afterShareBtn" type="button" style="width:100%" data-i18n="after.share">📣 오늘 기록 친구에게 보내기</button>
+            <button class="btn" id="afterShareBtn" type="button" style="width:100%" data-i18n="after.brag">🚀 친구들한테 자랑하기</button>
           <button class="btn secondary" id="afterPolaroidBtn" type="button" style="width:100%;font-size:13.5px;padding:10px;border:1.5px solid #e0c8b8;background:#fff8f4;color:#b84224;font-weight:700" data-i18n="after.polaroid">📸 이번 세션 감성 폴라로이드 일기 남기기</button>
           </div>
         </div>
@@ -188,6 +189,7 @@ img{max-width:100%}
       <a href="https://github.com/anbucare/Kongi-room/issues/new?labels=feedback&amp;title=%5B%EC%9D%98%EA%B2%AC%5D%20" target="_blank" rel="noopener" data-i18n="foot.feedback">💬 의견 보내기</a>
       <details><summary data-i18n="foot.updates">업데이트 소식</summary>
         <ul>
+          <li data-i18n="foot.u0">11.05 반영했어요: 연속 집중 스트릭 배지, 새 보물 발견 팡파레, 완주 후 자랑 버튼</li>
           <li data-i18n="foot.u1">11.05 반영했어요: 휴대폰 공유창·X·Threads·카카오톡·링크 복사가 있는 공유 시트, 친구에게 보내는 결과 링크</li>
           <li data-i18n="foot.u2">11.05 반영했어요: 처음 열 때 받는 용량을 절반 이하로 줄였어요</li>
           <li data-i18n="foot.u3">11.05 반영했어요: 영어·독일어 선택</li>
