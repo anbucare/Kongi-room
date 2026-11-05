@@ -1,26 +1,16 @@
-/* 콩이네 방 service worker: caches the app shell so the timer opens offline. */
-const VERSION = 'kongi-v13';
+/* 콩이네 방 service worker: keeps the app shell offline, caches room art lazily. */
+const VERSION = 'kongi-v14';
 const SHELL = [
   './',
   './index.html',
+  './app.css',
+  './app.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
-  './icons/icon-512.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
   './icons/icon.svg',
-  './assets/room_morning.webp',
-  './assets/room_day.webp',
-  './assets/room_sunset.webp',
-  './assets/room_night.webp',
-  './assets/room_bg.webp',
   './assets/cat_sleep.png',
-  './assets/cat_sit.png',
-  './assets/cat_back.png',
-  './assets/cat_stretch.png',
-  './assets/cat_eat.png',
-  './assets/cat_desk.png',
-  './assets/cat_belly.png',
   './assets/pixel_bowl.png'
 ];
 
@@ -40,23 +30,18 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Own files
   if (url.origin === self.location.origin) {
-    // HTML / root navigation: network-first so updates reflect immediately, fall back to cache offline
-    if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/')) {
+    // Page and code: network first so updates show up right away, cache when offline.
+    if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
       e.respondWith(
         fetch(req).then((res) => {
-          if (res && res.ok) {
-            const clone = res.clone();
-            caches.open(VERSION).then((c) => c.put(req, clone));
-          }
+          if (res && res.ok) { const clone = res.clone(); caches.open(VERSION).then((c) => c.put(req, clone)); }
           return res;
-        }).catch(() => caches.match(req))
+        }).catch(() => caches.match(req, { ignoreSearch: true }))
       );
       return;
     }
-
-    // Static assets (images, icons): cache-first, update in background
+    // Images and icons: cache first, refresh in the background. Room art is cached the first time it is shown.
     e.respondWith(
       caches.match(req).then((hit) => {
         const fetching = fetch(req).then((res) => {
@@ -69,7 +54,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // External fonts: network first, fallback to cache
+  // Google Fonts: network first, fall back to what was cached earlier.
   if (url.hostname.endsWith('gstatic.com') || url.hostname.endsWith('googleapis.com')) {
     e.respondWith(
       fetch(req).then((res) => {

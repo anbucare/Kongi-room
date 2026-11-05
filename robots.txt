@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://anbucare.github.io/Kongi-room/sitemap.xml
