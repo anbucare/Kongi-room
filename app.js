@@ -31,7 +31,6 @@ const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(navigator
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2400)}
 function tstrOf(mins){const h=Math.floor(mins/60),m=mins%60;if(lang==='en')return ((h?h+'h ':'')+(m||!h?m+'m':'')).trim();if(lang==='de')return ((h?h+' Std. ':'')+(m||!h?m+' Min.':'')).trim();return (h?h+'시간 ':'')+(m||!h?m+'분':'')}
 
-/* ---------- cat svg ---------- */
 function frontHead(tf){return `<g transform="${tf||''}"><g class="head">
   <polygon class="ear l" points="40,36 46,10 60,30"/><polygon class="ear r" points="66,30 80,10 86,36"/>
   <polygon class="ear-in" points="45,33 48,18 56,29"/><polygon class="ear-in" points="70,29 78,18 81,33"/>
@@ -101,14 +100,12 @@ if($('#catSvg')) $('#catSvg').innerHTML=`<svg viewBox="0 0 120 100" aria-hidden=
 </g>
 </svg>`;
 
-/* ---------- state ---------- */
 const scene=$('#scene'),catEl=$('#cat'),bubble=$('#bubble'),bowl=$('#bowl');
 let run=store.get('run',null); // {state:'focus'|'done'|'break', endAt, dur, demo}
 let log=store.get('log',null); if(!log||log.date!==todayKey()) log={date:todayKey(),items:[]};
 let ui='setup', phase='idle', idleTimer=null, lookTimer=null, audioCtx=null, moveId=0, curX=13, curY=35, isSulking=store.get('sulking',false);
 
 
-/* ---------- Weather (Rain ASMR) ---------- */
 let rainSource=null, rainGain=null;
 
 function toggleRain(enable){
@@ -162,7 +159,6 @@ function startRainAudio(){
     const buffer = audioCtx.createBuffer(1, bufferSize, sr);
     const data = buffer.getChannelData(0);
 
-    // Warm pink noise generator
     let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
@@ -175,10 +171,8 @@ function startRainAudio(){
       const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
       b6 = white * 0.115926;
 
-      // Soft rain wave breathing (very subtle)
       const swell = 0.92 + 0.08 * Math.sin((i / bufferSize) * Math.PI * 2);
 
-      // Cozy muffled "후둑... 후둑..." raindrops (warm 350-580Hz resonance, not sharp clicks)
       if (Math.random() < 0.00035) {
         const dropLen = Math.floor(sr * 0.035);
         const dropFreq = 340 + Math.random() * 240;
@@ -195,7 +189,6 @@ function startRainAudio(){
     rainSource.buffer = buffer;
     rainSource.loop = true;
 
-    // Filters: Highpass at 300Hz (no wind rumble), Lowpass at 1650Hz (warm, peaceful muffled room ASMR)
     const hp = audioCtx.createBiquadFilter();
     hp.type = 'highpass';
     hp.frequency.value = 300;
@@ -227,7 +220,6 @@ function stopRainAudio(){
   }
 }
 
-/* ---------- Treasures & Shelf (가변 보상) ---------- */
 const TREASURES = [
   { id: 'leaf', name: 'tr.leaf.name', icon: '🍂', desc: 'tr.leaf.desc' },
   { id: 'yarn', name: 'tr.yarn.name', icon: '🧶', desc: 'tr.yarn.desc' },
@@ -304,7 +296,6 @@ async function checkTreasureReward(){
   caption('gift.caption',{icon:picked.icon,name:t(picked.name)});
 }
 
-/* ---------- Polaroid Album (감성 폴라로이드 일기) ---------- */
 function getKongiQuote(mins, tod, rain, demo) {
   if (demo) return t('quote.demo');
   if (rain) return t('quote.rain',{m:mins});
@@ -513,7 +504,6 @@ function drawPolaroidCanvas(item){
   }
 }
 
-/* ---------- Intimacy & Motion Unlocks (친밀도 시스템) ---------- */
 const INTIMACY_LEVELS = [
   { level: 1, name: 'lv1.name', minXp: 0, maxXp: 30, icon: '🌱', desc: 'lv1.desc', motion: 'lv1.motion', spot: 'sofa', pose: 'sleep' },
   { level: 2, name: 'lv2.name', minXp: 30, maxXp: 90, icon: '🌿', desc: 'lv2.desc', motion: 'lv2.motion', spot: 'desk', pose: 'desk' },
@@ -666,7 +656,6 @@ function executeCatAction(spot, pose) {
   }
 }
 
-/* ---------- cat movement ---------- */
 const FLOOR=6;
 const SPOTS={
   sofa:{x:17.5,y:26.5},
@@ -679,8 +668,6 @@ const SPOTS={
   desk:{x:76,y:37},
   belly:{x:44,y:7.5}
 };
-/* On the sofa the sprite size differs by pose, so each pose gets its own seat position
-   (x = left edge %, y = bottom edge %, measured against the seat cushions in the room art). */
 const SOFA_POSE={sleep:{x:17.5,y:26.5},lie:{x:17.5,y:26.5},stretch:{x:16.5,y:26.5},back:{x:14.5,y:27},sit:{x:19,y:27},wait:{x:19,y:27}};
 function spotFor(spot,pose){const t=SPOTS[spot]||SPOTS.rug;return (spot==='sofa'&&SOFA_POSE[pose])?Object.assign({},t,SOFA_POSE[pose]):t}
 const SPRITES={
@@ -738,7 +725,6 @@ async function moveCat(spot, pose, face, opts){
   const curIsDesk = curY > 15 && curX >= 55;
   const targetIsDesk = target.y > 15 && target.x >= 55;
 
-  // Same elevated surface (e.g. sofa -> sofa or desk -> desk)
   if ((curIsSofa && targetIsSofa) || (curIsDesk && targetIsDesk)) {
     setFace(face !== undefined ? face : (targetIsDesk ? -1 : 1));
     setXY(target.x, target.y, 'left 280ms ease-in-out, bottom 280ms ease-in-out');
@@ -748,7 +734,6 @@ async function moveCat(spot, pose, face, opts){
     return;
   }
 
-  // 1. If currently elevated (sofa or desk), hop down to floor first
   if (curY > 15) {
     const isDesk = curX >= 55;
     const dropFloorX = isDesk ? 74 : 26;
@@ -759,13 +744,10 @@ async function moveCat(spot, pose, face, opts){
     if (moveId !== id) return;
   }
 
-  // 2. Now cat is on the floor (curY <= 15).
-  // Determine floor base coordinate for target:
   const isTargetElevated = target.y > 15;
   const targetFloorX = isTargetElevated ? (target.x >= 55 ? 74 : 26) : target.x;
   const targetFloorY = isTargetElevated ? 7.5 : target.y;
 
-  // Walk horizontally on floor if needed
   const walkDist = Math.abs(targetFloorX - curX);
   if (walkDist > 1.8) {
     const walkDir = targetFloorX < curX ? -1 : 1;
@@ -777,7 +759,6 @@ async function moveCat(spot, pose, face, opts){
     if (moveId !== id) return;
   }
 
-  // 3. If target is elevated (sofa or desk), leap up from floor base to target!
   if (isTargetElevated) {
     const isTargetDesk = target.x >= 55;
     setFace(isTargetDesk ? 1 : -1);
@@ -787,7 +768,6 @@ async function moveCat(spot, pose, face, opts){
     if (moveId !== id) return;
   }
 
-  // Final pose and orientation
   setFace(face !== undefined ? face : (target.x >= 55 ? -1 : 1));
   setPose(pose);
 }
@@ -803,7 +783,6 @@ function crumbs(){for(let i=0;i<3;i++){const s=document.createElement('span');s.
 let lastCaption=null,lastStatus=null;
 function caption(k,v){lastCaption={k,v};$('#caption').textContent=fill(t(k,v))}
 
-/* small fidgets so the cat never looks frozen */
 function fidget(){
   const p=catEl.dataset.pose;if(reduced()||catEl.classList.contains('walking')||catEl.classList.contains('jump'))return;
   const o=[];
@@ -842,7 +821,6 @@ function pickIdle(){
 }
 function setStatus(k,v){lastStatus={k,v};$('#focusStatus').textContent=fill(t(k,v));caption(k,v)}
 
-/* ---------- audio / wake lock ---------- */
 function ensureAudio(){try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}}
 function chime(){try{if(!audioCtx)return;const t=audioCtx.currentTime;[[659,0],[880,.22],[1046,.44]].forEach(([f,d])=>{
   const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=f;
@@ -855,7 +833,6 @@ function crunch(){try{if(!audioCtx)return;const n=audioCtx.sampleRate*.06,b=audi
 let lock=null;function wake(){try{if(navigator.wakeLock&&!lock)navigator.wakeLock.request('screen').then(l=>{lock=l;l.addEventListener('release',()=>{lock=null})}).catch(()=>{})}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&run)wake()});
 
-/* ---------- UI ---------- */
 function show(id){ui=id;['setup','focus','done','after','break'].forEach(k=>{$('#ui-'+k).hidden=k!==id})}
 const fmt=s=>{s=Math.ceil(s/1000);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':':'')+(h?pad(m):m<10?'0'+m:m)+':'+pad(x)};
 function tick(){
@@ -929,7 +906,6 @@ async function giveTreat(){
     store.set('log',log);renderLog();
     if(run)recordAlbum(run);
     
-    // Intimacy XP
     const gainedXp = wasDemo ? 15 : Math.max(25, 25 + sessionMin);
     addIntimacy(gainedXp);
 
@@ -989,7 +965,6 @@ function doStop(){
   show('setup');
 }
 
-/* ---------- log ---------- */
 const BOOK=['#b2574f','#4f6d8a','#7a8a4f','#c9933e','#6a5a8a','#8a5a3c'];
 function renderLog(){
   const done=log.items.filter(i=>i.type==='done'),stops=log.items.filter(i=>i.type==='stop');
@@ -1023,13 +998,11 @@ function renderLog(){
   const le=$('#logEmpty');if(le)le.hidden=log.items.length>0;
 }
 
-/* ---------- time of day ---------- */
 function tod(){const o=store.get('tod','auto');if(o!=='auto')return o;const h=new Date().getHours();
   return h>=6&&h<10?'morning':h<17?'day':h<20?'sunset':'night'}
 function applyTod(){scene.classList.remove('t-morning','t-day','t-sunset','t-night');scene.classList.add('t-'+tod())}
 setInterval(applyTod,60000);
 
-/* ---------- share card ---------- */
 function shareStats(){
   const done=log.items.filter(i=>i.type==='done'&&!i.demo);
   const mins=done.reduce((a,b)=>a+b.min,0);
@@ -1112,7 +1085,6 @@ function drawCard(data){
   x.font='400 46px '+ff;x.fillStyle=mut;x.fillText(t('title.room').replace('{N}',name)+' · '+t('tagline'),W/2,1800);
 }
 
-/* ---------- share sheet ---------- */
 function resultUrl(st){
   const p=new URLSearchParams({s:st.sessions,m:st.mins,l:st.last,n:petName,t:tod(),d:todayKey().replace(/-/g,'')});
   return SITE_URL+'?'+p.toString();
@@ -1187,7 +1159,6 @@ function openResultView(){
   return true;
 }
 
-/* ---------- events ---------- */
 $$('.chip').forEach(b=>b.addEventListener('click',()=>{$$('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');$('#customMin').value=b.dataset.min}));
 $('#customMin').addEventListener('input',e=>{$$('.chip').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.min===+e.target.value)))});
 $('#startBtn').addEventListener('click',()=>{let v=parseInt($('#customMin').value,10);if(!(v>=5)){v=5;$('#customMin').value=5}if(v>180){v=180;$('#customMin').value=180}start(v*60,false)});
@@ -1332,7 +1303,6 @@ $('#lvlActionBtn').addEventListener('click',()=>{
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#shareModal').hidden=true;$('#stopModal').hidden=true;$('#shelfModal').hidden=true;$('#albumModal').hidden=true;$('#polaroidDetailModal').hidden=true;$('#intimacyModal').hidden=true;$('#levelUpModal').hidden=true;$('#shareSheet').hidden=true;$('#resultModal').hidden=true;}});
 
-/* ---------- language ---------- */
 function applyLang(){
   document.documentElement.lang=lang;
   $$('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)});
@@ -1353,7 +1323,6 @@ function applyLang(){
 const langSel=$('#langSel');
 if(langSel){langSel.addEventListener('change',e=>{const v=e.target.value;if(!LANGS.includes(v))return;lang=v;store.set('lang',v);applyLang()})}
 
-/* ---------- boot ---------- */
 applyLang();applyTod();renderLog();renderShelf();updateIntimacyBadge();
 openResultView();
 if(store.get('rain',false)){toggleRain(true);}
