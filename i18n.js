@@ -1,5 +1,3 @@
-/* 콩이네 방 UI strings. Korean is the source language; {N} is the cat's name.
-   Korean templates may use particle tokens ({N가} {N는} {N를} {N와} {N네} {N랑}) that app.js resolves. */
 window.KONGI_I18N = {
 ko: {
   'lang.aria':'언어','hdr.nameAria':'고양이 이름','hdr.suffix':'네 방','hdr.tagline':'· 고양이와 함께하는 집중 타이머',

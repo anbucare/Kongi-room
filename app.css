@@ -1,5 +1,4 @@
 
-/* ---------- Weather / Rain ---------- */
 .scene.rainy{--sky1:#728394;--sky2:#9db0bf;--shade:rgba(30,45,60,.18)}
 .scene.rainy .window{background:linear-gradient(var(--sky1),var(--sky2))}
 .scene.rainy .window .sun,.scene.rainy .window .moon,.scene.rainy .window .stars,.scene.rainy .window .bird{opacity:0!important}
@@ -10,7 +9,6 @@
 .rain .bead{position:absolute;border-radius:50%;background:rgba(255,255,255,.65);box-shadow:0 1px 2px rgba(0,0,0,.25)}
 #rainBtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 
-/* ---------- Wall Shelf & Treasures ---------- */
 .shelf{left:39%;top:18%;width:16%;height:14%;position:absolute;cursor:pointer;transition:transform .2s}
 .shelf:hover{transform:translateY(-2px)}
 .shelf .shelf-board{position:absolute;left:0;right:0;bottom:18%;height:12%;background:#7b5234;border-radius:3px;box-shadow:0 .3cqw .6cqw rgba(0,0,0,.2)}
@@ -20,7 +18,6 @@
 .shelf-item{display:inline-block;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));user-select:none}
 @keyframes popIn{0%{transform:scale(0) translateY(10px);opacity:0}80%{transform:scale(1.2) translateY(-2px)}100%{transform:scale(1) translateY(0);opacity:1}}
 
-/* ---------- Polaroid Album Modal ---------- */
 .polaroid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;max-height:60vh;overflow-y:auto;padding:10px 4px}
 .polaroid-card{background:#fff;padding:10px 10px 18px 10px;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);transform:rotate(calc(var(--rot, 0) * 1deg));transition:transform .2s, box-shadow .2s;color:#333;text-align:center;cursor:pointer}
 .polaroid-card:hover{transform:scale(1.04) rotate(0deg);box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:2}
@@ -32,7 +29,6 @@
 .tab-btn.active{color:var(--fg);background:var(--soft)}
 
 
-/* ---------- Lo-Fi Pixel Art Enhancements ---------- */
 .pixel-cat{position:absolute;width:17%;cursor:pointer;transform-origin:bottom center;
   transition:left .65s cubic-bezier(.25,1,.5,1), bottom .65s cubic-bezier(.25,1,.5,1);
   image-rendering:pixelated;z-index:20}
@@ -51,11 +47,9 @@
 
 @keyframes pixelBreathe{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.025,.975) translateY(1px)}100%{transform:scale(1) translateY(0)}}
 
-/* Window Rain Overlay */
 .window-rain{position:absolute;left:31.5%;top:11%;width:28.5%;height:28.5%;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .5s;z-index:5;border-radius:2px}
 .scene.rainy .window-rain{opacity:1}
 
-/* Interactive Native Hotspots */
 .hotspot{position:absolute;cursor:pointer;border-radius:4px;transition:transform .2s, background .2s;z-index:15}
 .hotspot:hover{outline:2px dashed rgba(255,235,160,.85);background:rgba(255,235,160,.12);transform:scale(1.05)}
 .hotspot-badge{position:absolute;top:-8px;right:-8px;font-size:15px;animation:floatBadge 2s ease-in-out infinite alternate;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
@@ -67,16 +61,14 @@
 .steam-p:nth-child(3){left:8px;animation-delay:1.5s;animation-duration:2.1s}
 @keyframes steamRise{0%{opacity:0;transform:translate(0,0) scale(1)}30%{opacity:.85}100%{opacity:0;transform:translate(-3px,-22px) scale(2.6)}}
 
-/* Tool & Radio Cards */
 .tool-card{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--soft);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:inherit;transition:transform .2s,border-color .2s}
 .tool-card:hover{transform:translateY(-2px);border-color:var(--accent)}
 
-/* Layout: a window into the room on the left, a quiet control panel on the right; stacks on phones. */
 :root{
   --bg:#ece3d4; --fg:#372c25; --muted:#857566; --panel:#f6f0e6; --line:#d8c9b4;
   --accent:#4f6d52; --accent-fg:#fbf8f2; --soft:#e4dccd; --danger:#a65b3b;
   --body:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
-  --hand:"Gaegu","Gowun Dodum",cursive;
+  --hand:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
@@ -118,7 +110,6 @@ select{font:inherit;font-size:13px;color:var(--fg);background:var(--panel);borde
 main{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:720px){main{grid-template-columns:1fr}}
 
-/* ---------- The room ---------- */
 .scene{position:relative;aspect-ratio:16/10;max-width:100%;overflow:hidden;border-radius:18px;container-type:inline-size;
   background:#1a1520 no-repeat center center / cover;
   transition:background-image .4s ease;
@@ -189,7 +180,6 @@ main{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px;
 @keyframes drop{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:1;transform:translateY(790%) rotate(50deg)}}
 .shade-ov{inset:0;background:var(--shade);pointer-events:none;transition:background 1s}
 
-/* ---------- cat ---------- */
 .cat{width:17%;left:13%;bottom:35%;cursor:default;--cat:#e39a4c;--cat2:#c6782c;--ear:#f2b2a0;--eye:#2e2a24}
 .cat.petable{cursor:pointer}
 .cat .wrap{transition:transform .15s}
@@ -271,7 +261,6 @@ main{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px;
 .bubble::after{content:"";position:absolute;left:28%;bottom:-.9cqw;width:1.6cqw;height:1.6cqw;background:#fff;transform:rotate(45deg)}
 .scene .caption{left:0;right:0;bottom:0;padding:.8cqw 1.6cqw;font:2.3cqw/1.3 var(--hand);font-size:max(2.3cqw,11px);color:#fff;text-shadow:0 .1cqw .5cqw rgba(0,0,0,.5);background:linear-gradient(transparent,rgba(0,0,0,.28));pointer-events:none}
 
-/* ---------- Panel ---------- */
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
 .panel h2{margin:0;font-size:17px;font-weight:400}
 .panel p{margin:0;color:var(--muted);font-size:14px}
@@ -307,7 +296,6 @@ footer .empty{color:var(--muted);font-size:13.5px}
 .card-wrap{display:flex;justify-content:center}
 .card-wrap canvas{width:auto;height:min(56vh,520px);max-width:100%;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 
-/* Intimacy & Motion Unlocks */
 .intimacy-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;border:1.5px solid #f8c9b8;background:#fff6f2;color:#b84224;font-size:12.5px;font-weight:700;cursor:pointer;transition:transform .2s,box-shadow .2s;white-space:nowrap}
 .intimacy-badge:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(184,66,36,.18)}
 .xp-float{position:absolute;color:#e84128;font-weight:800;font-size:16px;pointer-events:none;z-index:99;animation:floatXp 1.4s ease-out forwards;text-shadow:0 1px 3px rgba(255,255,255,.9)}

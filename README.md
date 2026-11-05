@@ -64,3 +64,21 @@ python3 -m http.server 8000
 ```
 
 브라우저에서 `http://localhost:8000` 접속.
+
+---
+
+## 🔧 카카오톡 공유 켜기 (선택)
+
+공유 시트의 카카오톡 버튼은 기본으로 휴대폰 공유창이나 "복사 후 붙여넣기"로 동작합니다. 카카오 공유 API로 바로 보내려면:
+
+1. https://developers.kakao.com 에서 앱을 만들고 **플랫폼 → Web** 에 `https://anbucare.github.io` 를 등록합니다.
+2. 앱 키 중 **JavaScript 키**를 복사해 `app.js` 의 `const KAKAO_JS_KEY=''` 안에 넣습니다.
+3. 배포하면 카카오톡 버튼이 카카오 공유창(미리보기 그림 + "나도 해 보기" 버튼)을 엽니다.
+
+## 🌐 도메인 연결 (선택)
+
+도메인을 사면 저장소 **Settings → Pages → Custom domain** 에 입력하고, DNS에 `CNAME anbucare.github.io` 를 추가합니다. 이후 `index.html` 의 canonical·og:url·sitemap.xml 주소를 새 도메인으로 바꾸면 됩니다. GitHub Pages는 예전 `github.io` 주소를 새 도메인으로 자동 301 이동시킵니다.
+
+## 🗺️ robots.txt 참고
+
+프로젝트 사이트라 `robots.txt` 는 `/Kongi-room/robots.txt` 에 있고, 검색엔진이 보는 도메인 루트(`anbucare.github.io/robots.txt`)에는 올라가지 않습니다. 루트에 두려면 `anbucare.github.io` 이름의 저장소를 만들어 그 안에 robots.txt 를 두고 `Sitemap: https://anbucare.github.io/Kongi-room/sitemap.xml` 줄을 적으면 됩니다. 페이지 `<head>` 에는 `<link rel="sitemap">` 으로 사이트맵 위치를 적어 두었습니다.
