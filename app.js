@@ -659,8 +659,8 @@ function executeCatAction(spot, pose) {
 /* ---------- cat movement ---------- */
 const FLOOR=6;
 const SPOTS={
-  sofa:{x:24.5,y:23},
-  win:{x:34,y:45},
+  sofa:{x:17.5,y:26.5},
+  win:{x:24,y:47},
   rug:{x:44,y:7.5},
   mid:{x:42,y:7.5},
   bowl:{x:31,y:7.5},
@@ -669,6 +669,10 @@ const SPOTS={
   desk:{x:76,y:37},
   belly:{x:44,y:7.5}
 };
+/* On the sofa the sprite size differs by pose, so each pose gets its own seat position
+   (x = left edge %, y = bottom edge %, measured against the seat cushions in the room art). */
+const SOFA_POSE={sleep:{x:17.5,y:26.5},lie:{x:17.5,y:26.5},stretch:{x:16.5,y:26.5},back:{x:14.5,y:27},sit:{x:19,y:27},wait:{x:19,y:27}};
+function spotFor(spot,pose){const t=SPOTS[spot]||SPOTS.rug;return (spot==='sofa'&&SOFA_POSE[pose])?Object.assign({},t,SOFA_POSE[pose]):t}
 const SPRITES={
   sleep:'assets/cat_sleep.png',
   lie:'assets/cat_sleep.png',
@@ -709,7 +713,7 @@ function setXY(x,y,tr){catEl.style.transition=tr||'none';catEl.style.left=x+'%';
 async function moveCat(spot, pose, face, opts){
   opts = opts || {};
   const id = ++moveId;
-  const target = SPOTS[spot] || SPOTS.rug;
+  const target = spotFor(spot, pose);
   catEl.dataset.spot = spot;
 
   if (opts.instant || reduced()) {
