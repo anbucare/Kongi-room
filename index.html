@@ -44,35 +44,41 @@ img{max-width:100%}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gaegu:wght@700&display=swap">
 <link rel="stylesheet" href="app.css">
+<script src="i18n.js"></script>
 </head>
 <body>
 
 <div class="app">
   <header>
     <h1 class="brand">
-      <input id="petName" aria-label="고양이 이름" maxlength="6" value="콩이">
-      <span class="suffix">네 방</span>
-      <span class="sr-only">· 고양이와 함께하는 집중 타이머</span>
+      <input id="petName" aria-label="고양이 이름" data-i18n-aria="hdr.nameAria" maxlength="6" value="콩이">
+      <span class="suffix" data-i18n="hdr.suffix">네 방</span>
+      <span class="sr-only" data-i18n="hdr.tagline">· 고양이와 함께하는 집중 타이머</span>
     </h1>
     <div class="hdr-right">
       <span class="today" id="todaySum"></span>
-      <button class="intimacy-badge" id="intimacyBtn" type="button" title="콩이와의 친밀도 및 해금된 행동 보기">🌱 Lv.1 낯가리는 사이</button>
-      <select id="todSel" aria-label="방 시간대">
-        <option value="auto">시간대: 자동</option>
-        <option value="morning">아침</option>
-        <option value="day">낮</option>
-        <option value="sunset">노을</option>
-        <option value="night">밤</option>
+      <button class="intimacy-badge" id="intimacyBtn" type="button" title="콩이와의 친밀도 및 해금된 행동 보기" data-i18n-title="hdr.intimacyTitle">🌱 Lv.1 낯가리는 사이</button>
+      <select id="todSel" aria-label="방 시간대" data-i18n-aria="tod.aria">
+        <option value="auto" data-i18n="tod.auto">시간대: 자동</option>
+        <option value="morning" data-i18n="tod.morning">아침</option>
+        <option value="day" data-i18n="tod.day">낮</option>
+        <option value="sunset" data-i18n="tod.sunset">노을</option>
+        <option value="night" data-i18n="tod.night">밤</option>
       </select>
-      <button class="btn secondary" id="rainBtn" type="button" aria-pressed="false" title="빗소리와 창문 비 효과">🌧️ 빗소리</button>
-      <button class="btn secondary" id="albumBtn" type="button">📸 집중 앨범</button>
-      <button class="btn secondary" id="shareBtn" type="button">오늘의 방 카드</button>
-      <button class="btn" id="openShareBtn" type="button">📣 공유하기</button>
+      <select id="langSel" aria-label="언어" data-i18n-aria="lang.aria">
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+      </select>
+      <button class="btn secondary" id="rainBtn" type="button" aria-pressed="false" title="빗소리와 창문 비 효과" data-i18n-title="rain.title">🌧️ 빗소리</button>
+      <button class="btn secondary" id="albumBtn" type="button" data-i18n="album.btn">📸 집중 앨범</button>
+      <button class="btn secondary" id="shareBtn" type="button" data-i18n="share.cardBtn">오늘의 방 카드</button>
+      <button class="btn" id="openShareBtn" type="button" data-i18n="share.open">📣 공유하기</button>
     </div>
   </header>
 
   <main>
-    <section class="scene t-day" id="scene" aria-label="고양이가 있는 방">
+    <section class="scene t-day" id="scene" aria-label="고양이가 있는 방" data-i18n-aria="scene.aria">
       <div class="window-rain" id="windowRain">
         <div class="rain" id="rain"></div>
       </div>
@@ -80,30 +86,30 @@ img{max-width:100%}
       <div class="steam-box">
         <div class="steam-p"></div><div class="steam-p"></div><div class="steam-p"></div>
       </div>
-      <div class="hotspot" id="hotspotCoffee" style="left:42.5%;top:48%;width:4.5%;height:6%" title="☕ 김이 모락모락 나는 따뜻한 머그잔 (클릭)"></div>
+      <div class="hotspot" id="hotspotCoffee" style="left:42.5%;top:48%;width:4.5%;height:6%" title="☕ 김이 모락모락 나는 따뜻한 머그잔 (클릭)" data-i18n-title="hs.coffee"></div>
 
-      <div class="hotspot" id="shelf" style="left:76%;top:28%;width:18%;height:7%" title="🌿 콩이의 보물 선반 (클릭해서 보기)">
+      <div class="hotspot" id="shelf" style="left:76%;top:28%;width:18%;height:7%" title="🌿 콩이의 보물 선반 (클릭해서 보기)" data-i18n-title="hs.shelf">
         <div class="shelf-items" id="shelfItems" style="position:absolute;left:0;right:0;bottom:10%;display:flex;justify-content:center;gap:3px;font-size:13px"></div>
       </div>
 
-      <div class="hotspot" id="hotspotPlant" style="left:53%;top:46%;width:11%;height:14%" title="🪴 싱그러운 초록 화분 (클릭)"></div>
+      <div class="hotspot" id="hotspotPlant" style="left:53%;top:46%;width:11%;height:14%" title="🪴 싱그러운 초록 화분 (클릭)" data-i18n-title="hs.plant"></div>
 
-      <div class="hotspot" id="hotspotBook" style="left:78%;top:56%;width:7.5%;height:6%" title="📖 콩이의 추천 집중 도구 (클릭)">
+      <div class="hotspot" id="hotspotBook" style="left:78%;top:56%;width:7.5%;height:6%" title="📖 콩이의 추천 집중 도구 (클릭)" data-i18n-title="hs.book">
         <span class="hotspot-badge">📖</span>
       </div>
 
-      <div class="hotspot" id="hotspotRadio" style="left:90%;top:22%;width:7%;height:7.5%" title="📻 콩이의 Lo-Fi 라디오 (클릭)">
+      <div class="hotspot" id="hotspotRadio" style="left:90%;top:22%;width:7%;height:7.5%" title="📻 콩이의 Lo-Fi 라디오 (클릭)" data-i18n-title="hs.radio">
         <span class="hotspot-badge">🎵</span>
       </div>
 
       <div class="pixel-cat" id="cat" data-pose="sleep" data-spot="sofa" style="left:21%;bottom:25%">
         <div class="bubble" id="bubble" hidden>…</div>
-        <img id="catImg" src="assets/cat_sleep.png" alt="콩이">
+        <img id="catImg" src="assets/cat_sleep.png" alt="콩이" data-i18n-alt="cat.alt">
         <div class="zzz"><span>z</span><span>z</span><span>z</span></div>
       </div>
 
-      <div id="bowl" title="콩이의 밥그릇">
-        <img src="assets/pixel_bowl.png" alt="밥그릇">
+      <div id="bowl" title="콩이의 밥그릇" data-i18n-title="bowl.title">
+        <img src="assets/pixel_bowl.png" alt="밥그릇" data-i18n-alt="bowl.alt">
       </div>
 
       <div class="caption" id="caption">콩이는 소파에서 자고 있어요</div>
@@ -112,17 +118,17 @@ img{max-width:100%}
     <section class="panel" id="panel">
       <div id="ui-setup">
         <div style="display:flex;flex-direction:column;gap:14px">
-          <h2>오늘은 몇 분 집중할까요?</h2>
-          <div class="presets" role="group" aria-label="집중 시간">
+          <h2 data-i18n="setup.title">오늘은 몇 분 집중할까요?</h2>
+          <div class="presets" role="group" aria-label="집중 시간" data-i18n-aria="presets.aria">
             <button class="chip" type="button" data-min="25" aria-pressed="true">25분</button>
             <button class="chip" type="button" data-min="50">50분</button>
             <button class="chip" type="button" data-min="90">90분</button>
           </div>
-          <label class="custom">직접 입력 <input id="customMin" type="number" min="5" max="180" step="5" value="25" inputmode="numeric"> 분 <span class="hint">(최소 5분)</span></label>
-          <p id="setupMsg">타이머가 도는 동안 고양이는 방에서 자기 시간을 보내요. 끝나면 간식을 줄 수 있어요.</p>
+          <label class="custom"><span data-i18n="setup.custom">직접 입력</span> <input id="customMin" type="number" min="5" max="180" step="5" value="25" inputmode="numeric"> <span data-i18n="setup.minUnit">분</span> <span class="hint" data-i18n="setup.minHint">(최소 5분)</span></label>
+          <p id="setupMsg" data-i18n="setup.msg">타이머가 도는 동안 고양이는 방에서 자기 시간을 보내요. 끝나면 간식을 줄 수 있어요.</p>
           <div class="btn-row">
-            <button class="btn" id="startBtn" type="button">시작하기</button>
-            <button class="btn quiet" id="demoBtn" type="button">30초로 체험해 보기</button>
+            <button class="btn" id="startBtn" type="button" data-i18n="start">시작하기</button>
+            <button class="btn quiet" id="demoBtn" type="button" data-i18n="demo">30초로 체험해 보기</button>
           </div>
         </div>
       </div>
@@ -133,41 +139,41 @@ img{max-width:100%}
           <div class="bar"><i id="barFill"></i></div>
           <div class="status" id="focusStatus"></div>
           <div class="btn-row">
-            <button class="btn quiet" id="stopBtn" type="button">멈추기</button>
+            <button class="btn quiet" id="stopBtn" type="button" data-i18n="stop">멈추기</button>
           </div>
         </div>
       </div>
 
       <div id="ui-done" hidden>
         <div style="display:flex;flex-direction:column;gap:14px">
-          <h2 id="doneTitle">끝났어요</h2>
+          <h2 id="doneTitle" data-i18n="done.title">끝났어요</h2>
           <p id="doneMsg"></p>
-          <div class="btn-row"><button class="btn big" id="treatBtn" type="button">간식 주기</button></div>
+          <div class="btn-row"><button class="btn big" id="treatBtn" type="button" data-i18n="treat">간식 주기</button></div>
         </div>
       </div>
 
       <div id="ui-after" hidden>
         <div style="display:flex;flex-direction:column;gap:14px">
-          <h2>냠냠.</h2>
+          <h2 data-i18n="after.title">냠냠.</h2>
           <p id="afterMsg"></p>
           <div class="btn-row">
             <button class="btn secondary" type="button" data-break="5">5분 쉬기</button>
             <button class="btn secondary" type="button" data-break="10">10분 쉬기</button>
-            <button class="btn" id="nextBtn" type="button">바로 다음 세션</button>
+            <button class="btn" id="nextBtn" type="button" data-i18n="next">바로 다음 세션</button>
           </div>
           <div>
-            <button class="btn" id="afterShareBtn" type="button" style="width:100%">📣 오늘 기록 친구에게 보내기</button>
-          <button class="btn secondary" id="afterPolaroidBtn" type="button" style="width:100%;font-size:13.5px;padding:10px;border:1.5px solid #e0c8b8;background:#fff8f4;color:#b84224;font-weight:700">📸 이번 세션 감성 폴라로이드 일기 남기기</button>
+            <button class="btn" id="afterShareBtn" type="button" style="width:100%" data-i18n="after.share">📣 오늘 기록 친구에게 보내기</button>
+          <button class="btn secondary" id="afterPolaroidBtn" type="button" style="width:100%;font-size:13.5px;padding:10px;border:1.5px solid #e0c8b8;background:#fff8f4;color:#b84224;font-weight:700" data-i18n="after.polaroid">📸 이번 세션 감성 폴라로이드 일기 남기기</button>
           </div>
         </div>
       </div>
 
       <div id="ui-break" hidden>
         <div style="display:flex;flex-direction:column;gap:14px">
-          <h2>쉬는 시간</h2>
+          <h2 data-i18n="break.title">쉬는 시간</h2>
           <div class="clock" id="breakClock">05:00</div>
           <div class="status" id="breakStatus"></div>
-          <div class="btn-row"><button class="btn quiet" id="skipBreak" type="button">쉬는 시간 끝내기</button></div>
+          <div class="btn-row"><button class="btn quiet" id="skipBreak" type="button" data-i18n="break.skip">쉬는 시간 끝내기</button></div>
         </div>
       </div>
     </section>
@@ -176,13 +182,14 @@ img{max-width:100%}
   <footer>
     <span class="sum" id="logSum"></span>
     <div class="items" id="logItems"></div>
-    <span class="empty" id="logEmpty">아직 쌓인 책이 없어요. 한 세션을 마치면 아래 책꽂이에 책이 한 권 꽂혀요.</span>
+    <span class="empty" id="logEmpty" data-i18n="log.empty">아직 쌓인 책이 없어요. 한 세션을 마치면 아래 책꽂이에 책이 한 권 꽂혀요.</span>
     <div class="foot-links">
-      <a href="https://github.com/anbucare/Kongi-room/issues/new?labels=feedback&amp;title=%5B%EC%9D%98%EA%B2%AC%5D%20" target="_blank" rel="noopener">💬 의견 보내기</a>
-      <details><summary>업데이트 소식</summary>
+      <a href="https://github.com/anbucare/Kongi-room/issues/new?labels=feedback&amp;title=%5B%EC%9D%98%EA%B2%AC%5D%20" target="_blank" rel="noopener" data-i18n="foot.feedback">💬 의견 보내기</a>
+      <details><summary data-i18n="foot.updates">업데이트 소식</summary>
         <ul>
-          <li>11.05 반영했어요: 휴대폰 공유창·X·Threads·카카오톡·링크 복사가 있는 공유 시트, 친구에게 보내는 결과 링크</li>
-          <li>11.05 반영했어요: 처음 열 때 받는 용량을 절반 이하로 줄였어요</li>
+          <li data-i18n="foot.u1">11.05 반영했어요: 휴대폰 공유창·X·Threads·카카오톡·링크 복사가 있는 공유 시트, 친구에게 보내는 결과 링크</li>
+          <li data-i18n="foot.u2">11.05 반영했어요: 처음 열 때 받는 용량을 절반 이하로 줄였어요</li>
+          <li data-i18n="foot.u3">11.05 반영했어요: 영어·독일어 선택</li>
         </ul>
       </details>
     </div>
@@ -191,11 +198,11 @@ img{max-width:100%}
 
 <div class="modal" id="stopModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="stopTitle">
-    <h3 id="stopTitle">지금 멈출까요?</h3>
+    <h3 id="stopTitle" data-i18n="stop.title">지금 멈출까요?</h3>
     <p id="stopMsg"></p>
     <div class="btn-row">
-      <button class="btn" id="keepBtn" type="button">계속 집중하기</button>
-      <button class="btn quiet" id="confirmStop" type="button">멈추기</button>
+      <button class="btn" id="keepBtn" type="button" data-i18n="keep">계속 집중하기</button>
+      <button class="btn quiet" id="confirmStop" type="button" data-i18n="stop">멈추기</button>
     </div>
   </div>
 </div>
@@ -203,94 +210,94 @@ img{max-width:100%}
 
 <div class="modal" id="radioModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="radioTitle" style="max-width:540px">
-    <h3 id="radioTitle">📻 콩이의 Lo-Fi 라디오</h3>
-    <p>공부하거나 일할 때 잡생각을 지워주는 편안한 사운드 트랙이에요.</p>
+    <h3 id="radioTitle" data-i18n="radio.title">📻 콩이의 Lo-Fi 라디오</h3>
+    <p data-i18n="radio.sub">공부하거나 일할 때 잡생각을 지워주는 편안한 사운드 트랙이에요.</p>
     <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0">
       <a class="tool-card" href="https://www.youtube.com/watch?v=jfKfPfyJRdk" target="_blank" rel="noopener">
         <div style="font-size:28px">🎧</div>
         <div style="flex:1">
           <div style="font-weight:700">Lofi Girl — beats to relax/study to</div>
-          <div style="font-size:12.5px;color:var(--muted)">전 세계 수험생과 개발자들의 집중 메이트 (YouTube)</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="radio.s1">전 세계 수험생과 개발자들의 집중 메이트 (YouTube)</div>
         </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700">듣기 ↗</div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="radio.listen">듣기 ↗</div>
       </a>
       <a class="tool-card" href="https://www.youtube.com/watch?v=5yx6BWlEVcY" target="_blank" rel="noopener">
         <div style="font-size:28px">☕</div>
         <div style="flex:1">
           <div style="font-weight:700">Chillhop Radio — jazzy & lofi hip hop</div>
-          <div style="font-size:12.5px;color:var(--muted)">따뜻하고 차분한 재즈 힙합 비트 모음</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="radio.s2">따뜻하고 차분한 재즈 힙합 비트 모음</div>
         </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700">듣기 ↗</div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="radio.listen">듣기 ↗</div>
       </a>
       <div class="tool-card" id="radioRainToggle" style="cursor:pointer">
         <div style="font-size:28px">🌧️</div>
         <div style="flex:1">
-          <div style="font-weight:700">창밖 잔잔한 빗소리 ASMR</div>
-          <div style="font-size:12.5px;color:var(--muted)">방 안의 실시간 빗소리 오디오 켜기 / 끄기</div>
+          <div style="font-weight:700" data-i18n="radio.rain">창밖 잔잔한 빗소리 ASMR</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="radio.rainSub">방 안의 실시간 빗소리 오디오 켜기 / 끄기</div>
         </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700" id="radioRainStatus">토글</div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" id="radioRainStatus" data-i18n="radio.toggle">토글</div>
       </div>
     </div>
-    <div class="btn-row"><button class="btn secondary" id="closeRadio" type="button">닫기</button></div>
+    <div class="btn-row"><button class="btn secondary" id="closeRadio" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
 
 <div class="modal" id="toolsModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="toolsTitle" style="max-width:540px">
-    <h3 id="toolsTitle">📖 콩이의 추천 집중 도구</h3>
-    <p>콩이네 방이 개인적으로 즐겨 쓰는 외부 서비스예요. 제휴나 광고가 아니고, 각 이름과 상표는 해당 회사의 것이에요.</p>
+    <h3 id="toolsTitle" data-i18n="tools.title">📖 콩이의 추천 집중 도구</h3>
+    <p data-i18n="tools.sub">콩이네 방이 개인적으로 즐겨 쓰는 외부 서비스예요. 제휴나 광고가 아니고, 각 이름과 상표는 해당 회사의 것이에요.</p>
     <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0">
       <a class="tool-card" href="https://www.notion.so" target="_blank" rel="noopener">
         <div style="font-size:28px">📝</div>
         <div style="flex:1">
-          <div style="font-weight:700">Notion (노션)</div>
-          <div style="font-size:12.5px;color:var(--muted)">공부 계획, 스터디 노트, 일일 루틴을 한눈에 정리하는 올인원 툴</div>
+          <div style="font-weight:700" data-i18n="tools.notion">Notion (노션)</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.notionDesc">공부 계획, 스터디 노트, 일일 루틴을 한눈에 정리하는 올인원 툴</div>
         </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700">알아보기 ↗</div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
       </a>
       <a class="tool-card" href="https://www.yeolpumta.com" target="_blank" rel="noopener">
         <div style="font-size:28px">⏰</div>
         <div style="flex:1">
-          <div style="font-weight:700">열품타 (열정품은타이머)</div>
-          <div style="font-size:12.5px;color:var(--muted)">친구들과 공부 시간을 기록하고 서로 비교하며 자극받는 스터디 타이머</div>
+          <div style="font-weight:700" data-i18n="tools.ypt">열품타 (열정품은타이머)</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.yptDesc">친구들과 공부 시간을 기록하고 서로 비교하며 자극받는 스터디 타이머</div>
         </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700">알아보기 ↗</div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
       </a>
       <a class="tool-card" href="https://www.flexcil.com" target="_blank" rel="noopener">
         <div style="font-size:28px">✍️</div>
         <div style="flex:1">
-          <div style="font-weight:700">Flexcil (플렉슬) / Goodnotes</div>
-          <div style="font-size:12.5px;color:var(--muted)">아이패드·태블릿 수험생 필수 PDF 필기 및 오답노트 도구</div>
+          <div style="font-weight:700" data-i18n="tools.flexcil">Flexcil (플렉슬) / Goodnotes</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.flexcilDesc">아이패드·태블릿 수험생 필수 PDF 필기 및 오답노트 도구</div>
         </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700">알아보기 ↗</div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
       </a>
     </div>
-    <div class="btn-row"><button class="btn secondary" id="closeTools" type="button">닫기</button></div>
+    <div class="btn-row"><button class="btn secondary" id="closeTools" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
 
 <div class="modal" id="shelfModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shelfTitle">
-    <h3 id="shelfTitle">🌿 콩이의 보물 선반</h3>
+    <h3 id="shelfTitle" data-i18n="shelf.title">🌿 콩이의 보물 선반</h3>
     <p id="shelfSubtitle">콩이가 완주 선물로 물어다 둔 소중한 조각들이에요.</p>
     <div id="shelfDetailList" style="display:flex;flex-direction:column;gap:10px;margin:14px 0"></div>
-    <div class="btn-row"><button class="btn secondary" id="closeShelf" type="button">닫기</button></div>
+    <div class="btn-row"><button class="btn secondary" id="closeShelf" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
 
 <div class="modal" id="albumModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="albumTitle" style="max-width:680px">
-    <h3 id="albumTitle">📸 콩이와 함께한 집중 앨범</h3>
-    <p>완주할 때마다 콩이와 보낸 따뜻한 시간들이 사진으로 남습니다.</p>
+    <h3 id="albumTitle" data-i18n="album.title">📸 콩이와 함께한 집중 앨범</h3>
+    <p data-i18n="album.sub">완주할 때마다 콩이와 보낸 따뜻한 시간들이 사진으로 남습니다.</p>
     <div class="polaroid-grid" id="albumGrid"></div>
-    <div class="btn-row" style="margin-top:14px"><button class="btn secondary" id="closeAlbum" type="button">닫기</button></div>
+    <div class="btn-row" style="margin-top:14px"><button class="btn secondary" id="closeAlbum" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
 
 <div class="modal" id="intimacyModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="intimacyTitle" style="max-width:540px">
-    <h3 id="intimacyTitle">📖 콩이와의 애착 수첩</h3>
-    <p>집중을 함께 완주할수록 콩이가 마음을 열고 새로운 행동을 보여줍니다.</p>
+    <h3 id="intimacyTitle" data-i18n="intimacy.title">📖 콩이와의 애착 수첩</h3>
+    <p data-i18n="intimacy.sub">집중을 함께 완주할수록 콩이가 마음을 열고 새로운 행동을 보여줍니다.</p>
 
     <div style="background:linear-gradient(135deg,#fff8f5,#fff1eb);border:1.5px solid #f6cfc2;border-radius:14px;padding:16px;margin:14px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -305,11 +312,11 @@ img{max-width:100%}
       <div style="display:flex;justify-content:flex-end;margin-top:4px;font-size:11.5px;color:var(--muted)" id="intimacyXpText">0 / 30 XP</div>
     </div>
 
-    <div style="font-weight:700;font-size:13.5px;margin-bottom:8px">🐾 행동 해금 도감</div>
+    <div style="font-weight:700;font-size:13.5px;margin-bottom:8px" data-i18n="intimacy.unlockList">🐾 행동 해금 도감</div>
     <div id="intimacyLevelList" style="max-height:360px;overflow-y:auto"></div>
 
     <div class="btn-row" style="margin-top:14px">
-      <button class="btn secondary" id="closeIntimacy" type="button">닫기</button>
+      <button class="btn secondary" id="closeIntimacy" type="button" data-i18n="close">닫기</button>
     </div>
   </div>
 </div>
@@ -321,63 +328,63 @@ img{max-width:100%}
     <p id="lvlSubtitle" style="font-weight:700;font-size:15px;margin:0 0 12px 0">Lv.2 「다정한 룸메이트」 등급이 되었습니다!</p>
     <div style="background:#fff6f2;border:1.5px dashed #f6cfc2;border-radius:12px;padding:12px;margin:12px 0">
       <div id="lvlMotionDesc" style="font-weight:700;color:#b84224;font-size:14px">✨ 새로 해금된 행동: [책상 위 식빵 굽기]</div>
-      <div style="font-size:12.5px;color:var(--muted);margin-top:4px">이제 집중 시간이나 휴식 시간에 콩이가 책상 위로 올라와 곁을 지켜줍니다.</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px" data-i18n="lvl.desc">이제 집중 시간이나 휴식 시간에 콩이가 책상 위로 올라와 곁을 지켜줍니다.</div>
     </div>
     <div class="btn-row" style="justify-content:center;gap:10px;margin-top:16px">
-      <button class="btn" id="lvlActionBtn" type="button" style="background:#c04022">🐾 새로운 행동 보러 가기</button>
-      <button class="btn secondary" id="closeLevelUp" type="button">확인</button>
+      <button class="btn" id="lvlActionBtn" type="button" style="background:#c04022" data-i18n="lvl.go">🐾 새로운 행동 보러 가기</button>
+      <button class="btn secondary" id="closeLevelUp" type="button" data-i18n="ok">확인</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="polaroidDetailModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="polTitle" style="max-width:520px;text-align:center">
-    <h3 id="polTitle" style="margin-bottom:4px">📸 감성 폴라로이드 일기</h3>
-    <p style="font-size:13px;margin-bottom:12px">콩이와 함께한 집중 순간이 담긴 사진이에요. 오늘 한 일을 적고 저장해 보세요.</p>
+    <h3 id="polTitle" style="margin-bottom:4px" data-i18n="pol.title">📸 감성 폴라로이드 일기</h3>
+    <p style="font-size:13px;margin-bottom:12px" data-i18n="pol.sub">콩이와 함께한 집중 순간이 담긴 사진이에요. 오늘 한 일을 적고 저장해 보세요.</p>
 
     <div style="display:flex;justify-content:center;margin:8px 0">
       <canvas id="polaroidCanvas" width="1080" height="1350" style="width:100%;max-width:320px;height:auto;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25)"></canvas>
     </div>
 
     <div style="text-align:left;margin-top:10px">
-      <label for="polMemoInput" style="font-size:12.5px;font-weight:700;color:var(--muted)">✏️ 오늘 집중한 일 한마디 기록 (실시간 반영)</label>
-      <input type="text" id="polMemoInput" maxlength="32" placeholder="예: 코딩 완주, 기획서 작성, 영단어 50개" style="width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid #e0d2c6;background:var(--bg);color:var(--fg);font-family:inherit;font-size:14px;margin-top:4px;box-sizing:border-box">
+      <label for="polMemoInput" style="font-size:12.5px;font-weight:700;color:var(--muted)" data-i18n="pol.memoLabel">✏️ 오늘 집중한 일 한마디 기록 (실시간 반영)</label>
+      <input type="text" id="polMemoInput" maxlength="32" placeholder="예: 코딩 완주, 기획서 작성, 영단어 50개" data-i18n-ph="pol.memoPh" style="width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid #e0d2c6;background:var(--bg);color:var(--fg);font-family:inherit;font-size:14px;margin-top:4px;box-sizing:border-box">
     </div>
 
     <div class="btn-row" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn" id="sharePolaroidBtn" type="button" style="flex:1">📣 공유하기</button>
-      <button class="btn secondary" id="downloadPolaroidBtn" type="button">📥 인스타·스레드용 저장</button>
-      <button class="btn secondary" id="copyPolaroidTextBtn" type="button">📋 공유 텍스트 복사</button>
-      <button class="btn secondary" id="closePolaroid" type="button">닫기</button>
+      <button class="btn" id="sharePolaroidBtn" type="button" style="flex:1" data-i18n="pol.share">📣 공유하기</button>
+      <button class="btn secondary" id="downloadPolaroidBtn" type="button" data-i18n="pol.save">📥 인스타·스레드용 저장</button>
+      <button class="btn secondary" id="copyPolaroidTextBtn" type="button" data-i18n="pol.copy">📋 공유 텍스트 복사</button>
+      <button class="btn secondary" id="closePolaroid" type="button" data-i18n="close">닫기</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="shareModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
-    <h3 id="shareTitle">오늘의 방</h3>
-    <p>인스타 스토리 비율(9:16)로 만든 카드예요. 아래 공유 버튼으로 그림과 링크를 함께 보낼 수 있어요.</p>
+    <h3 id="shareTitle" data-i18n="shareM.title">오늘의 방</h3>
+    <p data-i18n="shareM.sub">인스타 스토리 비율(9:16)로 만든 카드예요. 아래 공유 버튼으로 그림과 링크를 함께 보낼 수 있어요.</p>
     <div class="card-wrap"><canvas id="card" width="1080" height="1920"></canvas></div>
-    <div class="btn-row"><button class="btn" id="shareCardBtn" type="button">📣 이 카드 공유하기</button><button class="btn secondary" id="closeShare" type="button">닫기</button></div>
+    <div class="btn-row"><button class="btn" id="shareCardBtn" type="button" data-i18n="shareM.btn">📣 이 카드 공유하기</button><button class="btn secondary" id="closeShare" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
 
 <div class="modal" id="shareSheet" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-    <h3 id="sheetTitle">친구에게 보내기</h3>
+    <h3 id="sheetTitle" data-i18n="sheet.title">친구에게 보내기</h3>
     <p id="sheetLine" class="result-stat"></p>
-    <div class="share-preview"><img id="sheetPreview" alt="공유할 그림 미리보기"></div>
+    <div class="share-preview"><img id="sheetPreview" alt="공유할 그림 미리보기" data-i18n-alt="sheet.previewAlt"></div>
     <div class="share-grid" id="shareGrid">
-      <button class="btn primary" id="shNative" type="button">📱 휴대폰 공유창으로 보내기</button>
-      <button class="btn secondary" id="shCopy" type="button">🔗 링크 복사</button>
-      <button class="btn secondary" id="shCopyText" type="button">📋 글과 링크 복사</button>
-      <button class="btn secondary" id="shKakao" type="button">💬 카카오톡</button>
-      <button class="btn secondary" id="shX" type="button">𝕏 X에 올리기</button>
-      <button class="btn secondary" id="shThreads" type="button">@ Threads에 올리기</button>
-      <button class="btn secondary" id="shSave" type="button">🖼 그림 저장</button>
+      <button class="btn primary" id="shNative" type="button" data-i18n="sh.native">📱 휴대폰 공유창으로 보내기</button>
+      <button class="btn secondary" id="shCopy" type="button" data-i18n="sh.copy">🔗 링크 복사</button>
+      <button class="btn secondary" id="shCopyText" type="button" data-i18n="sh.copyText">📋 글과 링크 복사</button>
+      <button class="btn secondary" id="shKakao" type="button" data-i18n="sh.kakao">💬 카카오톡</button>
+      <button class="btn secondary" id="shX" type="button" data-i18n="sh.x">𝕏 X에 올리기</button>
+      <button class="btn secondary" id="shThreads" type="button" data-i18n="sh.threads">@ Threads에 올리기</button>
+      <button class="btn secondary" id="shSave" type="button" data-i18n="sh.save">🖼 그림 저장</button>
     </div>
     <p class="share-hint" id="sheetHint"></p>
-    <div class="btn-row"><button class="btn secondary" id="closeSheet" type="button">닫기</button></div>
+    <div class="btn-row"><button class="btn secondary" id="closeSheet" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
 
@@ -386,8 +393,8 @@ img{max-width:100%}
     <h3 id="resultTitle">친구의 오늘의 방</h3>
     <p id="resultLine" class="result-stat"></p>
     <div class="share-preview"><canvas id="resultCard" width="1080" height="1920"></canvas></div>
-    <p class="share-hint">콩이는 타이머가 끝나기 2분 전부터 밥그릇 앞에서 기다려요. 끝까지 집중하면 간식을 줄 수 있고, 가입은 없어요.</p>
-    <div class="btn-row"><button class="btn" id="resultTry" type="button">🐾 나도 콩이 데려오기 (30초 체험)</button><button class="btn secondary" id="resultClose" type="button">그냥 둘러보기</button></div>
+    <p class="share-hint" data-i18n="result.hint">콩이는 타이머가 끝나기 2분 전부터 밥그릇 앞에서 기다려요. 끝까지 집중하면 간식을 줄 수 있고, 가입은 없어요.</p>
+    <div class="btn-row"><button class="btn" id="resultTry" type="button" data-i18n="result.try">🐾 나도 콩이 데려오기 (30초 체험)</button><button class="btn secondary" id="resultClose" type="button" data-i18n="result.browse">그냥 둘러보기</button></div>
   </div>
 </div>
 
