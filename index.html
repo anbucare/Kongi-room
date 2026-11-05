@@ -73,7 +73,7 @@ img{max-width:100%}
 
 .pixel-cat .bubble{position:absolute;bottom:102%;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:30}
 
-#bowl{position:absolute;left:45.5%;bottom:6.5%;width:7%;cursor:pointer;transition:opacity .2s;z-index:12}
+#bowl{position:absolute;left:47.5%;bottom:6.5%;width:7%;cursor:pointer;transition:opacity .2s;z-index:12}
 #bowl img{width:100%;height:auto;display:block;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
 
 @keyframes pixelBreathe{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.025,.975) translateY(1px)}100%{transform:scale(1) translateY(0)}}
@@ -378,10 +378,13 @@ footer .empty{color:var(--muted);font-size:13.5px}
       </div>
       <div class="hotspot" id="hotspotCoffee" style="left:42.5%;top:48%;width:4.5%;height:6%" title="☕ 김이 모락모락 나는 따뜻한 머그잔 (클릭)"></div>
 
-      <!-- Wall Shelf for Treasures -->
-      <div class="hotspot" id="shelf" style="left:51%;top:57%;width:16%;height:9%" title="🌿 콩이의 보물 선반 (클릭해서 보기)">
-        <div class="shelf-items" id="shelfItems" style="position:absolute;left:0;right:0;bottom:10%;display:flex;justify-content:center;gap:4px;font-size:20px"></div>
+      <!-- Wall Shelf for Treasures (우측 벽면 원목 선반 위) -->
+      <div class="hotspot" id="shelf" style="left:76%;top:28%;width:18%;height:7%" title="🌿 콩이의 보물 선반 (클릭해서 보기)">
+        <div class="shelf-items" id="shelfItems" style="position:absolute;left:0;right:0;bottom:10%;display:flex;justify-content:center;gap:3px;font-size:13px"></div>
       </div>
+
+      <!-- Window Bench Potted Plant Hotspot (창가 낮은 서랍장 위 화분) -->
+      <div class="hotspot" id="hotspotPlant" style="left:53%;top:46%;width:11%;height:14%" title="🪴 싱그러운 초록 화분 (클릭)"></div>
 
       <!-- Desk Notebook Hotspot (Productivity Tools) -->
       <div class="hotspot" id="hotspotBook" style="left:78%;top:56%;width:7.5%;height:6%" title="📖 콩이의 추천 집중 도구 (클릭)">
@@ -453,6 +456,9 @@ footer .empty{color:var(--muted);font-size:13.5px}
             <button class="btn secondary" type="button" data-break="5">5분 쉬기</button>
             <button class="btn secondary" type="button" data-break="10">10분 쉬기</button>
             <button class="btn" id="nextBtn" type="button">바로 다음 세션</button>
+          </div>
+          <div>
+            <button class="btn secondary" id="afterPolaroidBtn" type="button" style="width:100%;font-size:13.5px;padding:10px;border:1.5px solid #e0c8b8;background:#fff8f4;color:#b84224;font-weight:700">📸 이번 세션 감성 폴라로이드 일기 남기기</button>
           </div>
         </div>
       </div>
@@ -613,6 +619,30 @@ footer .empty{color:var(--muted);font-size:13.5px}
     <div class="btn-row" style="justify-content:center;gap:10px;margin-top:16px">
       <button class="btn" id="lvlActionBtn" type="button" style="background:#c04022">🐾 새로운 행동 보러 가기</button>
       <button class="btn secondary" id="closeLevelUp" type="button">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="polaroidDetailModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="polTitle" style="max-width:520px;text-align:center">
+    <h3 id="polTitle" style="margin-bottom:4px">📸 감성 폴라로이드 일기</h3>
+    <p style="font-size:13px;margin-bottom:12px">콩이와 함께한 집중 순간이 담긴 사진이에요. 오늘 한 일을 적고 저장해 보세요.</p>
+
+    <!-- Polaroid Card Preview Container -->
+    <div style="display:flex;justify-content:center;margin:8px 0">
+      <canvas id="polaroidCanvas" width="1080" height="1350" style="width:100%;max-width:320px;height:auto;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25)"></canvas>
+    </div>
+
+    <!-- User Memo Input -->
+    <div style="text-align:left;margin-top:10px">
+      <label for="polMemoInput" style="font-size:12.5px;font-weight:700;color:var(--muted)">✏️ 오늘 집중한 일 한마디 기록 (실시간 반영)</label>
+      <input type="text" id="polMemoInput" maxlength="32" placeholder="예: 코딩 완주, 기획서 작성, 영단어 50개" style="width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid #e0d2c6;background:var(--bg);color:var(--fg);font-family:inherit;font-size:14px;margin-top:4px;box-sizing:border-box">
+    </div>
+
+    <div class="btn-row" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="downloadPolaroidBtn" type="button" style="flex:1;background:#c04022">📥 인스타·스레드용 저장</button>
+      <button class="btn secondary" id="copyPolaroidTextBtn" type="button">📋 공유 텍스트 복사</button>
+      <button class="btn secondary" id="closePolaroid" type="button">닫기</button>
     </div>
   </div>
 </div>
@@ -917,26 +947,48 @@ async function checkTreasureReward(){
   caption(fill(`{N가} 어디선가 [${picked.icon} ${picked.name}]을(를) 물어와 방 선반에 올려두었어요!`));
 }
 
-/* ---------- Polaroid Album ---------- */
+/* ---------- Polaroid Album (감성 폴라로이드 일기) ---------- */
+function getKongiQuote(mins, tod, rain, demo) {
+  if (demo) return '체험 세션도 정말 대단하다냥! 집중 준비 완료냥 🐾';
+  if (rain) return `창밖 빗소리 들으며 ${mins}분 집중 완료! 마음이 차분해졌다냥 ☕`;
+  if (tod === 'night') return `밤늦게까지 ${mins}분 완주! 오늘 정말 고생 많았다냥, 내가 곁에 있을게 zZ`;
+  if (tod === 'morning') return `아침부터 상쾌하게 ${mins}분 집중! 오늘 하루 출발이 아주 좋다냥 ☀️`;
+  if (tod === 'sunset') return `노을빛 물든 방에서 ${mins}분 완주! 노을보다 더 빛났다냥 🌅`;
+  return `오늘 ${mins}분 동안 정말 멋지게 집중했다냥! 곁에서 지켜봐서 행복하다냥 🐾`;
+}
+
 function recordAlbum(sessionRun){
   if(!sessionRun)return;
   let album = store.get('album', []);
   const mins = sessionRun.demo ? 0 : Math.round(sessionRun.dur/60);
   const now = new Date();
+  const curTod = tod();
+  const isRain = scene.classList.contains('rainy');
+  const pose = catEl.dataset.pose || 'sit';
+  const sprite = SPRITES[pose] || 'assets/cat_sit.png';
+  const kongiMsg = getKongiQuote(mins, curTod, isRain, !!sessionRun.demo);
+
   const item = {
     id: Date.now(),
-    dateStr: `${now.getMonth()+1}월 ${now.getDate()}일`,
+    dateStr: `${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()}`,
     timeStr: `${now.getHours()}:${now.getMinutes()<10?'0':''}${now.getMinutes()}`,
     min: mins,
     demo: !!sessionRun.demo,
-    tod: tod(),
-    rain: scene.classList.contains('rainy'),
-    note: sessionRun.demo ? '30초 체험 세션 완료' : `${mins}분 집중 완주 · ${petName}와 함께한 시간`
+    tod: curTod,
+    rain: isRain,
+    pose: pose,
+    sprite: sprite,
+    kongiMsg: kongiMsg,
+    memo: '',
+    note: sessionRun.demo ? '30초 체험 세션 완주' : `${mins}분 집중 완주 · ${petName}와 함께한 시간`
   };
   album.unshift(item);
   if(album.length > 50) album = album.slice(0, 50);
   store.set('album', album);
 }
+
+let currentPolaroidItem = null;
+let currentPolaroidIndex = 0;
 
 function renderAlbum(){
   const album = store.get('album', []);
@@ -952,21 +1004,156 @@ function renderAlbum(){
     card.className = 'polaroid-card';
     card.style.setProperty('--rot', ((idx % 5) - 2) * 1.8);
     
-    const skyBg = item.rain ? 'linear-gradient(#728394,#9db0bf)' :
-      item.tod === 'night' ? 'linear-gradient(#141a38,#2b365f)' :
-      item.tod === 'sunset' ? 'linear-gradient(#f3a46b,#7d4f7f)' :
-      item.tod === 'morning' ? 'linear-gradient(#bfe0f4,#fbe7c2)' :
-      'linear-gradient(#9fd0ef,#e3f1f8)';
+    const todName = item.rain ? '🌧️ 빗소리' : item.tod==='night' ? '🌙 밤' : item.tod==='sunset' ? '🌅 노을' : item.tod==='morning' ? '☀️ 아침' : '☀️ 낮';
 
     card.innerHTML = `
-      <div class="polaroid-thumb" style="background:${skyBg}">
-        <span style="font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))">${item.rain ? '🌧️ 🐱' : item.tod==='night' ? '🌙 🐾' : item.tod==='sunset' ? '🌅 🐾' : '☀️ 🐾'}</span>
+      <div class="polaroid-thumb" style="background-image:url('assets/room_${item.tod||'day'}.webp');background-size:cover;background-position:center;position:relative">
+        ${item.rain ? '<div style="position:absolute;inset:0;background:rgba(40,60,80,.25)"></div>' : ''}
+        <img src="${item.sprite||'assets/cat_sit.png'}" alt="콩이" style="position:absolute;bottom:6%;left:50%;transform:translateX(-50%);width:42%;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">
+        <span style="position:absolute;top:6px;right:6px;font-size:10px;background:rgba(0,0,0,.6);color:#fff;padding:2px 6px;border-radius:10px;backdrop-filter:blur(2px)">${todName}</span>
       </div>
-      <div class="polaroid-caption">${item.note}</div>
-      <div class="polaroid-date">${item.dateStr} ${item.timeStr}</div>
+      <div class="polaroid-caption">${item.memo || item.note}</div>
+      <div class="polaroid-date">${item.dateStr} ${item.timeStr} · ${item.demo?'체험':item.min+'분'}</div>
     `;
+    card.addEventListener('click', () => {
+      openPolaroidDetail(idx);
+    });
     grid.appendChild(card);
   });
+}
+
+function openPolaroidDetail(idx){
+  const album = store.get('album', []);
+  if(!album.length) return;
+  idx = Math.max(0, Math.min(album.length - 1, idx || 0));
+  currentPolaroidIndex = idx;
+  currentPolaroidItem = album[idx];
+  
+  $('#polMemoInput').value = currentPolaroidItem.memo || '';
+  drawPolaroidCanvas(currentPolaroidItem);
+  $('#polaroidDetailModal').hidden = false;
+}
+
+function drawPolaroidCanvas(item){
+  const c = $('#polaroidCanvas');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = 1080, H = 1350;
+  
+  ctx.fillStyle = '#fdfaf5';
+  ctx.fillRect(0, 0, W, H);
+  
+  ctx.strokeStyle = '#e7ded4';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, W - 6, H - 6);
+  
+  const px = 70, py = 70, pw = 940, ph = 780;
+  ctx.fillStyle = '#2b211a';
+  ctx.fillRect(px, py, pw, ph);
+
+  const roomImg = new Image();
+  roomImg.src = 'assets/room_' + (item.tod || 'day') + '.webp';
+  const catImg = new Image();
+  catImg.src = item.sprite || 'assets/cat_sit.png';
+
+  const renderContents = () => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 8);
+    ctx.clip();
+    
+    if (roomImg.complete && roomImg.naturalWidth) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(roomImg, px, py, pw, ph);
+    } else {
+      ctx.fillStyle = '#3a2e26';
+      ctx.fillRect(px, py, pw, ph);
+    }
+
+    if (item.rain) {
+      ctx.fillStyle = 'rgba(30, 48, 70, 0.28)';
+      ctx.fillRect(px, py, pw, ph);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 28; i++) {
+        const rx = px + ((i * 37) % pw);
+        const ry = py + ((i * 29) % ph);
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx - 6, ry + 22);
+        ctx.stroke();
+      }
+    }
+
+    if (catImg.complete && catImg.naturalWidth) {
+      ctx.imageSmoothingEnabled = false;
+      const cw = pw * 0.28;
+      const ch = cw * (catImg.naturalHeight / catImg.naturalWidth);
+      const cx = px + pw * 0.38;
+      const cy = py + ph - ch - (ph * 0.08);
+      ctx.drawImage(catImg, cx, cy, cw, ch);
+    }
+
+    const tagText = item.rain ? '🌧️ 빗소리와 함께' :
+      item.tod === 'night' ? '🌙 고요한 밤' :
+      item.tod === 'sunset' ? '🌅 따스한 노을' :
+      item.tod === 'morning' ? '☀️ 상쾌한 아침' : '☀️ 포근한 오후';
+    ctx.fillStyle = 'rgba(24, 18, 14, 0.65)';
+    ctx.beginPath();
+    ctx.roundRect(px + pw - 210, py + 22, 190, 44, 22);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(tagText, px + pw - 115, py + 52);
+
+    ctx.restore();
+
+    const ff = '"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
+    
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#8c7b6f';
+    ctx.font = '500 28px ' + ff;
+    ctx.fillText(`📅 ${item.dateStr} ${item.timeStr}`, px + 10, 915);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#b84224';
+    ctx.font = '700 32px ' + ff;
+    ctx.fillText(item.demo ? '체험 세션 완료 🐾' : `${item.min}분 집중 완주 🐾`, px + pw - 10, 915);
+
+    ctx.strokeStyle = '#e4d8cb';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 10, 940);
+    ctx.lineTo(px + pw - 10, 940);
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#3a2c22';
+    ctx.font = '600 34px ' + ff;
+    const quoteText = `"${item.kongiMsg || '오늘도 함께 집중해서 행복했다냥 🐾'}"`;
+    ctx.fillText(quoteText, px + 10, 1005);
+
+    const userMemo = item.memo || '오늘의 집중 기록이 남겨진 소중한 순간';
+    ctx.fillStyle = item.memo ? '#1b4a32' : '#887768';
+    ctx.font = '700 32px ' + ff;
+    ctx.fillText(`✏️ ${userMemo}`, px + 10, 1075);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#a69485';
+    ctx.font = '400 24px ' + ff;
+    ctx.fillText('🐾 콩이네 방 · Lo-Fi 고양이 집중 타이머 (Kongi-room)', W / 2, 1280);
+  };
+
+  let loaded = 0;
+  const check = () => { if (++loaded >= 2) renderContents(); };
+  if (roomImg.complete && catImg.complete) {
+    renderContents();
+  } else {
+    roomImg.onload = check;
+    catImg.onload = check;
+    setTimeout(renderContents, 120);
+  }
 }
 
 /* ---------- Intimacy & Motion Unlocks (친밀도 시스템) ---------- */
@@ -1129,10 +1316,10 @@ const SPOTS={
   win:{x:34,y:45},
   rug:{x:44,y:7.5},
   mid:{x:42,y:7.5},
-  bowl:{x:37.5,y:7.5},
-  eat:{x:42,y:6.5},
+  bowl:{x:31,y:7.5},
+  eat:{x:40.5,y:6.5},
   door:{x:80,y:7.5},
-  desk:{x:76,y:33},
+  desk:{x:76,y:37},
   belly:{x:44,y:7.5}
 };
 const SPRITES={
@@ -1185,50 +1372,62 @@ async function moveCat(spot, pose, face, opts){
     return;
   }
 
-  // 1. Hop down from sofa cushion to floor
-  if (curY > 15 && target.y <= 12) {
-    setFace(1); // face room
-    setPose('stretch');
-    setXY(28, 7.5, 'left 460ms ease-out, bottom 460ms cubic-bezier(.35,0,.7,1)');
-    await sleep(480);
-    if (moveId !== id) return;
-  }
+  const curIsSofa = curY > 15 && curX < 55;
+  const targetIsSofa = target.y > 15 && target.x < 55;
+  const curIsDesk = curY > 15 && curX >= 55;
+  const targetIsDesk = target.y > 15 && target.x >= 55;
 
-  // 2. Climb from floor up to sofa cushion
-  if (curY <= 12 && target.y > 15) {
-    // Walk over to the front of sofa first
-    const dirToSofa = 28 < curX ? -1 : 1;
-    setFace(dirToSofa);
-    setPose('sit');
-    const walkDist = Math.abs(28 - curX);
-    if (walkDist > 1.5) {
-      const dur = Math.max(300, walkDist * 30);
-      setXY(28, 7.5, `left ${dur}ms ease-in-out`);
-      await sleep(dur + 30);
-      if (moveId !== id) return;
-    }
-    // Natural leap up onto sofa cushion
-    setFace(-1);
-    setPose('stretch');
-    setXY(target.x, target.y, 'left 500ms cubic-bezier(.2,.8,.4,1), bottom 500ms cubic-bezier(.2,.8,.4,1)');
-    await sleep(520);
+  // Same elevated surface (e.g. sofa -> sofa or desk -> desk)
+  if ((curIsSofa && targetIsSofa) || (curIsDesk && targetIsDesk)) {
+    setFace(face !== undefined ? face : (targetIsDesk ? -1 : 1));
+    setXY(target.x, target.y, 'left 280ms ease-in-out, bottom 280ms ease-in-out');
+    await sleep(300);
     if (moveId !== id) return;
-    setFace(face !== undefined ? face : 1);
     setPose(pose);
     return;
   }
 
-  // 3. Floor-to-floor horizontal motion (e.g. rug <-> bowl)
-  const dir = target.x < curX ? -1 : 1;
-  setFace(dir);
-  setPose('sit');
-  const dist = Math.abs(target.x - curX);
-  const dur = Math.max(340, dist * 32);
-  setXY(target.x, target.y, `left ${dur}ms ease-in-out, bottom ${dur}ms ease-in-out`);
-  await sleep(dur + 30);
-  if (moveId !== id) return;
+  // 1. If currently elevated (sofa or desk), hop down to floor first
+  if (curY > 15) {
+    const isDesk = curX >= 55;
+    const dropFloorX = isDesk ? 74 : 26;
+    setFace(isDesk ? -1 : 1);
+    setPose('stretch');
+    setXY(dropFloorX, 7.5, 'left 320ms ease-out, bottom 320ms cubic-bezier(.35,0,.7,1)');
+    await sleep(340);
+    if (moveId !== id) return;
+  }
 
-  setFace(face !== undefined ? face : 1);
+  // 2. Now cat is on the floor (curY <= 15).
+  // Determine floor base coordinate for target:
+  const isTargetElevated = target.y > 15;
+  const targetFloorX = isTargetElevated ? (target.x >= 55 ? 74 : 26) : target.x;
+  const targetFloorY = isTargetElevated ? 7.5 : target.y;
+
+  // Walk horizontally on floor if needed
+  const walkDist = Math.abs(targetFloorX - curX);
+  if (walkDist > 1.8) {
+    const walkDir = targetFloorX < curX ? -1 : 1;
+    setFace(walkDir);
+    setPose('sit');
+    const dur = Math.max(260, Math.min(750, walkDist * 22));
+    setXY(targetFloorX, targetFloorY, `left ${dur}ms ease-in-out, bottom ${dur}ms ease-in-out`);
+    await sleep(dur + 20);
+    if (moveId !== id) return;
+  }
+
+  // 3. If target is elevated (sofa or desk), leap up from floor base to target!
+  if (isTargetElevated) {
+    const isTargetDesk = target.x >= 55;
+    setFace(isTargetDesk ? 1 : -1);
+    setPose('stretch');
+    setXY(target.x, target.y, 'left 440ms cubic-bezier(.2,.8,.4,1), bottom 440ms cubic-bezier(.2,.8,.4,1)');
+    await sleep(460);
+    if (moveId !== id) return;
+  }
+
+  // Final pose and orientation
+  setFace(face !== undefined ? face : (target.x >= 55 ? -1 : 1));
   setPose(pose);
 }
 function say(t,ms){bubble.textContent=t;bubble.hidden=false;clearTimeout(say.t);if(ms)say.t=setTimeout(()=>{bubble.hidden=true},ms)}
@@ -1602,10 +1801,67 @@ $('#hotspotCoffee').addEventListener('click',()=>{
   hearts(2);
   caption(fill('{N가} 커피 향을 맡으며 킁킁거려요. 잠시 따뜻한 차 한 잔 마시며 쉬어가세요.'));
 });
+const plantEl=$('#hotspotPlant');
+if(plantEl){
+  plantEl.addEventListener('click',()=>{
+    say('파릇파릇 🌱', 2200);
+    hearts(2);
+    caption(fill('창가 서랍장에서 햇살을 받으며 자라는 싱그러운 화분이에요.'));
+  });
+}
 $('#shelf').addEventListener('click',showShelfModal);
 $('#closeShelf').addEventListener('click',()=>{$('#shelfModal').hidden=true});
 $('#albumBtn').addEventListener('click',()=>{renderAlbum();$('#albumModal').hidden=false;});
 $('#closeAlbum').addEventListener('click',()=>{$('#albumModal').hidden=true});
+
+const afterPolBtn = $('#afterPolaroidBtn');
+if (afterPolBtn) {
+  afterPolBtn.addEventListener('click', () => {
+    openPolaroidDetail(0);
+  });
+}
+
+$('#closePolaroid').addEventListener('click', () => {
+  $('#polaroidDetailModal').hidden = true;
+  renderAlbum();
+});
+
+$('#polMemoInput').addEventListener('input', (e) => {
+  if (currentPolaroidItem) {
+    currentPolaroidItem.memo = e.target.value.trim();
+    const album = store.get('album', []);
+    if (album[currentPolaroidIndex]) {
+      album[currentPolaroidIndex].memo = currentPolaroidItem.memo;
+      store.set('album', album);
+    }
+    drawPolaroidCanvas(currentPolaroidItem);
+  }
+});
+
+$('#downloadPolaroidBtn').addEventListener('click', () => {
+  const c = $('#polaroidCanvas');
+  if (!c) return;
+  try {
+    const link = document.createElement('a');
+    link.download = `kongi-room-polaroid-${Date.now()}.png`;
+    link.href = c.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('이미지를 길게 누르거나 우클릭하여 저장해 주세요.');
+  }
+});
+
+$('#copyPolaroidTextBtn').addEventListener('click', () => {
+  if (!currentPolaroidItem) return;
+  const it = currentPolaroidItem;
+  const memoLine = it.memo ? `\n✏️ 오늘의 한마디: "${it.memo}"` : '';
+  const text = `콩이와 함께 ${it.demo ? '체험' : it.min + '분'} 집중 완주 완료! 🐱🐾\n"${it.kongiMsg || ''}"${memoLine}\n\n#콩이네방 #집중타이머 #인디메이커 https://anbucare.github.io/Kongi-room/`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('스레드·X 공유용 문구가 복사되었습니다!');
+    }).catch(() => {});
+  }
+});
 
 $('#intimacyBtn').addEventListener('click',()=>{renderIntimacyModal();$('#intimacyModal').hidden=false;});
 $('#closeIntimacy').addEventListener('click',()=>{$('#intimacyModal').hidden=true;});
@@ -1617,7 +1873,7 @@ $('#lvlActionBtn').addEventListener('click',()=>{
   else if(curLv === 3) executeCatAction('rug','belly');
 });
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#shareModal').hidden=true;$('#stopModal').hidden=true;$('#shelfModal').hidden=true;$('#albumModal').hidden=true;$('#intimacyModal').hidden=true;$('#levelUpModal').hidden=true;}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#shareModal').hidden=true;$('#stopModal').hidden=true;$('#shelfModal').hidden=true;$('#albumModal').hidden=true;$('#polaroidDetailModal').hidden=true;$('#intimacyModal').hidden=true;$('#levelUpModal').hidden=true;}});
 
 /* ---------- boot ---------- */
 applyTod();renderLog();renderShelf();updateIntimacyBadge();
