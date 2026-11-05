@@ -39,7 +39,10 @@
 ## 📂 저장소 구조
 
 ```text
-├── index.html              # 타이머 앱 본체 (HTML/CSS/JS 단일 번들)
+├── index.html              # 타이머 앱 본체 (마크업)
+├── app.css / app.js        # 스타일과 앱 스크립트
+├── robots.txt / sitemap.xml # 검색엔진 안내
+├── assets/                 # 방 일러스트(webp), 콩이 스프라이트, 미리보기 그림(og.jpg)
 ├── manifest.webmanifest    # PWA 매니페스트 (홈 화면 추가, 스탠드얼론 설정)
 ├── sw.js                   # 오프라인 캐싱 서비스 워커
 ├── render-icons.js         # 앱 아이콘 렌더링 스크립트
