@@ -32,6 +32,15 @@ npx wrangler deploy
 3. 사이트 쪽 `app.js` 에서 `const RESULT_BASE=''` 를 `const RESULT_BASE='https://kongi-room-share.hana.workers.dev/r'` 로 바꾸고 배포합니다. 그때부터 공유 시트가 만드는 링크가 Worker 주소로 바뀝니다.
 4. 확인: `https://kongi-room-share.hana.workers.dev/r?s=1&l=50&m=50&preview=1` 을 브라우저에서 열면 봇이 보는 미리보기 페이지가 그대로 보입니다. 카카오톡 대화창에 링크를 보내 미리보기가 바뀌는지도 확인해 보세요.
 
+## 배포 (GitHub Actions로 자동, 권장)
+
+저장소에 `.github/workflows/deploy-worker.yml` 이 있어서 `worker/` 가 바뀔 때마다 자동으로 배포됩니다. 한 번만 비밀값 두 개를 넣으면 됩니다.
+
+1. Cloudflare 대시보드 → 오른쪽 위 프로필 → **API Tokens** → *Create Token* → 템플릿 **Edit Cloudflare Workers** 로 토큰을 만듭니다.
+2. Cloudflare 대시보드 → **Workers & Pages** 첫 화면 오른쪽의 **Account ID** 를 복사합니다.
+3. GitHub 저장소 → **Settings → Secrets and variables → Actions → New repository secret** 으로 `CLOUDFLARE_API_TOKEN` 과 `CLOUDFLARE_ACCOUNT_ID` 를 넣습니다.
+4. 저장소의 **Actions** 탭에서 *Deploy share-preview worker* 를 *Run workflow* 로 한 번 실행합니다. 로그 끝에 `https://kongi-room-share.<계정>.workers.dev` 주소가 나옵니다.
+
 ## 동작 확인 (로컬)
 
 ```bash
