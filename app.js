@@ -27,6 +27,7 @@ function bowlsOf(n){return lang==='en'?(n===1?'1 empty bowl':n+' empty bowls'):l
 function fmtDate(d){if(lang==='ko'){const days=['일','월','화','수','목','금','토'];return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${days[d.getDay()]}`}
   try{return d.toLocaleDateString(lang==='en'?'en-US':'de-DE',{year:'numeric',month:'short',day:'numeric',weekday:'short'})}catch(e){return d.toDateString()}}
 const KAKAO_JS_KEY='';
+const RESULT_BASE='';
 const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(navigator.userAgent);
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2400)}
 function tstrOf(mins){const h=Math.floor(mins/60),m=mins%60;if(lang==='en')return ((h?h+'h ':'')+(m||!h?m+'m':'')).trim();if(lang==='de')return ((h?h+' Std. ':'')+(m||!h?m+' Min.':'')).trim();return (h?h+'시간 ':'')+(m||!h?m+'분':'')}
@@ -1087,7 +1088,8 @@ function drawCard(data){
 
 function resultUrl(st){
   const p=new URLSearchParams({s:st.sessions,m:st.mins,l:st.last,n:petName,t:tod(),d:todayKey().replace(/-/g,'')});
-  return SITE_URL+'?'+p.toString();
+  if(lang!=='ko')p.set('lang',lang);
+  return (RESULT_BASE||SITE_URL)+'?'+p.toString();
 }
 function shareLine(st){
   const what=st.last?t('what.done',{m:st.last}):(st.sessions?t('what.focus',{t:tstrOf(st.mins)}):t('what.start'));
@@ -1141,6 +1143,7 @@ async function shareKakao(){
 function openResultView(){
   const q=new URLSearchParams(location.search);
   if(!q.has('s'))return false;
+  if(LANGS.includes(q.get('lang'))&&store.get('lang',null)==null){lang=q.get('lang');applyLang()}
   const st={sessions:Math.max(0,parseInt(q.get('s'),10)||0),mins:Math.max(0,parseInt(q.get('m'),10)||0),last:Math.max(0,parseInt(q.get('l'),10)||0),stops:0};
   const name=((q.get('n')||'콩이').replace(/[<>]/g,'').slice(0,6)||'콩이').replace(/^콩이$/,dname());
   const todq=['morning','day','sunset','night'].includes(q.get('t'))?q.get('t'):'day';
