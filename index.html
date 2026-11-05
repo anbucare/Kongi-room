@@ -320,6 +320,22 @@ footer .empty{color:var(--muted);font-size:13.5px}
 .sheet p{margin:0;color:var(--muted);font-size:14px}
 .card-wrap{display:flex;justify-content:center}
 .card-wrap canvas{width:auto;height:min(56vh,520px);max-width:100%;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+
+/* Intimacy & Motion Unlocks */
+.intimacy-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;border:1.5px solid #f8c9b8;background:#fff6f2;color:#b84224;font-size:12.5px;font-weight:700;cursor:pointer;transition:transform .2s,box-shadow .2s;white-space:nowrap}
+.intimacy-badge:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(184,66,36,.18)}
+.xp-float{position:absolute;color:#e84128;font-weight:800;font-size:16px;pointer-events:none;z-index:99;animation:floatXp 1.4s ease-out forwards;text-shadow:0 1px 3px rgba(255,255,255,.9)}
+@keyframes floatXp{0%{opacity:0;transform:translateY(0) scale(.8)}20%{opacity:1;transform:translateY(-12px) scale(1.1)}100%{opacity:0;transform:translateY(-38px) scale(1)}}
+
+.level-card{display:flex;align-items:center;gap:14px;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:10px;transition:border-color .2s}
+.level-card.unlocked{border-color:#e68e74;background:#fffaf8}
+.level-card.locked{opacity:.6;filter:grayscale(.5)}
+.level-icon{font-size:30px;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:rgba(230,142,116,.15);flex-shrink:0}
+.level-info{flex:1;text-align:left}
+.level-name{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.level-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.level-motion{display:inline-block;margin-top:4px;font-size:11.5px;color:#c04826;background:rgba(230,142,116,.18);padding:2px 7px;border-radius:6px;font-weight:600}
+
 @media (prefers-reduced-motion:reduce){
   .cat *,.cat svg,.btn.big,.window .bird{animation:none!important}
 }
@@ -335,6 +351,7 @@ footer .empty{color:var(--muted);font-size:13.5px}
     </div>
     <div class="hdr-right">
       <span class="today" id="todaySum"></span>
+      <button class="intimacy-badge" id="intimacyBtn" type="button" title="콩이와의 친밀도 및 해금된 행동 보기">🌱 Lv.1 낯가리는 사이</button>
       <select id="todSel" aria-label="방 시간대">
         <option value="auto">시간대: 자동</option>
         <option value="morning">아침</option>
@@ -553,6 +570,50 @@ footer .empty{color:var(--muted);font-size:13.5px}
     <p>완주할 때마다 콩이와 보낸 따뜻한 시간들이 사진으로 남습니다.</p>
     <div class="polaroid-grid" id="albumGrid"></div>
     <div class="btn-row" style="margin-top:14px"><button class="btn secondary" id="closeAlbum" type="button">닫기</button></div>
+  </div>
+</div>
+
+<div class="modal" id="intimacyModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="intimacyTitle" style="max-width:540px">
+    <h3 id="intimacyTitle">📖 콩이와의 애착 수첩</h3>
+    <p>집중을 함께 완주할수록 콩이가 마음을 열고 새로운 행동을 보여줍니다.</p>
+
+    <div style="background:linear-gradient(135deg,#fff8f5,#fff1eb);border:1.5px solid #f6cfc2;border-radius:14px;padding:16px;margin:14px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:700;font-size:16px;color:#b84224" id="intimacyCurrentTitle">🌱 Lv.1 낯가리는 사이</div>
+        <div style="font-size:12px;color:var(--muted)" id="intimacyStats">누적 집중 0분 · 완주 0회</div>
+      </div>
+      <div style="font-size:13px;color:#55443c;margin-bottom:12px" id="intimacyCurrentDesc">아직은 조금 서먹하지만, 곁에 있어 주는 것만으로도 고마워해요.</div>
+      
+      <!-- Progress Bar -->
+      <div style="background:#eed8ce;height:10px;border-radius:5px;overflow:hidden;position:relative">
+        <div id="intimacyProgressBar" style="background:linear-gradient(90deg,#e86d4f,#c04022);height:100%;width:0%;transition:width .4s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:4px;font-size:11.5px;color:var(--muted)" id="intimacyXpText">0 / 30 XP</div>
+    </div>
+
+    <div style="font-weight:700;font-size:13.5px;margin-bottom:8px">🐾 행동 해금 도감</div>
+    <div id="intimacyLevelList" style="max-height:360px;overflow-y:auto"></div>
+
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn secondary" id="closeIntimacy" type="button">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="levelUpModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" style="max-width:440px;text-align:center;padding:24px">
+    <div style="font-size:48px;margin-bottom:8px">🎉 ❤️ 🐾</div>
+    <h3 id="lvlTitle" style="margin:0 0 6px 0;color:#c04022">콩이와의 친밀도 상승!</h3>
+    <p id="lvlSubtitle" style="font-weight:700;font-size:15px;margin:0 0 12px 0">Lv.2 「다정한 룸메이트」 등급이 되었습니다!</p>
+    <div style="background:#fff6f2;border:1.5px dashed #f6cfc2;border-radius:12px;padding:12px;margin:12px 0">
+      <div id="lvlMotionDesc" style="font-weight:700;color:#b84224;font-size:14px">✨ 새로 해금된 행동: [책상 위 식빵 굽기]</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px">이제 집중 시간이나 휴식 시간에 콩이가 책상 위로 올라와 곁을 지켜줍니다.</div>
+    </div>
+    <div class="btn-row" style="justify-content:center;gap:10px;margin-top:16px">
+      <button class="btn" id="lvlActionBtn" type="button" style="background:#c04022">🐾 새로운 행동 보러 가기</button>
+      <button class="btn secondary" id="closeLevelUp" type="button">확인</button>
+    </div>
   </div>
 </div>
 
@@ -787,7 +848,8 @@ const TREASURES = [
   { id: 'acorn', name: '통통한 도토리', icon: '🌰', desc: '산책길에서 소중하게 주워온 매끄러운 도토리' },
   { id: 'cap', name: '반짝이는 병뚜껑', icon: '🔘', desc: '은색으로 빛나서 콩이가 특별히 아끼는 보물' },
   { id: 'flower', name: '작은 노란 들꽃', icon: '🌼', desc: '햇살 냄새가 은은하게 배어있는 들꽃' },
-  { id: 'feather', name: '보드라운 파랑 깃털', icon: '🪶', desc: '창밖을 스쳐 날아가던 새가 남기고 간 깃털' }
+  { id: 'feather', name: '보드라운 파랑 깃털', icon: '🪶', desc: '창밖을 스쳐 날아가던 새가 남기고 간 깃털' },
+  { id: 'bell', name: '딸랑딸랑 황금 방울', icon: '🔔', desc: '평생의 반려가 된 증표로 콩이가 건넨 특별한 금빛 방울' }
 ];
 
 function getShelfItems(){
@@ -907,9 +969,172 @@ function renderAlbum(){
   });
 }
 
+/* ---------- Intimacy & Motion Unlocks (친밀도 시스템) ---------- */
+const INTIMACY_LEVELS = [
+  { level: 1, name: '낯가리는 사이', minXp: 0, maxXp: 30, icon: '🌱', desc: '아직은 조금 서먹하지만, 곁에 있어 주는 것만으로도 고마워해요.', motion: '소파 구석에서 조용히 수면', spot: 'sofa', pose: 'sleep' },
+  { level: 2, name: '다정한 룸메이트', minXp: 30, maxXp: 90, icon: '🌿', desc: '당신이 일하고 공부할 때 책상 위로 올라와 턱을 괴고 가만히 지켜봐요.', motion: '책상 위 식빵 굽기 (지켜보기)', spot: 'desk', pose: 'desk' },
+  { level: 3, name: '믿음직한 단짝', minXp: 90, maxXp: 180, icon: '🐾', desc: '가장 연약한 배를 보여줄 만큼 당신을 온전히 믿고 골골송을 불러요.', motion: '러그 위 발라당 애교 & 골골송', spot: 'rug', pose: 'belly' },
+  { level: 4, name: '평생의 반려', minXp: 180, maxXp: 9999, icon: '👑', desc: '세상에서 당신이 가장 안전하고 따뜻한 안식처예요. 어디든 찰싹 붙어있어요.', motion: '황금 방울 선물 & 무한 애착', spot: 'rug', pose: 'belly' }
+];
+
+function getIntimacy() {
+  const data = store.get('intimacy', null);
+  if (!data || typeof data.xp !== 'number') {
+    return { xp: 0, level: 1 };
+  }
+  return data;
+}
+
+function getLevelInfo(xp) {
+  for (let i = INTIMACY_LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= INTIMACY_LEVELS[i].minXp) {
+      return { ...INTIMACY_LEVELS[i] };
+    }
+  }
+  return INTIMACY_LEVELS[0];
+}
+
+function updateIntimacyBadge() {
+  const cur = getIntimacy();
+  const info = getLevelInfo(cur.xp);
+  const btn = $('#intimacyBtn');
+  if (btn) {
+    const nextText = info.level < 4 ? ` (${cur.xp}/${info.maxXp} XP)` : ' (MAX)';
+    btn.innerHTML = `${info.icon} <b>Lv.${info.level} ${info.name}</b>${nextText}`;
+  }
+}
+
+function showXpFloating(amount) {
+  try {
+    const el = document.createElement('div');
+    el.className = 'xp-float';
+    el.textContent = `+${amount} XP ❤️`;
+    const rect = catEl.getBoundingClientRect();
+    const sceneRect = scene.getBoundingClientRect();
+    el.style.left = (rect.left - sceneRect.left + rect.width / 2 - 25) + 'px';
+    el.style.top = (rect.top - sceneRect.top - 10) + 'px';
+    scene.appendChild(el);
+    setTimeout(() => el.remove(), 1450);
+  } catch(e) {}
+}
+
+function addIntimacy(amount) {
+  const current = getIntimacy();
+  const oldLevel = getLevelInfo(current.xp).level;
+  current.xp += amount;
+  const newInfo = getLevelInfo(current.xp);
+  current.level = newInfo.level;
+  store.set('intimacy', current);
+  updateIntimacyBadge();
+  showXpFloating(amount);
+
+  if (newInfo.level > oldLevel) {
+    showLevelUpModal(newInfo);
+    if (newInfo.level === 4) {
+      unlockGoldenBell();
+    }
+  }
+}
+
+function unlockGoldenBell() {
+  const owned = getShelfItems();
+  if (!owned.some(o => o.id === 'bell')) {
+    const bell = TREASURES.find(t => t.id === 'bell');
+    if (bell) {
+      owned.push(bell);
+      store.set('shelf', owned);
+      renderShelf();
+    }
+  }
+}
+
+function showLevelUpModal(info) {
+  $('#lvlTitle').textContent = `콩이와의 친밀도 상승!`;
+  $('#lvlSubtitle').textContent = `Lv.${info.level} 「${info.name}」 등급이 되었습니다!`;
+  $('#lvlMotionDesc').textContent = `✨ 새로 해금된 행동: [${info.motion}]`;
+  $('#levelUpModal').hidden = false;
+  hearts(6);
+}
+
+function renderIntimacyModal() {
+  const cur = getIntimacy();
+  const info = getLevelInfo(cur.xp);
+  $('#intimacyCurrentTitle').textContent = `${info.icon} Lv.${info.level} ${info.name}`;
+  $('#intimacyCurrentDesc').textContent = info.desc;
+
+  const pct = info.level >= 4 ? 100 : Math.min(100, Math.round(((cur.xp - info.minXp) / (info.maxXp - info.minXp)) * 100));
+  $('#intimacyProgressBar').style.width = pct + '%';
+  $('#intimacyXpText').textContent = info.level >= 4 ? `${cur.xp} XP (최고 등급 달성!)` : `${cur.xp} / ${info.maxXp} XP (${pct}%)`;
+
+  const totalMin = log.items.reduce((s, it) => s + (it.min || 0), 0);
+  const doneCount = log.items.filter(it => it.type === 'done').length;
+  $('#intimacyStats').textContent = `누적 집중 ${totalMin}분 · 완주 ${doneCount}회`;
+
+  const list = $('#intimacyLevelList');
+  list.innerHTML = '';
+  INTIMACY_LEVELS.forEach(lvl => {
+    const isUnlocked = cur.xp >= lvl.minXp;
+    const card = document.createElement('div');
+    card.className = `level-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+    card.innerHTML = `
+      <div class="level-icon">${lvl.icon}</div>
+      <div class="level-info">
+        <div class="level-name">
+          <span>Lv.${lvl.level} ${lvl.name}</span>
+          ${isUnlocked ? '<span style="font-size:11px;color:#2e7d32;font-weight:700">해금됨 ✓</span>' : `<span style="font-size:11px;color:var(--muted)">🔒 ${lvl.minXp} XP 필요</span>`}
+        </div>
+        <div class="level-desc">${lvl.desc}</div>
+        <div class="level-motion">🐾 해금 행동: ${lvl.motion}</div>
+      </div>
+      ${isUnlocked ? `<button class="btn secondary" style="padding:5px 9px;font-size:11.5px" type="button" data-pose-action="${lvl.pose}" data-spot-action="${lvl.spot}">이 행동 보기</button>` : ''}
+    `;
+    list.appendChild(card);
+  });
+
+  $$('[data-pose-action]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      const p = e.target.dataset.poseAction;
+      const s = e.target.dataset.spotAction;
+      $('#intimacyModal').hidden = true;
+      executeCatAction(s, p);
+    });
+  });
+}
+
+function executeCatAction(spot, pose) {
+  if (pose === 'desk') {
+    moveCat('desk', 'desk', -1).then(() => {
+      say('골골… 🐾', 2000);
+      hearts(3);
+      caption(fill('{N가} 책상 위로 올라와 턱을 괴고 다정하게 바라봅니다.'));
+    });
+  } else if (pose === 'belly') {
+    moveCat('rug', 'belly', 1).then(() => {
+      say('골골골… 🐾', 2200);
+      hearts(4);
+      caption(fill('{N가} 러그 위에 발라당 누워 애교를 부려요!'));
+    });
+  } else {
+    moveCat('sofa', 'sleep', 1).then(() => {
+      say('zZ…', 1800);
+      caption(fill('{N가} 소파에서 조용히 잠을 잡니다.'));
+    });
+  }
+}
+
 /* ---------- cat movement ---------- */
 const FLOOR=6;
-const SPOTS={sofa:{x:24.5,y:23},win:{x:34,y:45},rug:{x:44,y:7.5},mid:{x:42,y:7.5},bowl:{x:37.5,y:7.5},eat:{x:42,y:6.5},door:{x:80,y:7.5}};
+const SPOTS={
+  sofa:{x:24.5,y:23},
+  win:{x:34,y:45},
+  rug:{x:44,y:7.5},
+  mid:{x:42,y:7.5},
+  bowl:{x:37.5,y:7.5},
+  eat:{x:42,y:6.5},
+  door:{x:80,y:7.5},
+  desk:{x:76,y:33},
+  belly:{x:44,y:7.5}
+};
 const SPRITES={
   sleep:'assets/cat_sleep.png',
   lie:'assets/cat_sleep.png',
@@ -920,7 +1145,9 @@ const SPRITES={
   eat:'assets/cat_eat.png',
   lick:'assets/cat_sit.png',
   groom:'assets/cat_sit.png',
-  walk:'assets/cat_sit.png'
+  walk:'assets/cat_sit.png',
+  desk:'assets/cat_desk.png',
+  belly:'assets/cat_belly.png'
 };
 function setPose(p){
   catEl.dataset.pose=p;
@@ -935,6 +1162,8 @@ function setPose(p){
   if(p==='sleep'||p==='back'){ catEl.style.width='18%'; }
   else if(p==='stretch'){ catEl.style.width='19%'; }
   else if(p==='eat'){ catEl.style.width='17%'; }
+  else if(p==='desk'){ catEl.style.width='18%'; }
+  else if(p==='belly'){ catEl.style.width='17%'; }
   else{ catEl.style.width='16%'; }
 
   const b=$('#bowl');
@@ -1027,22 +1256,29 @@ function fidget(){
 (function fidgetLoop(){setTimeout(()=>{fidget();fidgetLoop()},2200+Math.random()*3200)})();
 
 const IDLE=[
-  {spot:'sofa',pose:'sleep',face:1,w:5,msg:'{N는} 소파에서 자고 있어요'},
-  {spot:'sofa',pose:'lie',face:1,w:2,msg:'{N가} 소파에서 뒹굴고 있어요'},
-  {spot:'win',pose:'back',face:1,w:3,msg:'{N가} 소파 등받이에 올라가 창밖을 보고 있어요'},
-  {spot:'rug',pose:'groom',face:-1,w:2,msg:'{N가} 러그 위에서 그루밍 중이에요'},
-  {spot:'rug',pose:'stretch',face:-1,w:1,msg:'{N가} 기지개를 쭉 켜요',then:'sit'},
-  {spot:'mid',pose:'sit',face:1,w:1,msg:'{N가} 방 한가운데 앉아서 이쪽을 보고 있어요'}
+  {spot:'sofa',pose:'sleep',face:1,w:5,minLv:1,msg:'{N는} 소파에서 자고 있어요'},
+  {spot:'sofa',pose:'lie',face:1,w:2,minLv:1,msg:'{N가} 소파에서 뒹굴고 있어요'},
+  {spot:'win',pose:'back',face:1,w:3,minLv:1,msg:'{N가} 소파 등받이에 올라가 창밖을 보고 있어요'},
+  {spot:'rug',pose:'groom',face:-1,w:2,minLv:1,msg:'{N가} 러그 위에서 그루밍 중이에요'},
+  {spot:'rug',pose:'stretch',face:-1,w:1,minLv:1,msg:'{N가} 기지개를 쭉 켜요',then:'sit'},
+  {spot:'mid',pose:'sit',face:1,w:1,minLv:1,msg:'{N가} 방 한가운데 앉아서 이쪽을 보고 있어요'},
+  {spot:'desk',pose:'desk',face:-1,w:4,minLv:2,msg:'{N가} 책상 위로 올라와 턱을 괴고 당신을 지켜봐요'},
+  {spot:'rug',pose:'belly',face:1,w:3,minLv:3,msg:'{N가} 러그 위에 발라당 누워 애교를 부리고 있어요'}
 ];
 function scheduleIdle(){clearTimeout(idleTimer);if(!(run&&run.state==='focus'&&phase==='idle'))return;
   const d=run.demo?4500+Math.random()*3000:15000+Math.random()*25000;
   idleTimer=setTimeout(()=>{pickIdle();scheduleIdle()},d)}
-function pickIdle(){const tot=IDLE.reduce((a,b)=>a+b.w,0);let r=Math.random()*tot,c=IDLE[0];
-  for(const i of IDLE){r-=i.w;if(r<=0){c=i;break}}
+function pickIdle(){
+  const curLv = getLevelInfo(getIntimacy().xp).level;
+  const available = IDLE.filter(i => (i.minLv || 1) <= curLv);
+  const tot = available.reduce((a,b)=>a+b.w, 0);
+  let r = Math.random()*tot, c = available[0];
+  for(const i of available){r-=i.w;if(r<=0){c=i;break}}
   if(c.spot===catEl.dataset.spot&&c.pose===catEl.dataset.pose)return;
   const id=moveId+1;
   moveCat(c.spot,c.pose,c.face).then(()=>{if(c.then&&moveId===id)setTimeout(()=>{if(moveId===id&&catEl.dataset.pose===c.pose)setPose(c.then)},2500)});
-  setStatus(c.msg)}
+  setStatus(c.msg);
+}
 function setStatus(t){$('#focusStatus').textContent=fill(t);caption(t)}
 
 /* ---------- audio / wake lock ---------- */
@@ -1127,9 +1363,15 @@ async function giveTreat(){
     await sleep(200);
     setPose('lick');caption('{N가} 입맛을 다셔요');hearts(3);
     const wasDemo = !!(run && run.demo);
-    log.items.push({type:'done',min:wasDemo?0:Math.round((run?run.dur:30)/60),demo:wasDemo});
+    const sessionMin = wasDemo ? 0 : Math.round((run?run.dur:30)/60);
+    log.items.push({type:'done',min:sessionMin,demo:wasDemo});
     store.set('log',log);renderLog();
     if(run)recordAlbum(run);
+    
+    // Intimacy XP
+    const gainedXp = wasDemo ? 15 : Math.max(25, 25 + sessionMin);
+    addIntimacy(gainedXp);
+
     checkTreasureReward();
     run=null;store.del('run');phase='idle';
     $('#afterMsg').textContent=fill(wasDemo?'체험 세션이라 시간은 쌓이지 않지만, 책은 한 권 올라갔어요. {N가} 기분이 좋아 보여요.':'책이 한 권 쌓였어요. {N가} 기분이 좋아 보여요.');
@@ -1137,8 +1379,18 @@ async function giveTreat(){
     await sleep(1500);
     setPose('groom');caption('{N가} 앞발로 세수를 해요');hearts(4);
     await sleep(2000);
-    await moveCat('sofa','sleep',1);
-    caption('{N가} 배부른 얼굴로 소파에서 자요');
+    
+    const curLv = getLevelInfo(getIntimacy().xp).level;
+    if(curLv >= 3 && Math.random() < 0.45){
+      await moveCat('rug','belly',1);
+      caption(fill('{N가} 배부른 얼굴로 러그에 발라당 누워 애교를 부려요'));
+    } else if(curLv >= 2 && Math.random() < 0.45){
+      await moveCat('desk','desk',-1);
+      caption(fill('{N가} 책상 위로 올라와 턱을 괴고 곁을 지켜줘요'));
+    } else {
+      await moveCat('sofa','sleep',1);
+      caption(fill('{N가} 배부른 얼굴로 소파에서 자요'));
+    }
   }catch(e){
     console.error('giveTreat error:', e);
     show('after');
@@ -1306,12 +1558,28 @@ $$('[data-break]').forEach(b=>b.addEventListener('click',()=>startBreak(+b.datas
 $('#nextBtn').addEventListener('click',()=>{$('#setupMsg').textContent=fill('바로 이어서 갈까요? {N는} 소파에서 쉬고 있어요.');show('setup')});
 $('#skipBreak').addEventListener('click',endBreak);
 catEl.addEventListener('click',()=>{
-  if(run&&run.state==='break'){
+  const p = catEl.dataset.pose;
+  if(p === 'desk'){
+    hearts(3);say('골골… 🐾', 1800);
+    caption(fill('{N가} 책상에 턱을 괸 채 편안하게 골골송을 불러요. "집중 잘하고 있냐옹?"'));
+    addIntimacy(2);
+  } else if(p === 'belly'){
+    hearts(4);say('골골골… 🐾', 2000);
+    caption(fill('{N가} 앞발을 꼬물거리며 배를 만져주는 손길을 느껴요.'));
+    addIntimacy(2);
+  } else if(run&&run.state==='break'){
     hearts(3);say('골골…',1500);
     if(catEl.dataset.pose==='sit'){setPose('lie');clearTimeout(catEl.p);catEl.p=setTimeout(()=>{if(run&&run.state==='break')setPose('sit')},2400)}
+    addIntimacy(2);
   } else if(!run && isSulking){
     hearts(1);say('힝…',1600);
     caption(fill('{N가} 슬쩍 뒤돌아보더니 다시 웅크려요. 집중을 시작하면 기운을 차릴 거예요.'));
+  } else if(run&&run.state==='focus'){
+    hearts(2);say('파이팅 🐾',1500);
+    caption(fill('{N가} 조용히 눈을 깜빡이며 당신의 집중을 응원해요.'));
+  } else {
+    hearts(2);say('야옹~',1500);
+    caption(fill('{N가} 다정하게 눈을 마주쳐요.'));
   }
 });
 $('#petName').value=petName;
@@ -1338,10 +1606,21 @@ $('#shelf').addEventListener('click',showShelfModal);
 $('#closeShelf').addEventListener('click',()=>{$('#shelfModal').hidden=true});
 $('#albumBtn').addEventListener('click',()=>{renderAlbum();$('#albumModal').hidden=false;});
 $('#closeAlbum').addEventListener('click',()=>{$('#albumModal').hidden=true});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#shareModal').hidden=true;$('#stopModal').hidden=true;$('#shelfModal').hidden=true;$('#albumModal').hidden=true;}});
+
+$('#intimacyBtn').addEventListener('click',()=>{renderIntimacyModal();$('#intimacyModal').hidden=false;});
+$('#closeIntimacy').addEventListener('click',()=>{$('#intimacyModal').hidden=true;});
+$('#closeLevelUp').addEventListener('click',()=>{$('#levelUpModal').hidden=true;});
+$('#lvlActionBtn').addEventListener('click',()=>{
+  $('#levelUpModal').hidden=true;
+  const curLv = getLevelInfo(getIntimacy().xp).level;
+  if(curLv === 2) executeCatAction('desk','desk');
+  else if(curLv === 3) executeCatAction('rug','belly');
+});
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#shareModal').hidden=true;$('#stopModal').hidden=true;$('#shelfModal').hidden=true;$('#albumModal').hidden=true;$('#intimacyModal').hidden=true;$('#levelUpModal').hidden=true;}});
 
 /* ---------- boot ---------- */
-applyTod();renderLog();renderShelf();
+applyTod();renderLog();renderShelf();updateIntimacyBadge();
 if(store.get('rain',false)){toggleRain(true);}
 if(run&&run.state==='focus'){
   const rem=run.endAt-Date.now();

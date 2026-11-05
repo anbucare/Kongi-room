@@ -1,5 +1,5 @@
 /* 콩이네 방 service worker: caches the app shell so the timer opens offline. */
-const VERSION = 'kongi-v11';
+const VERSION = 'kongi-v12';
 const SHELL = [
   './',
   './index.html',
@@ -19,6 +19,8 @@ const SHELL = [
   './assets/cat_back.png',
   './assets/cat_stretch.png',
   './assets/cat_eat.png',
+  './assets/cat_desk.png',
+  './assets/cat_belly.png',
   './assets/pixel_bowl.png'
 ];
 
