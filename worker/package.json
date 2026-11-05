@@ -1,0 +1,17 @@
+{
+  "name": "kongi-room-share",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Cloudflare Worker that gives every shared Kongi-room result link its own preview title, description and image.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
+    "satori": "0.12.1"
+  },
+  "devDependencies": {
+    "wrangler": "4.27.0"
+  }
+}

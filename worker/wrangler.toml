@@ -1,0 +1,20 @@
+name = "kongi-room-share"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+workers_dev = true
+
+[[rules]]
+type = "Data"
+globs = ["**/*.ttf", "**/*.jpg", "**/*.png"]
+fallthrough = true
+
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+fallthrough = true
+
+# DYNAMIC_OG = "true" renders a preview image with the cat's name on every request
+# (needs the Workers Paid plan: rendering takes far more than the free plan's 10 ms CPU).
+# Leave it unset on the free plan: previews then use the pre-rendered images in assets/og/.
+[vars]
+DYNAMIC_OG = "false"

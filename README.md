@@ -82,3 +82,7 @@ python3 -m http.server 8000
 ## 🗺️ robots.txt 참고
 
 프로젝트 사이트라 `robots.txt` 는 `/Kongi-room/robots.txt` 에 있고, 검색엔진이 보는 도메인 루트(`anbucare.github.io/robots.txt`)에는 올라가지 않습니다. 루트에 두려면 `anbucare.github.io` 이름의 저장소를 만들어 그 안에 robots.txt 를 두고 `Sitemap: https://anbucare.github.io/Kongi-room/sitemap.xml` 줄을 적으면 됩니다. 페이지 `<head>` 에는 `<link rel="sitemap">` 으로 사이트맵 위치를 적어 두었습니다.
+
+## 🔗 결과 링크 미리보기 (Cloudflare Worker, 선택)
+
+친구에게 보내는 결과 링크마다 다른 미리보기(제목·설명·그림)를 주려면 `worker/` 폴더의 Cloudflare Worker를 배포합니다. 배포 절차와 두 가지 그림 방식(무료 플랜용 미리 만든 그림 / 유료 플랜용 실시간 그림)은 `worker/README.md` 에 있습니다. 미리 만든 그림 108장은 `assets/og/` 에 들어 있습니다.
