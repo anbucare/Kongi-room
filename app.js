@@ -954,19 +954,19 @@ const SPOTS={
   door:{x:80,y:7.5},
   desk:{x:76,y:37},
   belly:{x:44,y:7.5},
-  lap:{x:43,y:7}
+  lap:{x:43,y:13}
 };
 const SOFA_POSE={sleep:{x:17.5,y:26.5},lie:{x:17.5,y:26.5},stretch:{x:16.5,y:26.5},back:{x:14.5,y:27},sit:{x:19,y:27},wait:{x:19,y:27}};
 const BASE_SPOTS=Object.assign({},SPOTS);
 const THEMES={
   room:{spots:{},hs:{}},
-  library:{spots:{sofa:{x:10,y:40},win:{x:33,y:38},rug:{x:40,y:8},mid:{x:50,y:8},door:{x:70,y:8},desk:{x:58,y:40},belly:{x:40,y:8},lap:{x:41,y:7}},
+  library:{spots:{sofa:{x:10,y:40},win:{x:33,y:38},rug:{x:40,y:8},mid:{x:50,y:8},door:{x:70,y:8},desk:{x:58,y:40},belly:{x:40,y:8},lap:{x:41,y:13}},
     hs:{shelf:[61,25,14,8],coffee:null,plant:[55,42,9,10],book:[85,40,12,8],radio:[10,22,10,10]}},
-  greenhouse:{spots:{sofa:{x:9,y:38},win:{x:37,y:40},rug:{x:42,y:8},mid:{x:52,y:8},door:{x:62,y:8},desk:{x:70,y:40},belly:{x:42,y:8},lap:{x:43,y:7}},
+  greenhouse:{spots:{sofa:{x:9,y:38},win:{x:37,y:40},rug:{x:42,y:8},mid:{x:52,y:8},door:{x:62,y:8},desk:{x:70,y:40},belly:{x:42,y:8},lap:{x:43,y:13}},
     hs:{shelf:[80,24,16,8],coffee:[85,48,7,7],plant:[2,30,12,25],book:null,radio:[9,40,9,10]}},
-  train:{spots:{sofa:{x:4,y:36},win:{x:11,y:36},rug:{x:40,y:8},mid:{x:50,y:8},door:{x:70,y:8},desk:{x:62,y:38},belly:{x:40,y:8},lap:{x:41,y:7}},
+  train:{spots:{sofa:{x:4,y:36},win:{x:11,y:36},rug:{x:40,y:8},mid:{x:50,y:8},door:{x:70,y:8},desk:{x:62,y:38},belly:{x:40,y:8},lap:{x:41,y:13}},
     hs:{shelf:[63,6,22,8],coffee:[74,54,7,7],plant:null,book:[76,6,14,10],radio:[14,32,9,10]}},
-  cabin:{spots:{sofa:{x:8,y:36},win:{x:40,y:40},rug:{x:40,y:8},mid:{x:50,y:8},door:{x:60,y:8},desk:{x:68,y:38},belly:{x:40,y:8},lap:{x:41,y:7}},
+  cabin:{spots:{sofa:{x:8,y:36},win:{x:40,y:40},rug:{x:40,y:8},mid:{x:50,y:8},door:{x:60,y:8},desk:{x:68,y:38},belly:{x:40,y:8},lap:{x:41,y:13}},
     hs:{shelf:[78,22,18,8],coffee:null,plant:[2,18,10,18],book:[8,16,12,8],radio:[87,46,10,12]}}
 };
 function spotFor(spot,pose){const t=SPOTS[spot]||SPOTS.rug;return (spot==='sofa'&&curTheme==='room'&&SOFA_POSE[pose])?Object.assign({},t,SOFA_POSE[pose]):t}
