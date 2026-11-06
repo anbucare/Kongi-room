@@ -58,6 +58,7 @@ img{max-width:100%}
     </h1>
     <div class="hdr-right">
       <span class="today" id="todaySum"></span>
+      <span class="streak-badge" id="streakBadge" hidden title="연속 집중 기록" data-i18n-title="streak.title">🔥</span>
       <button class="intimacy-badge" id="intimacyBtn" type="button" title="콩이와의 친밀도 및 해금된 행동 보기" data-i18n-title="hdr.intimacyTitle">🌱 Lv.1 낯가리는 사이</button>
       <select id="todSel" aria-label="방 시간대" data-i18n-aria="tod.aria">
         <option value="auto" data-i18n="tod.auto">시간대: 자동</option>
@@ -168,7 +169,7 @@ img{max-width:100%}
             <button class="btn" id="nextBtn" type="button" data-i18n="next">바로 다음 세션</button>
           </div>
           <div>
-            <button class="btn" id="afterShareBtn" type="button" style="width:100%" data-i18n="after.share">📣 오늘 기록 친구에게 보내기</button>
+            <button class="btn" id="afterShareBtn" type="button" style="width:100%" data-i18n="after.brag">🚀 친구들한테 자랑하기</button>
           <button class="btn secondary" id="afterPolaroidBtn" type="button" style="width:100%;font-size:13.5px;padding:10px;border:1.5px solid #e0c8b8;background:#fff8f4;color:#b84224;font-weight:700" data-i18n="after.polaroid">📸 이번 세션 감성 폴라로이드 일기 남기기</button>
           </div>
         </div>
@@ -193,6 +194,7 @@ img{max-width:100%}
       <a href="https://github.com/anbucare/Kongi-room/issues/new?labels=feedback&amp;title=%5B%EC%9D%98%EA%B2%AC%5D%20" target="_blank" rel="noopener" data-i18n="foot.feedback">💬 의견 보내기</a>
       <details><summary data-i18n="foot.updates">업데이트 소식</summary>
         <ul>
+          <li data-i18n="foot.u0">11.05 반영했어요: 연속 집중 스트릭 배지, 새 보물 발견 팡파레, 완주 후 자랑 버튼</li>
           <li data-i18n="foot.u1">11.05 반영했어요: 휴대폰 공유창·X·Threads·카카오톡·링크 복사가 있는 공유 시트, 친구에게 보내는 결과 링크</li>
           <li data-i18n="foot.u2">11.05 반영했어요: 처음 열 때 받는 용량을 절반 이하로 줄였어요</li>
           <li data-i18n="foot.u3">11.05 반영했어요: 영어·독일어 선택</li>
@@ -251,9 +253,9 @@ img{max-width:100%}
 <div class="modal" id="toolsModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="toolsTitle" style="max-width:540px">
     <h3 id="toolsTitle" data-i18n="tools.title">📖 콩이의 추천 집중 도구</h3>
-    <p data-i18n="tools.sub">콩이네 방이 개인적으로 즐겨 쓰는 외부 서비스예요. 제휴나 광고가 아니고, 각 이름과 상표는 해당 회사의 것이에요.</p>
-    <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0">
-      <a class="tool-card" href="https://www.notion.so" target="_blank" rel="noopener">
+    <p data-i18n="tools.sub">콩이가 집중할 때 함께 쓰기 좋은 엄선된 도구들이에요. 일부 링크는 제휴 링크를 포함할 수 있어요.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0" id="toolsList">
+      <a class="tool-card" id="toolNotion" href="https://www.notion.so" target="_blank" rel="noopener">
         <div style="font-size:28px">📝</div>
         <div style="flex:1">
           <div style="font-weight:700" data-i18n="tools.notion">Notion (노션)</div>
@@ -261,19 +263,35 @@ img{max-width:100%}
         </div>
         <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
       </a>
-      <a class="tool-card" href="https://www.yeolpumta.com" target="_blank" rel="noopener">
-        <div style="font-size:28px">⏰</div>
+      <a class="tool-card" id="toolTodoist" href="https://todoist.com" target="_blank" rel="noopener">
+        <div style="font-size:28px">✅</div>
         <div style="flex:1">
-          <div style="font-weight:700" data-i18n="tools.ypt">열품타 (열정품은타이머)</div>
-          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.yptDesc">친구들과 공부 시간을 기록하고 서로 비교하며 자극받는 스터디 타이머</div>
+          <div style="font-weight:700" data-i18n="tools.todoist">Todoist (투두이스트)</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.todoistDesc">일정과 공부 습관을 체계적으로 관리하는 전 세계 1위 스터디 플래너</div>
         </div>
         <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
       </a>
-      <a class="tool-card" href="https://www.flexcil.com" target="_blank" rel="noopener">
-        <div style="font-size:28px">✍️</div>
+      <a class="tool-card" id="toolSpeechify" href="https://speechify.com" target="_blank" rel="noopener">
+        <div style="font-size:28px">🎧</div>
         <div style="flex:1">
-          <div style="font-weight:700" data-i18n="tools.flexcil">Flexcil (플렉슬) / Goodnotes</div>
-          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.flexcilDesc">아이패드·태블릿 수험생 필수 PDF 필기 및 오답노트 도구</div>
+          <div style="font-weight:700" data-i18n="tools.speechify">Speechify (스피치파이)</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.speechifyDesc">PDF와 수험 자료를 자연스러운 AI 음성으로 읽어주는 집중 리더기</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
+      </a>
+      <a class="tool-card" id="toolFreedom" href="https://freedom.to" target="_blank" rel="noopener">
+        <div style="font-size:28px">🛡️</div>
+        <div style="flex:1">
+          <div style="font-weight:700" data-i18n="tools.freedom">Freedom (프리덤)</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.freedomDesc">집중 시간 동안 SNS와 유튜브 딴짓을 원천 차단해주는 포모도로 메이트</div>
+        </div>
+        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
+      </a>
+      <a class="tool-card" id="toolSkillshare" href="https://www.skillshare.com" target="_blank" rel="noopener">
+        <div style="font-size:28px">💡</div>
+        <div style="flex:1">
+          <div style="font-weight:700" data-i18n="tools.skillshare">Skillshare (스킬쉐어)</div>
+          <div style="font-size:12.5px;color:var(--muted)" data-i18n="tools.skillshareDesc">디자인, 코딩, 글쓰기 등 자기계발을 돕는 글로벌 온라인 클래스</div>
         </div>
         <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="tools.more">알아보기 ↗</div>
       </a>

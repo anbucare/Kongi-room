@@ -341,7 +341,8 @@ async function checkTreasureReward(sessionMin, wasDemo){
   store.set('shelf', owned);
   renderShelf();
   await sleep(600);
-  say(t('gift.say'), 3200);
+  say(t('treasure.found'), 4200);
+  celebrate();
   hearts(4);
   const no = 'No.' + String(TREASURES.indexOf(picked) + 1).padStart(3, '0');
   caption('gift.caption',{icon:picked.icon,name:no + ' ' + t(picked.name)});
@@ -385,6 +386,7 @@ function recordAlbum(sessionRun){
     lap: !!sessionRun.lap,
     wakes: sessionRun.wakes|0,
     place: store.get('place','') || '',
+    streak: STREAK.valid(),
     note: sessionRun.demo ? t('album.noteDemo') : fill(t('album.note',{m:mins}))
   };
   album.unshift(item);
@@ -675,6 +677,23 @@ function drawPolaroidCanvas(item){
     ctx.fillStyle = '#a69485';
     ctx.font = '400 24px ' + ff;
     ctx.fillText(t('pol.footer'), W / 2, 1280);
+
+    if(item.streak && item.streak >= 2){
+      ctx.save();
+      ctx.translate(px + 16, py + 16);
+      ctx.rotate(-0.1);
+      ctx.font = '700 30px ' + ff;
+      const stampText = '🔥 ' + t('pol.stamp',{n:item.streak});
+      const stw = ctx.measureText(stampText).width + 36;
+      ctx.fillStyle = 'rgba(255,249,238,.88)';
+      ctx.strokeStyle = 'rgba(192,64,34,.85)';
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.roundRect(0,0,stw,54,14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(179,64,34,.95)';
+      ctx.textAlign = 'left';
+      ctx.fillText(stampText, 18, 38);
+      ctx.restore();
+    }
   };
 
   let loaded = 0;
@@ -719,6 +738,51 @@ function updateIntimacyBadge() {
   if (btn) {
     const nextText = info.level < 4 ? ` (${cur.xp}/${info.maxXp} XP)` : ' (MAX)';
     btn.innerHTML = `${info.icon} <b>Lv.${info.level} ${t(info.name)}</b>${nextText}`;
+  }
+}
+
+const STREAK={
+  get(){const s=store.get('streak',null);return (s&&typeof s.count==='number')?s:{count:0,best:0,last:null}},
+  valid(){const s=this.get();if(!s.count||!s.last)return 0;
+    const y=new Date();y.setDate(y.getDate()-1);
+    const yk=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
+    return (s.last===todayKey()||s.last===yk)?s.count:0}
+};
+function bumpStreak(){
+  const s=STREAK.get(),tk=todayKey();
+  if(s.last!==tk){
+    const y=new Date();y.setDate(y.getDate()-1);
+    const yk=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
+    s.count=(s.last===yk)?(s.count||0)+1:1;
+    s.last=tk;
+  }
+  s.best=Math.max(s.best||0,s.count);
+  store.set('streak',s);
+  updateStreakBadge();
+  return s.count;
+}
+function updateStreakBadge(){
+  const el=$('#streakBadge');if(!el)return;
+  const n=STREAK.valid();
+  el.hidden=n<1;
+  if(n>=1)el.textContent='🔥 '+t('streak.badge',{n:n});
+}
+function celebrate(){
+  if(reduced())return;
+  const c=catRect();
+  const icons=['✨','⭐','🌟','💫'];
+  for(let i=0;i<14;i++){
+    const el=document.createElement('span');
+    el.className='celebrate';
+    el.textContent=icons[i%icons.length];
+    el.style.left=(c.l+c.w*(.2+Math.random()*.6))+'%';
+    el.style.top=(c.t+c.h*(Math.random()*.4))+'%';
+    el.style.setProperty('--dx',(Math.random()*10-5)+'cqw');
+    el.style.setProperty('--dr',(Math.random()*40-20)+'deg');
+    el.style.animationDelay=(i*90)+'ms';
+    el.style.fontSize=(3.4+Math.random()*2.2)+'cqw';
+    scene.appendChild(el);
+    setTimeout(()=>el.remove(),2000);
   }
 }
 
@@ -1169,6 +1233,8 @@ async function giveTreat(){
     store.set('log',log);renderLog();
     if(run)recordAlbum(run);
     
+    if(!wasDemo) bumpStreak(); else updateStreakBadge();
+
     const gainedXp = wasDemo ? 15 : Math.max(25, 25 + sessionMin);
     addIntimacy(gainedXp);
 
@@ -1176,6 +1242,8 @@ async function giveTreat(){
     run=null;store.del('run');phase='idle';
     $('#afterMsg').textContent=fill(t(wasDemo?'after.msgDemo':'after.msg'));
     show('after');
+    say(t('after.bragBubble'), 5200);
+    hearts(3);
     await sleep(1500);
     if(run) return;
     setPose('groom');caption('groom.cap');hearts(4);
@@ -1346,6 +1414,18 @@ function drawCard(data){
   const d=data.date||new Date();
   x.textAlign='center';x.fillStyle=mut;x.font='400 44px '+ff;
   x.fillText(fmtDate(d),W/2,230);
+  const stk=(data.streak!=null)?data.streak:STREAK.valid();
+  if(stk>=2){
+    x.save();x.translate(64,96);x.rotate(-0.1);
+    x.font='700 42px '+ff;
+    const stampText='🔥 '+t('pol.stamp',{n:stk});
+    const stw=x.measureText(stampText).width+48;
+    x.fillStyle='rgba(255,249,238,.9)';x.strokeStyle='rgba(192,64,34,.85)';x.lineWidth=5;
+    x.beginPath();x.roundRect(0,0,stw,70,16);x.fill();x.stroke();
+    x.fillStyle='rgba(179,64,34,.95)';x.textAlign='left';
+    x.fillText(stampText,24,50);
+    x.restore();x.textAlign='center';
+  }
   x.fillStyle=ink;x.font='400 150px '+ff;
   x.fillText(data.last?t('card.done',{m:data.last}):tstr,W/2,360);
   x.font='400 54px '+ff;x.fillStyle=ink;
@@ -1425,7 +1505,7 @@ function openResultView(){
   $('#resultTitle').textContent=nm(t('result.title'));
   $('#resultLine').textContent=nm(t('result.line',{what,t:tstrOf(st.mins),s:sessionsOf(st.sessions)}));
   document.title=t('result.docTitle');
-  const draw=()=>drawCard(Object.assign({canvas:$('#resultCard'),tod:todq,rain:false,shelf:[],name,date},st));
+  const draw=()=>drawCard(Object.assign({canvas:$('#resultCard'),tod:todq,rain:false,shelf:[],streak:0,name,date},st));
   (document.fonts&&document.fonts.ready?document.fonts.ready.then(draw,draw):draw());
   $('#resultModal').hidden=false;
   const leave=()=>{history.replaceState(null,'',location.pathname);$('#resultModal').hidden=true};
@@ -1603,7 +1683,7 @@ function applyLang(){
   const ni=$('#petName');if(ni&&petName==='콩이'){ni.value=dname();ni.style.width=(ni.value.length*1.15+.9)+'em'}
   $('#rainBtn').textContent=scene.classList.contains('rainy')?t('rain.btnOn'):t('rain.btn');
   const lh=$('#lapHint');if(lh)lh.textContent=fill(t('lap.hint'));
-  renderLog();updateIntimacyBadge();renderShelf();
+  renderLog();updateIntimacyBadge();updateStreakBadge();renderShelf();
   if(lastCaption)caption(lastCaption.k,lastCaption.v);
   if(lastStatus){$('#focusStatus').textContent=fill(t(lastStatus.k,lastStatus.v))}
   tick();
@@ -1613,7 +1693,7 @@ if(lapToggle){lapToggle.checked=lapMode;lapToggle.addEventListener('change',e=>{
 const langSel=$('#langSel');
 if(langSel){langSel.addEventListener('change',e=>{const v=e.target.value;if(!LANGS.includes(v))return;lang=v;store.set('lang',v);applyLang()})}
 
-applyLang();applyTod();renderLog();renderShelf();updateIntimacyBadge();
+applyLang();applyTod();renderLog();renderShelf();updateIntimacyBadge();updateStreakBadge();
 openResultView();
 if(store.get('rain',false)){toggleRain(true);}
 if(run&&run.state==='focus'){
