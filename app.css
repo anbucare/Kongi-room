@@ -117,7 +117,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 32px}
 .app{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
-.brand{display:flex;align-items:baseline;gap:8px;min-width:0;margin:0;font-size:22px;font-weight:400}
+.brand{display:flex;align-items:baseline;gap:0;min-width:0;margin:0;font-size:22px;font-weight:400}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .share-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .share-grid .btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 10px;font-size:14px}
@@ -131,7 +131,8 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .foot-links details{font-size:13px}.foot-links summary{cursor:pointer;color:var(--accent)}
 .foot-links ul{margin:6px 0 0;padding-left:18px}
 .result-stat{font-size:15px;line-height:1.6}
-.brand input{font:inherit;font-size:22px;color:var(--fg);background:transparent;border:0;border-bottom:1.5px dashed var(--line);width:3.4em;padding:0 2px;text-align:center}
+.brand input{font:inherit;font-size:22px;color:var(--fg);background:transparent;border:0;border-bottom:1.5px dashed var(--line);width:2.2em;padding:0;margin:0;text-align:center;box-sizing:content-box;min-width:1em}
+.brand .suffix{margin-left:0}
 .brand input:focus{outline:none;border-bottom-color:var(--accent)}
 .brand .suffix{font-size:22px}
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
