@@ -72,6 +72,7 @@ img{max-width:100%}
         <option value="en">English</option>
         <option value="de">Deutsch</option>
       </select>
+      <button class="btn secondary" id="themeBtn" type="button" title="집중 공간 테마 고르기" data-i18n-title="theme.title">🏠 집중 공간</button>
       <button class="btn secondary" id="rainBtn" type="button" aria-pressed="false" title="빗소리와 창문 비 효과" data-i18n-title="rain.title">🌧️ 빗소리</button>
       <button class="btn secondary" id="albumBtn" type="button" data-i18n="album.btn">📸 집중 앨범</button>
       <button class="btn secondary" id="shareBtn" type="button" data-i18n="share.cardBtn">오늘의 방 카드</button>
@@ -100,10 +101,11 @@ img{max-width:100%}
         <span class="hotspot-badge">📖</span>
       </div>
 
-      <div class="hotspot" id="hotspotRadio" style="left:90%;top:22%;width:7%;height:7.5%" title="📻 콩이의 Lo-Fi 라디오 (클릭)" data-i18n-title="hs.radio">
+      <div class="hotspot" id="hotspotRadio" style="left:90%;top:22%;width:7%;height:7.5%" title="📻 콩이의 ASMR 믹서 (클릭)" data-i18n-title="hs.radio">
         <span class="hotspot-badge">🎵</span>
       </div>
 
+      <div class="theme-fx" id="themeFx" aria-hidden="true"></div>
       <div class="pixel-cat" id="cat" data-pose="sleep" data-spot="sofa" style="left:21%;bottom:25%">
         <div class="bubble" id="bubble" hidden>…</div>
         <img id="catImg" src="assets/cat_sleep.png" alt="콩이" data-i18n-alt="cat.alt">
@@ -216,36 +218,39 @@ img{max-width:100%}
 </div>
 
 
+<div class="modal" id="themeModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="themeTitle" style="max-width:560px">
+    <h3 id="themeTitle" data-i18n="theme.title">🏠 내가 머물고 싶은 집중 공간</h3>
+    <p data-i18n="theme.sub">오늘의 기분에 맞는 방을 고르세요. 콩이가 그 방으로 따라와요.</p>
+    <div class="theme-grid">
+      <button class="theme-card" type="button" data-theme="room"><img src="assets/theme_room_thumb.webp" alt="" loading="lazy" width="320" height="200"><b data-i18n="theme.room.name"></b><small data-i18n="theme.room.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="library"><img src="assets/theme_library_thumb.webp" alt="" loading="lazy" width="320" height="200"><b data-i18n="theme.library.name"></b><small data-i18n="theme.library.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="greenhouse"><img src="assets/theme_greenhouse_thumb.webp" alt="" loading="lazy" width="320" height="200"><b data-i18n="theme.greenhouse.name"></b><small data-i18n="theme.greenhouse.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="train"><img src="assets/theme_train_thumb.webp" alt="" loading="lazy" width="320" height="200"><b data-i18n="theme.train.name"></b><small data-i18n="theme.train.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="cabin"><img src="assets/theme_cabin_thumb.webp" alt="" loading="lazy" width="320" height="200"><b data-i18n="theme.cabin.name"></b><small data-i18n="theme.cabin.desc"></small></button>
+    </div>
+    <div class="btn-row"><button class="btn secondary" id="closeTheme" type="button" data-i18n="close">닫기</button></div>
+  </div>
+</div>
 <div class="modal" id="radioModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="radioTitle" style="max-width:540px">
-    <h3 id="radioTitle" data-i18n="radio.title">📻 콩이의 Lo-Fi 라디오</h3>
-    <p data-i18n="radio.sub">공부하거나 일할 때 잡생각을 지워주는 편안한 사운드 트랙이에요.</p>
-    <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0">
-      <a class="tool-card" href="https://www.youtube.com/watch?v=jfKfPfyJRdk" target="_blank" rel="noopener">
-        <div style="font-size:28px">🎧</div>
-        <div style="flex:1">
-          <div style="font-weight:700">Lofi Girl — beats to relax/study to</div>
-          <div style="font-size:12.5px;color:var(--muted)" data-i18n="radio.s1">전 세계 수험생과 개발자들의 집중 메이트 (YouTube)</div>
-        </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="radio.listen">듣기 ↗</div>
-      </a>
-      <a class="tool-card" href="https://www.youtube.com/watch?v=5yx6BWlEVcY" target="_blank" rel="noopener">
-        <div style="font-size:28px">☕</div>
-        <div style="flex:1">
-          <div style="font-weight:700">Chillhop Radio — jazzy & lofi hip hop</div>
-          <div style="font-size:12.5px;color:var(--muted)" data-i18n="radio.s2">따뜻하고 차분한 재즈 힙합 비트 모음</div>
-        </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700" data-i18n="radio.listen">듣기 ↗</div>
-      </a>
-      <div class="tool-card" id="radioRainToggle" style="cursor:pointer">
-        <div style="font-size:28px">🌧️</div>
-        <div style="flex:1">
-          <div style="font-weight:700" data-i18n="radio.rain">창밖 잔잔한 빗소리 ASMR</div>
-          <div style="font-size:12.5px;color:var(--muted)" data-i18n="radio.rainSub">방 안의 실시간 빗소리 오디오 켜기 / 끄기</div>
-        </div>
-        <div style="font-size:12px;color:var(--accent);font-weight:700" id="radioRainStatus" data-i18n="radio.toggle">토글</div>
-      </div>
+    <h3 id="radioTitle" data-i18n="mix.title">📻 콩이의 ASMR 믹서</h3>
+    <p data-i18n="mix.sub">유튜브로 나가지 않고 방 안에서 바로 재생돼요. 볼륨을 섞어서 나만의 집중 사운드를 만들어 보세요.</p>
+    <div class="mix-list">
+      <div class="mix-row"><span class="mix-ico">🌧️</span><div class="mix-lbl"><b data-i18n="mix.rain"></b><small data-i18n="mix.rainSub"></small></div><input type="range" class="mix-range" data-mix="rain" min="0" max="100" step="5" value="0" aria-labelledby="mixL-rain"><span class="mix-val" data-mix="rain">0%</span></div>
+      <div class="mix-row"><span class="mix-ico">🐱</span><div class="mix-lbl"><b data-i18n="mix.purr"></b><small data-i18n="mix.purrSub"></small></div><input type="range" class="mix-range" data-mix="purr" min="0" max="100" step="5" value="0" aria-labelledby="mixL-purr"><span class="mix-val" data-mix="purr">0%</span></div>
+      <div class="mix-row"><span class="mix-ico">🔥</span><div class="mix-lbl"><b data-i18n="mix.fire"></b><small data-i18n="mix.fireSub"></small></div><input type="range" class="mix-range" data-mix="fire" min="0" max="100" step="5" value="0" aria-labelledby="mixL-fire"><span class="mix-val" data-mix="fire">0%</span></div>
+      <div class="mix-row"><span class="mix-ico">🕰️</span><div class="mix-lbl"><b data-i18n="mix.clock"></b><small data-i18n="mix.clockSub"></small></div><input type="range" class="mix-range" data-mix="clock" min="0" max="100" step="5" value="0" aria-labelledby="mixL-clock"><span class="mix-val" data-mix="clock">0%</span></div>
+      <div class="mix-row"><span class="mix-ico">✏️</span><div class="mix-lbl"><b data-i18n="mix.pencil"></b><small data-i18n="mix.pencilSub"></small></div><input type="range" class="mix-range" data-mix="pencil" min="0" max="100" step="5" value="0" aria-labelledby="mixL-pencil"><span class="mix-val" data-mix="pencil">0%</span></div>
     </div>
+    <div class="mix-presets">
+      <span class="hint" data-i18n="mix.presets">추천 조합</span>
+      <button class="chip pchip" type="button" data-preset="night" data-i18n="mix.pNight">비 오는 밤의 골골송</button>
+      <button class="chip pchip" type="button" data-preset="library" data-i18n="mix.pLibrary">고요한 도서관</button>
+      <button class="chip pchip" type="button" data-preset="cabin" data-i18n="mix.pCabin">겨울 산장</button>
+      <button class="chip pchip" type="button" data-preset="off" data-i18n="mix.off">모두 끄기</button>
+    </div>
+    <p class="hint" data-i18n="mix.hint">소리는 모두 Web Audio로 그 자리에서 합성돼요. 데이터를 쓰지 않고, 화면을 꺼도 계속 들려요.</p>
     <div class="btn-row"><button class="btn secondary" id="closeRadio" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
