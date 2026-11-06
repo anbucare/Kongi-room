@@ -95,7 +95,11 @@ ko: {
   'click.deskSay':'골골… 🐾','click.deskCap':'{N가} 책상에 턱을 괸 채 편안하게 골골송을 불러요. "집중 잘하고 있냐옹?"','click.bellySay':'골골골… 🐾','click.bellyCap':'{N가} 앞발을 꼬물거리며 배를 만져주는 손길을 느껴요.',
   'click.breakSay':'골골…','click.sulkSay':'힝…','click.sulkCap':'{N가} 슬쩍 뒤돌아보더니 다시 웅크려요. 집중을 시작하면 기운을 차릴 거예요.',
   'click.focusSay':'파이팅 🐾','click.focusCap':'{N가} 조용히 눈을 깜빡이며 당신의 집중을 응원해요.','click.idleSay':'야옹~','click.idleCap':'{N가} 다정하게 눈을 마주쳐요.',
-  'coffee.say':'따뜻해… ☕','coffee.cap':'{N가} 커피 향을 맡으며 킁킁거려요. 잠시 따뜻한 차 한 잔 마시며 쉬어가세요.','plant.say':'파릇파릇 🌱','plant.cap':'창가 서랍장에서 햇살을 받으며 자라는 싱그러운 화분이에요.'
+  'coffee.say':'따뜻해… ☕','coffee.cap':'{N가} 커피 향을 맡으며 킁킁거려요. 잠시 따뜻한 차 한 잔 마시며 쉬어가세요.','plant.say':'파릇파릇 🌱','plant.cap':'창가 서랍장에서 햇살을 받으며 자라는 싱그러운 화분이에요.',
+  'streak.title':'연속 집중 기록','streak.badge':'{n}일 연속 집중 중','pol.stamp':'{n}일 연속 달성',
+  'after.brag':'🚀 친구들한테 자랑하기','after.bragBubble':'오늘 집사 집중력 최고였다냥! 친구들한테 자랑해볼래? 🐾',
+  'treasure.found':'✨ 새로운 보물을 발견했다냥!',
+  'foot.u0':'11.05 반영했어요: 연속 집중 스트릭 배지, 새 보물 발견 팡파레, 완주 후 자랑 버튼'
 },
 en: {
   'lang.aria':'Language','hdr.nameAria':"Cat's name",'hdr.suffix':"'s Room",'hdr.tagline':'· a focus timer with a cat',
@@ -193,7 +197,11 @@ en: {
   'click.deskSay':'Purr… 🐾','click.deskCap':'{N} purrs with its chin on the desk. “Focusing well, meow?”','click.bellySay':'Purrrr… 🐾','click.bellyCap':'{N} wiggles its paws, enjoying the belly rub.',
   'click.breakSay':'Purr…','click.sulkSay':'Hmph…','click.sulkCap':'{N} glances back, then curls up again. It will cheer up once you start focusing.',
   'click.focusSay':'Go go 🐾','click.focusCap':'{N} blinks slowly, cheering on your focus.','click.idleSay':'Meow~','click.idleCap':'{N} meets your eyes warmly.',
-  'coffee.say':'Warm… ☕','coffee.cap':'{N} sniffs the coffee. Take a moment for a warm cup of tea.','plant.say':'So green 🌱','plant.cap':'A fresh plant growing in the sun on the window chest.'
+  'coffee.say':'Warm… ☕','coffee.cap':'{N} sniffs the coffee. Take a moment for a warm cup of tea.','plant.say':'So green 🌱','plant.cap':'A fresh plant growing in the sun on the window chest.',
+  'streak.title':'Focus streak','streak.badge':'{n}-day focus streak','pol.stamp':'{n}-day streak',
+  'after.brag':'🚀 Show it off to friends','after.bragBubble':'Top-notch focus today, meow! Want to show it off to your friends? 🐾',
+  'treasure.found':'✨ A new treasure has been found, meow!',
+  'foot.u0':'Nov 5: daily focus streak badge, new treasure fanfare, and a brag button after each session'
 },
 de: {
   'lang.aria':'Sprache','hdr.nameAria':'Name der Katze','hdr.suffix':'s Zimmer','hdr.tagline':'· ein Fokus-Timer mit Katze',
@@ -291,6 +299,10 @@ de: {
   'click.deskSay':'Schnurr… 🐾','click.deskCap':'{N} schnurrt mit dem Kinn auf dem Schreibtisch. „Gut am Fokussieren, miau?“','click.bellySay':'Schnurrrr… 🐾','click.bellyCap':'{N} wackelt mit den Pfoten und genießt das Bauchkraulen.',
   'click.breakSay':'Schnurr…','click.sulkSay':'Hmpf…','click.sulkCap':'{N} schaut kurz zurück und rollt sich wieder ein. Sobald du anfängst, wird es munter.',
   'click.focusSay':'Du schaffst das 🐾','click.focusCap':'{N} blinzelt langsam und feuert dich an.','click.idleSay':'Miau~','click.idleCap':'{N} schaut dir liebevoll in die Augen.',
-  'coffee.say':'Warm… ☕','coffee.cap':'{N} schnuppert am Kaffee. Gönn dir eine warme Tasse Tee.','plant.say':'Schön grün 🌱','plant.cap':'Eine frische Pflanze, die auf der Fensterkommode in der Sonne wächst.'
+  'coffee.say':'Warm… ☕','coffee.cap':'{N} schnuppert am Kaffee. Gönn dir eine warme Tasse Tee.','plant.say':'Schön grün 🌱','plant.cap':'Eine frische Pflanze, die auf der Fensterkommode in der Sonne wächst.',
+  'streak.title':'Fokus-Serie','streak.badge':'{n} Tage Fokus-Serie','pol.stamp':'{n} Tage in Folge',
+  'after.brag':'🚀 Freunden angeben','after.bragBubble':'Spitzenfokus heute, miau! Willst du ihn deinen Freunden zeigen? 🐾',
+  'treasure.found':'✨ Ein neuer Schatz wurde gefunden, miau!',
+  'foot.u0':'05.11.: Fokus-Serien-Abzeichen, Schatz-Fanfare und Angeben-Button nach jeder Sitzung'
 }
 };
