@@ -107,8 +107,10 @@ img{max-width:100%}
         <div class="bubble" id="bubble" hidden>…</div>
         <img id="catImg" src="assets/cat_sleep.png" alt="콩이" data-i18n-alt="cat.alt">
         <div class="zzz"><span>z</span><span>z</span><span>z</span></div>
+        <div class="purr" aria-hidden="true"><span></span><span></span><span></span></div>
       </div>
 
+      <div id="cushion" aria-hidden="true"></div>
       <div id="bowl" title="콩이의 밥그릇" data-i18n-title="bowl.title">
         <img src="assets/pixel_bowl.png" alt="밥그릇" data-i18n-alt="bowl.alt">
       </div>
@@ -126,6 +128,8 @@ img{max-width:100%}
             <button class="chip" type="button" data-min="90">90분</button>
           </div>
           <label class="custom"><span data-i18n="setup.custom">직접 입력</span> <input id="customMin" type="number" min="5" max="180" step="5" value="25" inputmode="numeric"> <span data-i18n="setup.minUnit">분</span> <span class="hint" data-i18n="setup.minHint">(최소 5분)</span></label>
+          <label class="lap-toggle"><input type="checkbox" id="lapToggle"> <span data-i18n="lap.toggle">🛏️ 무릎냥이 잠재우기 모드</span></label>
+          <p class="hint" id="lapHint" style="margin-top:-8px">타이머가 도는 동안 콩이가 방석 위에서 골골송을 부르며 잠들어요. 화면을 벗어나거나 멈추면 깜짝 놀라 깨요.</p>
           <p id="setupMsg" data-i18n="setup.msg">타이머가 도는 동안 고양이는 방에서 자기 시간을 보내요. 끝나면 간식을 줄 수 있어요.</p>
           <div class="btn-row">
             <button class="btn" id="startBtn" type="button" data-i18n="start">시작하기</button>
@@ -138,6 +142,7 @@ img{max-width:100%}
         <div style="display:flex;flex-direction:column;gap:14px">
           <div class="clock" id="clock">25:00</div>
           <div class="bar"><i id="barFill"></i></div>
+          <ol class="stages" id="stages" aria-label="몰입 단계"><li data-i18n="stage.1">자리 잡기</li><li data-i18n="stage.2">식빵 굽기</li><li data-i18n="stage.3">꿀잠·골골송</li><li data-i18n="stage.4">눈인사</li></ol>
           <div class="status" id="focusStatus"></div>
           <div class="btn-row">
             <button class="btn quiet" id="stopBtn" type="button" data-i18n="stop">멈추기</button>
@@ -279,9 +284,9 @@ img{max-width:100%}
 
 <div class="modal" id="shelfModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shelfTitle">
-    <h3 id="shelfTitle" data-i18n="shelf.title">🌿 콩이의 보물 선반</h3>
-    <p id="shelfSubtitle">콩이가 완주 선물로 물어다 둔 소중한 조각들이에요.</p>
-    <div id="shelfDetailList" style="display:flex;flex-direction:column;gap:10px;margin:14px 0"></div>
+    <h3 id="shelfTitle" data-i18n="dex.title">📖 콩이의 보물 도감</h3>
+    <p id="shelfSubtitle">콩이가 집중 시간에 맞춰 물어온 소품이에요.</p>
+    <div id="shelfDetailList" class="dex"></div>
     <div class="btn-row"><button class="btn secondary" id="closeShelf" type="button" data-i18n="close">닫기</button></div>
   </div>
 </div>
@@ -343,12 +348,14 @@ img{max-width:100%}
     <h3 id="polTitle" style="margin-bottom:4px" data-i18n="pol.title">📸 감성 폴라로이드 일기</h3>
     <p style="font-size:13px;margin-bottom:12px" data-i18n="pol.sub">콩이와 함께한 집중 순간이 담긴 사진이에요. 오늘 한 일을 적고 저장해 보세요.</p>
 
+    <div class="pol-tabs" role="tablist"><button class="tab-btn active" id="polTabClassic" type="button" role="tab" data-i18n="pol.tab">폴라로이드</button><button class="tab-btn" id="polTabEssay" type="button" role="tab" data-i18n="essay.tab">에세이</button></div>
     <div style="display:flex;justify-content:center;margin:8px 0">
       <canvas id="polaroidCanvas" width="1080" height="1350" style="width:100%;max-width:320px;height:auto;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25)"></canvas>
     </div>
 
     <div style="text-align:left;margin-top:10px">
       <label for="polMemoInput" style="font-size:12.5px;font-weight:700;color:var(--muted)" data-i18n="pol.memoLabel">✏️ 오늘 집중한 일 한마디 기록 (실시간 반영)</label>
+      <div id="polPlaceWrap" hidden style="margin-bottom:8px"><input type="text" id="polPlaceInput" maxlength="24" placeholder="장소 (예: Oberursel)" data-i18n-ph="essay.place" style="width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid #e0d2c6;background:var(--bg);color:var(--fg);font-family:inherit;font-size:14px;box-sizing:border-box"></div>
       <input type="text" id="polMemoInput" maxlength="32" placeholder="예: 코딩 완주, 기획서 작성, 영단어 50개" data-i18n-ph="pol.memoPh" style="width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid #e0d2c6;background:var(--bg);color:var(--fg);font-family:inherit;font-size:14px;margin-top:4px;box-sizing:border-box">
     </div>
 
