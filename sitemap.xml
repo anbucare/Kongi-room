@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://anbucare.github.io/Kongi-room/</loc>
+    <loc>https://kongi-room.pages.dev/</loc>
     <lastmod>2026-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://anbucare.github.io/Kongi-room/assets/og.jpg</image:loc>
+      <image:loc>https://kongi-room.pages.dev/assets/og.jpg</image:loc>
       <image:title>콩이네 방 · 고양이와 함께하는 집중 타이머</image:title>
     </image:image>
   </url>
