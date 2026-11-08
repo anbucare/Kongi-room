@@ -5,7 +5,7 @@ import fontData from '../assets/GowunDodum-Subset.ttf';
 import bgJpg from '../assets/og-bg.jpg';
 import catPng from '../assets/cat.png';
 
-const SITE = 'https://kongi-room.pages.dev/';
+const SITE = 'https://kongi-room.anbu-pilot.workers.dev/';
 const BOT_UA = /facebookexternalhit|facebot|twitterbot|kakaotalk-scrap|kakaotalk|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|skypeuripreview|applebot|googlebot|bingbot|naverbot|yeti|daum|threads|instagram|embedly|quora link preview|redditbot|mastodon|bluesky|cardyb|summalybot|line-poker|viber|snapchat|duckduckbot|petalbot|vkshare|outbrain|w3c_validator|1in200m/i;
 
 let wasmReady = null;

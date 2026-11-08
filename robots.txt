@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://kongi-room.pages.dev/sitemap.xml
+Sitemap: https://kongi-room.anbu-pilot.workers.dev/sitemap.xml

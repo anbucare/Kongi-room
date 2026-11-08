@@ -15,7 +15,7 @@ let petName=store.get('petName','콩이')||'콩이';
 const Nga=()=>josa(petName,'이','가'),Nneun=()=>josa(petName,'은','는'),Nreul=()=>josa(petName,'을','를'),Nwa=()=>josa(petName,'과','와');
 const fill=s=>String(s).replace(/\{N네\}/g,petName+'네').replace(/\{N가\}/g,Nga()).replace(/\{N는\}/g,Nneun()).replace(/\{N를\}/g,Nreul()).replace(/\{N와\}/g,Nwa()).replace(/\{N랑\}/g,josa(petName,'이랑','랑')).replace(/\{N\}/g,dname());
 const reduced=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SITE_URL='https://kongi-room.pages.dev/';
+const SITE_URL='https://kongi-room.anbu-pilot.workers.dev/';
 const LANGS=['ko','en','de'];
 const THEME_IDS=['room','library','greenhouse','train','cabin'];
 let curTheme=(()=>{const v=store.get('theme','room');return THEME_IDS.includes(v)?v:'room'})();
