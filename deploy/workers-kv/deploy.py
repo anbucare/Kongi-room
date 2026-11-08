@@ -60,7 +60,9 @@ def main(site):
     # 3. worker script
     meta = {'main_module': 'worker.js', 'compatibility_date': '2025-10-01',
             'bindings': [{'type': 'kv_namespace', 'name': 'SITE', 'namespace_id': ns},
-                         {'type': 'plain_text', 'name': 'SITE_VERSION', 'text': version}]}
+                         {'type': 'plain_text', 'name': 'SITE_VERSION', 'text': version}]
+                        + ([{'type': 'service', 'name': 'SHARE', 'service': os.environ.get('SHARE_WORKER', 'kongi-room-share')}]
+                           if os.environ.get('SHARE_WORKER', 'kongi-room-share') else [])}
     curl(['-X', 'PUT', '-F', 'metadata=' + json.dumps(meta) + ';type=application/json',
           '-F', 'worker.js=@' + os.path.join(HERE, 'worker.js') + ';type=application/javascript+module',
           API + '/workers/scripts/' + NAME])

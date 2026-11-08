@@ -15,6 +15,9 @@ export default {
       return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
     }
     const url = new URL(req.url);
+    // Result links and their preview images: answered by the kongi-room-share Worker
+    // through a service binding, so shared links stay on this site's address.
+    if (env.SHARE && /^\/(r|result|og|og\.png)\/?$/.test(url.pathname)) return env.SHARE.fetch(req);
     let path = decodeURIComponent(url.pathname).replace(/^\/+/, '');
     // links that still carry the old GitHub Pages folder
     if (path === 'Kongi-room' || path.startsWith('Kongi-room/')) {

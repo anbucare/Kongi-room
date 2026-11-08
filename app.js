@@ -29,7 +29,7 @@ function bowlsOf(n){return lang==='en'?(n===1?'1 empty bowl':n+' empty bowls'):l
 function fmtDate(d){if(lang==='ko'){const days=['일','월','화','수','목','금','토'];return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${days[d.getDay()]}`}
   try{return d.toLocaleDateString(lang==='en'?'en-US':'de-DE',{year:'numeric',month:'short',day:'numeric',weekday:'short'})}catch(e){return d.toDateString()}}
 const KAKAO_JS_KEY='';
-const RESULT_BASE='';
+const RESULT_BASE=SITE_URL+'r';
 const RESULT_WORKER='https://kongi-room-share.anbu-pilot.workers.dev/r';
 const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(navigator.userAgent);
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2400)}
