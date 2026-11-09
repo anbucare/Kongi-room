@@ -1,5 +1,5 @@
 /* 콩이네 방 service worker: keeps the app shell offline, caches room art lazily. */
-const VERSION = 'kongi-v26';
+const VERSION = 'kongi-v27';
 const SHELL = [
   './',
   './index.html',
@@ -30,6 +30,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return; // always live
 
   if (url.origin === self.location.origin && /^\/(r|result|og|og\.png)\/?$/.test(url.pathname)) {
     if (req.mode === 'navigate') e.respondWith(fetch(req).catch(() => caches.match('./')));
