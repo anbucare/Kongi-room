@@ -72,6 +72,9 @@
 ```text
 ├── index.html              # 타이머 앱 본체 (마크업)
 ├── app.css / app.js        # 스타일과 앱 스크립트
+├── core.js                 # 순수 규칙(XP·레벨·포모도로 사이클·스트릭·성장·시간 표기) — 앱과 테스트가 함께 씀
+├── i18n.js                 # 한국어·영어·독일어 문구 사전
+├── tests/                  # node --test 단위 테스트 (규칙, 번역 완전성, 캐시 목록, 외부 스크립트 금지)
 ├── robots.txt / sitemap.xml # 검색엔진 안내
 ├── assets/                 # 방 일러스트(webp), 콩이 스프라이트, 미리보기 그림(og.jpg)
 ├── manifest.webmanifest    # PWA 매니페스트 (홈 화면 추가, 스탠드얼론 설정)
@@ -95,6 +98,28 @@ python3 -m http.server 8000
 ```
 
 브라우저에서 `http://localhost:8000` 접속.
+
+## ✅ 테스트
+
+Node 20 이상이면 의존성 설치 없이 바로 돌아갑니다.
+
+```bash
+npm test
+```
+
+- `tests/core.test.js`: XP(체험 0, 분당 1 + 완주 5, 중단 시 절반)·레벨(60/180/420)·포모도로 상태기계(4회마다 긴 휴식, 자동 시작)·스트릭·성장 해금·초 단위 시간 표기
+- `tests/i18n.test.js`: ko/en/de 키 수·키 집합 일치, 영어·독일어 문구에 한글 없음, `{변수}` 일치, index.html·app.js 가 쓰는 키 존재
+- `tests/shell.test.js`: `sw.js` 캐시 목록에 페이지 파일 누락 없음, 캐시 버전, 외부 스크립트·추적 코드 없음, 공유는 링크(wa.me·intent)만, 푸터의 만든 사람·메일
+
+파일을 고쳤으면 `sw.js` 의 `VERSION` 을 올려야 설치된 앱이 새 파일을 받습니다 (테스트가 최소 버전을 확인합니다).
+
+끝까지 흐름(30초 체험→간식→레벨, 25분→일시정지→이어하기, 자동 포모도로, 핫스팟·믹서, KO/EN/DE, 무릎냥이, 모바일 390×844)은 Playwright 로 자동 확인합니다. 개발용 의존성 하나(playwright)만 필요하고 사이트에는 아무것도 추가되지 않습니다.
+
+```bash
+npm i && npx playwright install chromium
+python3 -m http.server 8787   # 다른 터미널에서
+npm run test:e2e              # 스크린샷은 tests/e2e/shots/ 에 남아요
+```
 
 ---
 
