@@ -21,10 +21,10 @@ test('sw.js 캐시 목록에 index.html 이 쓰는 로컬 css/js/manifest 가 �
   for (const f of shell) assert.ok(fs.existsSync(path.join(root, f)), 'SHELL 에 적힌 파일이 저장소에 없음: ' + f);
 });
 
-test('sw.js 캐시 버전은 kongi-v30 이상이다 (파일을 바꾸면 올려야 함)', () => {
+test('sw.js 캐시 버전은 kongi-v31 이상이다 (파일을 바꾸면 올려야 함)', () => {
   const m = /const VERSION = 'kongi-v(\d+)'/.exec(read('sw.js'));
   assert.ok(m, 'VERSION 문자열을 찾지 못함');
-  assert.ok(+m[1] >= 30, '버전 ' + m[1]);
+  assert.ok(+m[1] >= 31, '버전 ' + m[1]);
 });
 
 test('외부 스크립트·추적 코드가 없다 (Google Fonts 스타일시트만 허용)', () => {
