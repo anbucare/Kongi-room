@@ -127,7 +127,7 @@ npm run test:e2e              # 스크린샷은 tests/e2e/shots/ 에 남아요
 
 공유 시트의 카카오톡 버튼은 기본으로 휴대폰 공유창이나 "복사 후 붙여넣기"로 동작합니다. 카카오 공유 API로 바로 보내려면:
 
-1. https://developers.kakao.com 에서 앱을 만들고 **플랫폼 → Web** 에 `https://anbucare.github.io` 를 등록합니다.
+1. https://developers.kakao.com 에서 앱을 만들고 **플랫폼 → Web** 에 `https://kongi-room.anbu-pilot.workers.dev` 를 등록합니다.
 2. 앱 키 중 **JavaScript 키**를 복사해 `app.js` 의 `const KAKAO_JS_KEY=''` 안에 넣습니다.
 3. 배포하면 카카오톡 버튼이 카카오 공유창(미리보기 그림 + "나도 해 보기" 버튼)을 엽니다.
 
@@ -138,6 +138,28 @@ npm run test:e2e              # 스크린샷은 tests/e2e/shots/ 에 남아요
 ## 🗺️ robots.txt 참고
 
 프로젝트 사이트라 `robots.txt` 는 `/Kongi-room/robots.txt` 에 있고, 검색엔진이 보는 도메인 루트(`anbucare.github.io/robots.txt`)에는 올라가지 않습니다. 루트에 두려면 `anbucare.github.io` 이름의 저장소를 만들어 그 안에 robots.txt 를 두고 `Sitemap: https://anbucare.github.io/Kongi-room/sitemap.xml` 줄을 적으면 됩니다. 페이지 `<head>` 에는 `<link rel="sitemap">` 으로 사이트맵 위치를 적어 두었습니다.
+
+## 🚀 사이트 배포 (kongi-room.anbu-pilot.workers.dev)
+
+실제 사이트는 Cloudflare Workers + KV 에서 서비스됩니다. GitHub Pages 주소(`anbucare.github.io/Kongi-room`)는 방문자를 이 주소로 넘기는 이동용입니다. main 에 합쳐도 자동으로 올라가지 않으니, 합친 뒤 아래 한 줄을 실행합니다.
+
+처음 한 번만 Cloudflare 에 로그인합니다 (브라우저가 열리고, 토큰은 wrangler 가 알아서 보관합니다):
+
+```bash
+npx wrangler login
+```
+
+그 뒤에는 main 이 바뀔 때마다 저장소 루트에서:
+
+```bash
+node deploy/workers-kv/deploy-wrangler.mjs
+```
+
+- `--dry-run` 을 붙이면 올리지 않고 무엇을 올릴지만 보여 줍니다.
+- `--prune` 을 붙이면 올린 뒤 직전 버전만 남기고 더 오래된 버전 파일을 KV 에서 지웁니다 (의견·옮기기 코드 데이터는 건드리지 않습니다).
+- 끝나면 `https://kongi-room.anbu-pilot.workers.dev/` 를 열어 푸터의 "업데이트 소식"이 바뀌었는지 확인합니다. 설치된 앱은 `sw.js` 의 `VERSION` 이 바뀌면 다음에 열 때 새 파일을 받습니다.
+
+토큰 방식(`deploy/workers-kv/deploy.py`, CI 나 다른 컴퓨터용)도 그대로 있습니다. 환경변수 `CLOUDFLARE_ACCOUNT_ID` 와 `CLOUDFLARE_API_TOKEN`(Workers Scripts: Edit + Workers KV Storage: Edit) 이 필요하며, 토큰 값은 파일이나 저장소에 적지 않습니다.
 
 ## 🔗 결과 링크 미리보기 (Cloudflare Worker, 선택)
 
