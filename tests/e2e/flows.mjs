@@ -4,6 +4,7 @@
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 const base = process.env.BASE || 'http://localhost:8787/';
+const LIVE = !/localhost|127\.0\.0\.1/.test(base); // on the real site, skip anything that would write to its API
 const OUT = new URL('./shots/', import.meta.url).pathname; fs.mkdirSync(OUT, { recursive: true });
 const results = []; let fails = 0;
 function check(name, ok, detail) { results.push({ name, ok: !!ok, detail }); if (!ok) fails++; console.log((ok ? 'OK  ' : 'FAIL') + ' ' + name + (detail ? '  — ' + detail : '')); }
@@ -174,6 +175,7 @@ const browser = await chromium.launch();
   await page.exposeFunction('__open', (u) => { opened = u; });
   await page.evaluate(() => { window.open = (u) => { window.__open(u); return null; }; });
   await page.click('#openShareBtn'); await page.clock.runFor(800);
+  await page.locator('#shareSheet').waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}); // the card loads the room art first (slower on the live site)
   check('공유 시트 열림', await vis(page, '#shareSheet'));
   const order = await page.$$eval('#shareGrid .btn', (b) => b.filter((x) => !x.hidden).map((x) => x.id));
   check('공유 버튼: 링크 복사·WhatsApp·카카오톡·X·Threads 나란히', ['shCopy', 'shWhatsApp', 'shKakao', 'shX', 'shThreads'].every((id) => order.includes(id)), order.join(','));
@@ -192,8 +194,11 @@ const browser = await chromium.launch();
   await page.click('#feedbackBtn'); await page.fill('#fbText', '테스트 의견입니다');
   let mailHref = null; await page.exposeFunction('__mail', (h) => { mailHref = h; });
   await page.evaluate(() => { const o = HTMLAnchorElement.prototype.click; HTMLAnchorElement.prototype.click = function () { if (this.href.startsWith('mailto:')) { window.__mail(this.href); return; } return o.call(this); }; });
-  await page.click('#fbSend'); await page.clock.runFor(1500); await page.waitForTimeout(300);
-  check('API 없는 호스트에서 앱 안 보내기 → 메일 앱으로 열림', typeof mailHref === 'string' && mailHref.startsWith('mailto:hana.park86@outlook.com') && decodeURIComponent(mailHref).includes('테스트 의견입니다'), mailHref);
+  if (LIVE) console.log('SKIP 라이브에서는 앱 안 보내기를 실제로 전송하지 않음 (/api/feedback 에 테스트 글이 남지 않도록)');
+  else {
+    await page.click('#fbSend'); await page.clock.runFor(1500); await page.waitForTimeout(300);
+    check('API 없는 호스트에서 앱 안 보내기 → 메일 앱으로 열림', typeof mailHref === 'string' && mailHref.startsWith('mailto:hana.park86@outlook.com') && decodeURIComponent(mailHref).includes('테스트 의견입니다'), mailHref);
+  }
   mailHref = null; await page.click('#fbMail'); await page.waitForTimeout(200);
   check('메일 앱으로 보내기 버튼 → mailto', typeof mailHref === 'string' && mailHref.includes('subject='), mailHref);
   await page.keyboard.press('Escape');
