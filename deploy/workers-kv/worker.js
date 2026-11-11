@@ -47,7 +47,10 @@ async function api(req, env, url) {
     if (!b || b.app !== 'kongi-room' || typeof b.data !== 'object') return json({ error: 'invalid' }, 400);
     const code = newCode();
     await env.SITE.put('backup/' + code, JSON.stringify(b), { expirationTtl: 60 * 60 * 24 * 90 });
-    return json({ code });
+    const res = json({ code });
+    // the old GitHub Pages address sends its visitors' progress here once, when it forwards them
+    if (req.headers.get('origin') === 'https://anbucare.github.io') res.headers.set('access-control-allow-origin', 'https://anbucare.github.io');
+    return res;
   }
   const m = /^\/api\/backup\/([A-Z0-9]{8})$/.exec(path);
   if (m && req.method === 'GET') {

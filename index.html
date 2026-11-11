@@ -2,6 +2,48 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<script>
+/* The site moved from GitHub Pages to Cloudflare. On the old address, carry this browser's
+   progress over with a one-time transfer code and send the visitor to the new address.
+   On the new address, ?carry=CODE loads that progress once. */
+(function(){
+  var NEW='https://kongi-room.anbu-pilot.workers.dev/';
+  var h=location.hostname;
+  var q=new URLSearchParams(location.search);
+  if(/\.github\.io$/i.test(h)){
+    document.documentElement.style.visibility='hidden';
+    q.delete('carry');
+    var go=function(code){if(code)q.set('carry',code);var s=q.toString();location.replace(NEW+(s?'?'+s:'')+location.hash)};
+    var data={},n=0;
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k==='run')continue;data[k]=localStorage.getItem(k);n++}}catch(e){}
+    if(!(data.intimacy||data.log||data.album||data.shelf||data.streak)){go();return}
+    var done=false,t=setTimeout(function(){if(!done){done=true;go()}},4000);
+    fetch(NEW+'api/backup',{method:'POST',headers:{'content-type':'text/plain'},body:JSON.stringify({app:'kongi-room',v:1,at:new Date().toISOString(),from:location.origin,data:data})})
+      .then(function(r){return r.ok?r.json():null}).then(function(j){if(!done){done=true;clearTimeout(t);go(j&&j.code)}})
+      .catch(function(){if(!done){done=true;clearTimeout(t);go()}});
+    return;
+  }
+  var code=(q.get('carry')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(code.length!==8)return;
+  var clean=function(){q.delete('carry');var s=q.toString();history.replaceState(null,'',location.pathname+(s?'?'+s:'')+location.hash)};
+  var seen;try{seen=JSON.parse(localStorage.getItem('carried')||'[]')}catch(e){seen=[]}
+  if(seen.indexOf(code)>=0){clean();return}
+  document.documentElement.style.visibility='hidden';
+  fetch('/api/backup/'+code).then(function(r){return r.ok?r.json():null}).then(function(snap){
+    var ok=false;
+    if(snap&&snap.app==='kongi-room'&&snap.data){
+      var has=false;try{has=!!(localStorage.getItem('intimacy')||localStorage.getItem('log')||localStorage.getItem('album'))}catch(e){}
+      var ko=(navigator.language||'').indexOf('ko')===0;
+      if(!has||confirm(ko?'옛 주소에서 쓰던 콩이와의 기록을 이 주소로 가져올까요? (지금 이 주소의 기록은 바뀌어요)':'Bring your progress from the old address here? (This replaces the progress saved here.)')){
+        try{Object.keys(snap.data).forEach(function(k){localStorage.setItem(k,snap.data[k])});if(!('stats' in snap.data))localStorage.removeItem('stats');ok=true}catch(e){}
+      }
+    }
+    try{seen.push(code);localStorage.setItem('carried',JSON.stringify(seen))}catch(e){}
+    clean();
+    if(ok)location.reload();else document.documentElement.style.visibility='';
+  }).catch(function(){clean();document.documentElement.style.visibility=''});
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>콩이네 방 · 고양이와 함께하는 집중 타이머</title>
 <meta name="description" content="집중을 끝내면 콩이가 간식을 먹으러 와요. 가입 없이 25·50·90분 중 골라 바로 시작해 보세요.">
