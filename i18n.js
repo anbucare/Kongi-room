@@ -758,3 +758,6 @@ Object.assign(window.KONGI_I18N.de,{'lap.hint':'Beim Fokussieren wechselt die An
 Object.assign(window.KONGI_I18N.ko,{'st.unlockIn':'다음 해금 · {t} 더 집중하면 · 지금 {s}'});
 Object.assign(window.KONGI_I18N.en,{'st.unlockIn':'Next unlock · {t} more focus · now {s}'});
 Object.assign(window.KONGI_I18N.de,{'st.unlockIn':'Nächste Freischaltung · noch {t} Fokus · jetzt {s}'});
+Object.assign(window.KONGI_I18N.ko,{'foot.mail':'✉️ 메일로 의견 보내기','foot.mailSubject':'[콩이네 방] 의견','foot.maker':'만든 사람: 박하나 · 독일에서 혼자 만들고 운영해요'});
+Object.assign(window.KONGI_I18N.en,{'foot.mail':'✉️ Send feedback by email','foot.mailSubject':"[Kongi's Room] Feedback",'foot.maker':'Made by Hana Park · built and run solo from Germany'});
+Object.assign(window.KONGI_I18N.de,{'foot.mail':'✉️ Feedback per E-Mail senden','foot.mailSubject':'[Kongis Zimmer] Feedback','foot.maker':'Von Hana Park · allein in Deutschland gebaut und betrieben'});

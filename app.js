@@ -2231,6 +2231,7 @@ function drawPreview(src){const pv=$('#sheetPreview');if(!pv||!src)return;const 
 function applyLang(){
   document.documentElement.lang=lang;hush();
   $$('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)});
+  $$('[data-i18n-subject]').forEach(el=>{el.href=el.getAttribute('href').split('?')[0]+'?subject='+encodeURIComponent(t(el.dataset.i18nSubject))});
   $$('[data-i18n-title]').forEach(el=>{el.title=t(el.dataset.i18nTitle)});
   $$('[data-i18n-aria]').forEach(el=>{el.setAttribute('aria-label',t(el.dataset.i18nAria))});
   $$('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh)});
