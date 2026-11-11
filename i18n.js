@@ -761,3 +761,44 @@ Object.assign(window.KONGI_I18N.de,{'st.unlockIn':'Nächste Freischaltung · noc
 Object.assign(window.KONGI_I18N.ko,{'foot.mail':'✉️ 메일로 의견 보내기','foot.mailSubject':'[콩이네 방] 의견','foot.maker':'만든 사람: 박하나 · 독일에서 혼자 만들고 운영해요'});
 Object.assign(window.KONGI_I18N.en,{'foot.mail':'✉️ Send feedback by email','foot.mailSubject':"[Kongi's Room] Feedback",'foot.maker':'Made by Hana Park · built and run solo from Germany'});
 Object.assign(window.KONGI_I18N.de,{'foot.mail':'✉️ Feedback per E-Mail senden','foot.mailSubject':'[Kongis Zimmer] Feedback','foot.maker':'Von Hana Park · allein in Deutschland gebaut und betrieben'});
+
+// 2026-11-11: WhatsApp sharing, mail-first feedback, thumbnail fallback
+Object.assign(window.KONGI_I18N.ko,{
+  'sh.whatsapp':'💚 WhatsApp으로 보내기','tg.whatsapp':'💚 WhatsApp으로 초대',
+  'sheet.hintCopy':'링크를 복사해서 보내거나, WhatsApp·X·Threads 버튼으로 바로 보낼 수 있어요.',
+  'sheet.hintNative':'휴대폰 공유창에서는 WhatsApp·카카오톡·문자·인스타그램 등 설치된 앱으로 바로 보낼 수 있어요.',
+  'foot.feedback':'💬 앱 안에서 의견 보내기 (가입 없이)',
+  'fb.sub':'로그인이나 가입 없이 보낼 수 있어요. 메일 앱으로 보내는 게 가장 확실하고, 앱 안에서 바로 보내기도 돼요. 불편한 점, 바라는 기능, 좋았던 점 모두 반가워요.',
+  'fb.mail':'✉️ 메일 앱으로 보내기','fb.send':'앱 안에서 바로 보내기',
+  'fb.mailOpened':'메일 앱을 열었어요. 보내기만 누르면 돼요 💛',
+  'fb.failMail':'지금은 앱 안에서 보내지 못해 메일 앱을 열었어요. 적은 내용은 복사해 두었어요',
+  'theme.broken':'그림을 불러오지 못했어요',
+  'fb.privacy':'메일로 보내면 내 메일 앱에서 바로 가요. 앱 안에서 보내면 개발자만 볼 수 있는 곳에 저장돼요. 두 경우 모두 화면 크기·언어만 함께 적혀요.',
+  'foot.u6':'11.11 반영했어요: WhatsApp 공유, 메일 우선 의견 보내기, 자동 테스트(규칙·번역 완전성)'
+});
+Object.assign(window.KONGI_I18N.en,{
+  'sh.whatsapp':'💚 Send on WhatsApp','tg.whatsapp':'💚 Invite on WhatsApp',
+  'sheet.hintCopy':'Copy the link to send it, or send straight to WhatsApp, X or Threads with the buttons.',
+  'sheet.hintNative':'The phone share sheet sends straight to installed apps like WhatsApp, KakaoTalk, Messages or Instagram.',
+  'foot.feedback':'💬 Send feedback in the app (no sign-up)',
+  'fb.sub':'No login or sign-up needed. Email is the most reliable way; sending inside the app works too. Problems, wishes and things you liked are all welcome.',
+  'fb.mail':'✉️ Send with my email app','fb.send':'Send inside the app',
+  'fb.mailOpened':'Your email app is open — just press send 💛',
+  'fb.failMail':'Couldn’t send in-app right now, so your email app was opened. Your text was copied too',
+  'theme.broken':'Picture didn’t load',
+  'fb.privacy':'Sent by email, it goes straight from your mail app. Sent inside the app, only the developer can read it. Either way, only your screen size and language are included.',
+  'foot.u6':'11.11 added: WhatsApp sharing, email-first feedback, automated tests (rules, translation completeness)'
+});
+Object.assign(window.KONGI_I18N.de,{
+  'sh.whatsapp':'💚 Per WhatsApp senden','tg.whatsapp':'💚 Per WhatsApp einladen',
+  'sheet.hintCopy':'Kopiere den Link zum Versenden oder schicke ihn direkt per WhatsApp, X oder Threads.',
+  'sheet.hintNative':'Über das Teilen-Menü schickst du direkt an installierte Apps wie WhatsApp, KakaoTalk, Nachrichten oder Instagram.',
+  'foot.feedback':'💬 Feedback in der App senden (ohne Anmeldung)',
+  'fb.sub':'Ohne Login oder Anmeldung. Per E-Mail kommt es am sichersten an; Senden in der App geht auch. Probleme, Wünsche und Lob sind willkommen.',
+  'fb.mail':'✉️ Mit meiner Mail-App senden','fb.send':'In der App senden',
+  'fb.mailOpened':'Deine Mail-App ist offen – nur noch auf Senden tippen 💛',
+  'fb.failMail':'Gerade nicht in der App gesendet, deshalb wurde deine Mail-App geöffnet. Dein Text wurde auch kopiert',
+  'theme.broken':'Bild konnte nicht geladen werden',
+  'fb.privacy':'Per E-Mail geht es direkt aus deiner Mail-App. In der App gesendet kann es nur der Entwickler lesen. In beiden Fällen werden nur Bildschirmgröße und Sprache mitgeschickt.',
+  'foot.u6':'11.11 ergänzt: Teilen per WhatsApp, Feedback zuerst per E-Mail, automatische Tests (Regeln, Übersetzungsvollständigkeit)'
+});

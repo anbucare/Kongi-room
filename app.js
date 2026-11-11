@@ -1,5 +1,6 @@
 (function(){
 'use strict';
+const CORE=window.KONGI_CORE;
 const $=(s,el)=>(el||document).querySelector(s);
 const $$=(s,el)=>Array.from((el||document).querySelectorAll(s));
 const store={
@@ -9,7 +10,8 @@ const store={
 };
 const pad=n=>String(n).padStart(2,'0');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const todayKey=()=>CORE.dayKey(new Date());
+const yesterdayKey=()=>{const y=new Date();y.setDate(y.getDate()-1);return CORE.dayKey(y)};
 function josa(name,a,b){const c=name.charCodeAt(name.length-1);if(c>=0xAC00&&c<=0xD7A3)return name+(((c-0xAC00)%28)?a:b);return name+b}
 let petName=store.get('petName','콩이')||'콩이';
 const Nga=()=>josa(petName,'이','가'),Nneun=()=>josa(petName,'은','는'),Nreul=()=>josa(petName,'을','를'),Nwa=()=>josa(petName,'과','와');
@@ -35,9 +37,7 @@ const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(navigator
 function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},ms||2600)}
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Durations with seconds: "12분 30초" / "12m 30s" / "12 Min. 30 Sek."
-function fmtDur(sec){sec=Math.max(0,Math.round(sec||0));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),x=sec%60;
-  const U=lang==='en'?['h','m','s',' ']:lang==='de'?[' Std.',' Min.',' Sek.',' ']:['시간','분','초',' '];
-  const out=[];if(h)out.push(h+U[0]);if(m)out.push(m+U[1]);if(x&&!h)out.push(x+U[2]);if(!out.length)out.push('0'+U[2]);return out.join(U[3])}
+function fmtDur(sec){return CORE.fmtDur(sec,lang)}
 // Text set through setT is re-rendered when the language changes.
 // A var given as {dur:seconds} is formatted in the current language each time.
 function tv(vars){if(!vars)return vars;const o={};for(const k in vars){const v=vars[k];o[k]=(v&&typeof v==='object'&&'dur' in v)?fmtDur(v.dur):v}return o}
@@ -46,7 +46,7 @@ function rerenderT(){$$('[data-tkey]').forEach(el=>{let v=null;try{v=el.dataset.
 // Lifetime totals (the daily log resets every day).
 const STATS={get(){let s=store.get('stats',null);if(!s||typeof s.sec!=='number'){const al=store.get('album',[]);s={sec:al.filter(a=>!a.demo).reduce((a,b)=>a+(b.min|0)*60,0),sessions:store.get('doneTotal',0)|0,demos:0};store.set('stats',s)}return s},
   add(o){const s=this.get();for(const k in o)s[k]=(s[k]||0)+o[k];store.set('stats',s);return s}};
-const POMO_DEF={short:5,long:15,every:4,autoBreak:true,autoFocus:false,sound:true,notify:false};
+const POMO_DEF=CORE.POMO_DEF;
 let pomo=Object.assign({},POMO_DEF,store.get('pomo',{}));
 function cycleGet(){const c=store.get('cycle',null);return (c&&c.date===todayKey())?c:{date:todayKey(),n:0}}
 function cycleSet(n){store.set('cycle',{date:todayKey(),n})}
@@ -467,8 +467,7 @@ const TREASURES = [
   {id:'ring',icon:'💍',tier:120,name:'tr.ring.name',desc:'tr.ring.desc'},
   {id:'bell',icon:'🔔',tier:120,name:'tr.bell.name',desc:'tr.bell.desc'}
 ];
-const TIERS=[15,25,50,120];
-function tierOf(min){let tier=0;for(const x of TIERS)if(min>=x)tier=x;return tier}
+const TIERS=CORE.TIERS,tierOf=CORE.tierOf;
 
 function getShelfItems(){
   return store.get('shelf', []);
@@ -893,15 +892,8 @@ function drawPolaroidCanvas(item){
   }
 }
 
-const INTIMACY_LEVELS = [
-  { level: 1, name: 'lv1.name', minXp: 0, maxXp: 60, icon: '🌱', desc: 'lv1.desc', motion: 'lv1.motion', spot: 'sofa', pose: 'sleep' },
-  { level: 2, name: 'lv2.name', minXp: 60, maxXp: 180, icon: '🌿', desc: 'lv2.desc', motion: 'lv2.motion', spot: 'desk', pose: 'desk' },
-  { level: 3, name: 'lv3.name', minXp: 180, maxXp: 420, icon: '🐾', desc: 'lv3.desc', motion: 'lv3.motion', spot: 'rug', pose: 'belly' },
-  { level: 4, name: 'lv4.name', minXp: 420, maxXp: 99999, icon: '👑', desc: 'lv4.desc', motion: 'lv4.motion', spot: 'rug', pose: 'belly' }
-];
-// XP: 1 per real focus minute (+5 for finishing). Demos give none, so the 30-second demo can't level Kongi up.
-const XP_RULE={perMin:1,finish:5,treat:2,petPerDay:6};
-function xpForFocus(sec,finished){return Math.floor(sec/60)*XP_RULE.perMin+(finished&&sec>=300?XP_RULE.finish:0)}
+// Levels and XP rules live in core.js (shared with the unit tests). Demos earn nothing, so the 30-second demo can't level Kongi up.
+const INTIMACY_LEVELS=CORE.LEVELS,XP_RULE=CORE.XP_RULE,xpForFocus=CORE.xpForFocus;
 
 function getIntimacy() {
   const data = store.get('intimacy', null);
@@ -916,33 +908,16 @@ function getIntimacy() {
   return data;
 }
 
-function getLevelInfo(xp) {
-  for (let i = INTIMACY_LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= INTIMACY_LEVELS[i].minXp) {
-      return { ...INTIMACY_LEVELS[i] };
-    }
-  }
-  return INTIMACY_LEVELS[0];
-}
+const getLevelInfo=CORE.levelInfo;
 
 function updateIntimacyBadge() { renderStatus(); }
 
 const STREAK={
   get(){const s=store.get('streak',null);return (s&&typeof s.count==='number')?s:{count:0,best:0,last:null}},
-  valid(){const s=this.get();if(!s.count||!s.last)return 0;
-    const y=new Date();y.setDate(y.getDate()-1);
-    const yk=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
-    return (s.last===todayKey()||s.last===yk)?s.count:0}
+  valid(){return CORE.streakValid(this.get(),todayKey(),yesterdayKey())}
 };
 function bumpStreak(){
-  const s=STREAK.get(),tk=todayKey();
-  if(s.last!==tk){
-    const y=new Date();y.setDate(y.getDate()-1);
-    const yk=y.getFullYear()+'-'+pad(y.getMonth()+1)+'-'+pad(y.getDate());
-    s.count=(s.last===yk)?(s.count||0)+1:1;
-    s.last=tk;
-  }
-  s.best=Math.max(s.best||0,s.count);
+  const s=CORE.streakBump(STREAK.get(),todayKey(),yesterdayKey());
   store.set('streak',s);
   updateStreakBadge();
   return s.count;
@@ -950,19 +925,10 @@ function bumpStreak(){
 function updateStreakBadge(){ renderStatus(); }
 
 // ---- Kongi grows with you: room decorations and seasons unlock with lifetime focus minutes ----
-const DECOR=[
-  {id:'flower',min:50,icon:'🌸',at:[60,41]},
-  {id:'yarn',min:120,icon:'🧶',at:[63,88]},
-  {id:'portrait',min:240,icon:'🖼️',at:[10,30]},
-  {id:'fish',min:400,icon:'🐟',at:[33,60]},
-  {id:'garland',min:700,icon:'🎐',at:[51,8]},
-  {id:'crown',min:1200,icon:'👑',at:[85,66]}
-];
-const SEASONS=[{id:'spring',min:0,icon:'🌸'},{id:'summer',min:300,icon:'🌻'},{id:'autumn',min:900,icon:'🍂'},{id:'winter',min:1800,icon:'❄️'}];
+const DECOR=CORE.DECOR;
 function lifeMin(){return Math.floor(STATS.get().sec/60)}
-function seasonNow(){const m=lifeMin();let s=SEASONS[0];for(const x of SEASONS)if(m>=x.min)s=x;return s}
-function unlockList(){return DECOR.map(d=>({kind:'decor',id:d.id,min:d.min,icon:d.icon,name:'dc.'+d.id})).concat(SEASONS.slice(1).map(x=>({kind:'season',id:x.id,min:x.min,icon:x.icon,name:'season.'+x.id}))).sort((a,b)=>a.min-b.min)}
-function nextUnlock(){const m=lifeMin();return unlockList().find(u=>u.min>m)||null}
+function seasonNow(){return CORE.seasonFor(lifeMin())}
+function nextUnlock(){return CORE.nextUnlock(lifeMin())}
 function renderDecor(){
   const layer=$('#decorLayer');if(!layer)return;layer.innerHTML='';
   const m=lifeMin();
@@ -1096,7 +1062,7 @@ function renderIntimacyModal() {
   $('#intimacyCurrentTitle').textContent = `${info.icon} Lv.${info.level} ${t(info.name)}`;
   $('#intimacyCurrentDesc').textContent = t(info.desc);
 
-  const pct = info.level >= 4 ? 100 : Math.min(100, Math.round(((cur.xp - info.minXp) / (info.maxXp - info.minXp)) * 100));
+  const pct = CORE.levelPct(cur.xp);
   $('#intimacyProgressBar').style.width = pct + '%';
   $('#intimacyXpText').textContent = info.level >= 4 ? t('intimacy.max',{xp:cur.xp}) : t('intimacy.xp',{xp:cur.xp,max:info.maxXp,pct});
 
@@ -1373,7 +1339,7 @@ function stopPurr(){
   if(!purrNodes)return;const p=purrNodes;purrNodes=null;
   try{p.g.gain.cancelScheduledValues(audioCtx.currentTime);p.g.gain.setTargetAtTime(0,audioCtx.currentTime,0.15);setTimeout(()=>{try{p.o.stop();p.lfo.stop()}catch(e){}},500)}catch(e){}
 }
-function stageFor(p){return p<0.10?1:p<0.35?2:3}
+const stageFor=CORE.stageFor;
 function setStage(n,quiet){
   stage=n;renderStages();
   const home=homeSpot(),lap=!!(run&&run.lap);
@@ -1503,10 +1469,11 @@ function tick(){
 }
 setInterval(tick,250);
 
-function nextIsLong(){const n=cycleGet().n;return n>0&&n%Math.max(2,pomo.every|0)===0}
-function nextBreakMin(){return nextIsLong()?pomo.long:pomo.short}
+function nextBreak(){return CORE.pomoNextBreak(cycleGet().n,pomo)}
+function nextIsLong(){return nextBreak().long}
+function nextBreakMin(){return nextBreak().min}
 function renderCycle(){
-  const every=Math.max(2,pomo.every|0),n=cycleGet().n,inCycle=n%every===0&&n>0?every:n%every;
+  const every=CORE.pomoEvery(pomo),n=cycleGet().n,inCycle=n%every===0&&n>0?every:n%every;
   ['#cycleBox','#cycleBoxF','#cycleBoxA','#cycleBoxB'].forEach(sel=>{const el=$(sel);if(!el)return;
     let dots='';for(let i=0;i<every;i++)dots+=`<i class="${i<inCycle?'on':''}"></i>`;
     const next=nextIsLong()?t('cyc.long',{m:pomo.long}):t('cyc.short',{m:pomo.short});
@@ -1586,12 +1553,14 @@ function recordFocus(r,kind){
   const demo=!!r.demo;
   let xp=0;
   if(kind==='stop'){
+    // under a minute (or a demo) nothing is kept, as the stop dialog says
+    if(demo||sec<XP_RULE.stopMinSec)return {sec:0,xp:0,demo};
     log.items.push({type:'stop',sec,min:Math.floor(sec/60),demo});
-    if(!demo&&sec>=60){xp=Math.floor(xpForFocus(sec,false)/2);STATS.add({sec});}
+    xp=CORE.xpForStop(sec);STATS.add({sec});
   }else{
     log.items.push({type:'done',sec,min:demo?0:Math.round(sec/60),demo,lap:!!r.lap,wakes:r.wakes|0});
     if(demo)STATS.add({demos:1});
-    else{xp=xpForFocus(sec,true);STATS.add({sec,sessions:1});bumpStreak();cycleSet(cycleGet().n+1)}
+    else{xp=xpForFocus(sec,true,false);STATS.add({sec,sessions:1});bumpStreak();cycleSet(cycleGet().n+1)}
     recordAlbum(r);
   }
   store.set('log',log);
@@ -1964,6 +1933,8 @@ $('#shNative').addEventListener('click',shareNative);
 $('#shCopy').addEventListener('click',()=>{if(sheetCtx)copyText(sheetCtx.url,t('toast.linkCopied'))});
 $('#shCopyText').addEventListener('click',()=>{if(sheetCtx)copyText(sheetCtx.text+'\n'+sheetCtx.url,t('toast.textCopied'))});
 $('#shKakao').addEventListener('click',shareKakao);
+const waUrl=txt=>'https://wa.me/?text='+encodeURIComponent(txt);
+$('#shWhatsApp').addEventListener('click',()=>{if(!sheetCtx)return;window.open(waUrl(sheetCtx.text+'\n'+sheetCtx.url),'_blank','noopener')});
 $('#shX').addEventListener('click',()=>{if(!sheetCtx)return;window.open('https://x.com/intent/post?text='+encodeURIComponent(sheetCtx.text)+'&url='+encodeURIComponent(sheetCtx.url),'_blank','noopener')});
 $('#shThreads').addEventListener('click',()=>{if(!sheetCtx)return;window.open('https://www.threads.net/intent/post?text='+encodeURIComponent(sheetCtx.text+'\n'+sheetCtx.url),'_blank','noopener')});
 $('#shSave').addEventListener('click',()=>{if(sheetCtx)saveImage(sheetCtx.canvas,sheetCtx.fileName||'kongi-room.png')});
@@ -2134,13 +2105,26 @@ let fbKind='idea';
 $$('[data-fb]').forEach(b=>b.addEventListener('click',()=>{fbKind=b.dataset.fb;$$('[data-fb]').forEach(c=>c.setAttribute('aria-pressed',String(c===b)))}));
 $('#feedbackBtn').addEventListener('click',()=>{$('#feedbackModal').hidden=false;setTimeout(()=>$('#fbText').focus(),50)});
 $('#fbClose').addEventListener('click',()=>{$('#feedbackModal').hidden=true});
+// The mail link is the first channel (a static site has no inbox of its own); the in-app form posts to
+// /api/feedback where that API exists and opens the mail app with the same text everywhere else.
+const FEEDBACK_MAIL='hana.park86@outlook.com';
+function fbMailto(){
+  const text=$('#fbText').value.trim(),contact=$('#fbContact').value.trim(),kind=t('fb.'+fbKind);
+  const body=[kind,'',text,'',contact,'— '+lang+' · '+innerWidth+'x'+innerHeight].filter(Boolean).join('\n');
+  return 'mailto:'+FEEDBACK_MAIL+'?subject='+encodeURIComponent(t('foot.mailSubject')+' · '+kind)+'&body='+encodeURIComponent(body);
+}
+function openMail(href){const a=document.createElement('a');a.href=href;a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
+$('#fbMail').addEventListener('click',()=>{
+  const text=$('#fbText').value.trim();if(text.length<2){toast(t('fb.empty'));$('#fbText').focus();return}
+  openMail(fbMailto());toast(t('fb.mailOpened'),3600);say(t('fb.say'),2400);hearts(3);
+});
 $('#fbSend').addEventListener('click',async()=>{
   const text=$('#fbText').value.trim();if(text.length<2){toast(t('fb.empty'));$('#fbText').focus();return}
   const btn=$('#fbSend');btn.disabled=true;
   const body={kind:fbKind,text,contact:$('#fbContact').value.trim(),lang,screen:innerWidth+'x'+innerHeight,lv:getLevelInfo(getIntimacy().xp).level};
   try{const r=await fetch('/api/feedback',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(r.status);
     $('#fbText').value='';$('#fbContact').value='';$('#feedbackModal').hidden=true;toast(t('fb.thanks'),3600);say(t('fb.say'),2400);hearts(3)}
-  catch(e){copyText(text,t('fb.failCopied'))}
+  catch(e){const href=fbMailto();copyText(text,t('fb.failMail'));openMail(href)}
   finally{btn.disabled=false}
 });
 
@@ -2187,7 +2171,8 @@ function renderFriend(){
 }
 $('#togetherBtn').addEventListener('click',()=>{const v=focusMin();const sel=$('#tgMin');if(![...sel.options].some(o=>+o.value===v)){const o=document.createElement('option');o.textContent=v;sel.appendChild(o)}sel.value=String(v);$('#tgInfo').textContent='';$('#togetherModal').hidden=false});
 $('#tgClose').addEventListener('click',()=>{$('#togetherModal').hidden=true});
-$('#tgMake').addEventListener('click',async()=>{
+// Builds the shared-start link, closes the panel and starts this room's countdown; returns what to send.
+function buildTogether(){
   const m=+$('#tgMin').value,delay=+$('#tgDelay').value;const startAt=Date.now()+delay*60000;
   const p=new URLSearchParams({tg:startAt.toString(36),tm:m,tn:dname()});if(lang!=='ko')p.set('lang',lang);
   const url=SITE_URL+'?'+p.toString();
@@ -2195,8 +2180,13 @@ $('#tgMake').addEventListener('click',async()=>{
   const text=fill(t('tg.shareText',{m,at}));
   $('#togetherModal').hidden=true;
   scheduleTogether({start:startAt,m,name:t('tg.friends'),host:true});
+  return {url,text};
+}
+$('#tgMake').addEventListener('click',async()=>{
+  const {url,text}=buildTogether();
   try{if(navigator.share){await navigator.share({title:roomTitle(),text,url});}else{await copyText(text+'\n'+url,t('tg.copied'))}}catch(e){if(e&&e.name!=='AbortError')copyText(text+'\n'+url,t('tg.copied'))}
 });
+$('#tgWa').addEventListener('click',()=>{const {url,text}=buildTogether();window.open(waUrl(text+'\n'+url),'_blank','noopener')});
 let joinTimer=null,joinInfo=null;
 function leaveJoin(){clearInterval(joinTimer);joinTimer=null;if(joinInfo&&!joinInfo.started){joinInfo=null;history.replaceState(null,'',location.pathname)}}
 // Shows a countdown until the shared start time, then starts the focus with the end time both people share.
@@ -2242,6 +2232,7 @@ function applyLang(){
   $('#rainBtn').textContent=scene.classList.contains('rainy')?t('rain.btnOn'):t('rain.btn');
   const lh=$('#lapHint');if(lh)lh.textContent=fill(t('lap.hint'));
   const tb=$('#themeBtn');if(tb)tb.textContent=t('theme.btn')+' · '+t('theme.'+curTheme+'.name');
+  $$('.theme-card').forEach(c=>{c.dataset.broken='🖼️ '+t('theme.broken')});
   rerenderT();renderDaily();renderPomoSet();renderPause();renderFriend();renderSoundNow();
   renderLog();renderShelf();
   if(lastCaption)caption(lastCaption.k,lastCaption.v);
@@ -2256,7 +2247,7 @@ if(lapToggle){lapToggle.checked=lapMode;lapToggle.addEventListener('change',e=>{
 $('#themeBtn').addEventListener('click',()=>{$('#themeModal').hidden=false});
 $('#closeTheme').addEventListener('click',()=>{$('#themeModal').hidden=true});
 $$('.theme-card').forEach(c=>c.addEventListener('click',()=>{applyTheme(c.dataset.theme);$('#themeModal').hidden=true;caption('theme.cap');followSound()}));
-$$('.theme-card img').forEach(im=>{const bad=()=>{im.classList.add('broken')};im.addEventListener('error',bad);if(im.complete&&!im.naturalWidth)bad()});
+$$('.theme-card img').forEach(im=>{const bad=()=>{im.classList.add('broken');const c=im.closest('.theme-card');if(c)c.classList.add('broken')};im.addEventListener('error',bad);if(im.complete&&!im.naturalWidth)bad()});
 const langSel=$('#langSel');
 if(langSel){langSel.addEventListener('change',e=>{const v=e.target.value;if(!LANGS.includes(v))return;lang=v;store.set('lang',v);applyLang()})}
 

@@ -72,6 +72,9 @@
 ```text
 ├── index.html              # 타이머 앱 본체 (마크업)
 ├── app.css / app.js        # 스타일과 앱 스크립트
+├── core.js                 # 순수 규칙(XP·레벨·포모도로 사이클·스트릭·성장·시간 표기) — 앱과 테스트가 함께 씀
+├── i18n.js                 # 한국어·영어·독일어 문구 사전
+├── tests/                  # node --test 단위 테스트 (규칙, 번역 완전성, 캐시 목록, 외부 스크립트 금지)
 ├── robots.txt / sitemap.xml # 검색엔진 안내
 ├── assets/                 # 방 일러스트(webp), 콩이 스프라이트, 미리보기 그림(og.jpg)
 ├── manifest.webmanifest    # PWA 매니페스트 (홈 화면 추가, 스탠드얼론 설정)
@@ -96,13 +99,35 @@ python3 -m http.server 8000
 
 브라우저에서 `http://localhost:8000` 접속.
 
+## ✅ 테스트
+
+Node 20 이상이면 의존성 설치 없이 바로 돌아갑니다.
+
+```bash
+npm test
+```
+
+- `tests/core.test.js`: XP(체험 0, 분당 1 + 완주 5, 중단 시 절반)·레벨(60/180/420)·포모도로 상태기계(4회마다 긴 휴식, 자동 시작)·스트릭·성장 해금·초 단위 시간 표기
+- `tests/i18n.test.js`: ko/en/de 키 수·키 집합 일치, 영어·독일어 문구에 한글 없음, `{변수}` 일치, index.html·app.js 가 쓰는 키 존재
+- `tests/shell.test.js`: `sw.js` 캐시 목록에 페이지 파일 누락 없음, 캐시 버전, 외부 스크립트·추적 코드 없음, 공유는 링크(wa.me·intent)만, 푸터의 만든 사람·메일
+
+파일을 고쳤으면 `sw.js` 의 `VERSION` 을 올려야 설치된 앱이 새 파일을 받습니다 (테스트가 최소 버전을 확인합니다).
+
+끝까지 흐름(30초 체험→간식→레벨, 25분→일시정지→이어하기, 자동 포모도로, 핫스팟·믹서, KO/EN/DE, 무릎냥이, 모바일 390×844)은 Playwright 로 자동 확인합니다. 개발용 의존성 하나(playwright)만 필요하고 사이트에는 아무것도 추가되지 않습니다.
+
+```bash
+npm i && npx playwright install chromium
+python3 -m http.server 8787   # 다른 터미널에서
+npm run test:e2e              # 스크린샷은 tests/e2e/shots/ 에 남아요
+```
+
 ---
 
 ## 🔧 카카오톡 공유 켜기 (선택)
 
 공유 시트의 카카오톡 버튼은 기본으로 휴대폰 공유창이나 "복사 후 붙여넣기"로 동작합니다. 카카오 공유 API로 바로 보내려면:
 
-1. https://developers.kakao.com 에서 앱을 만들고 **플랫폼 → Web** 에 `https://anbucare.github.io` 를 등록합니다.
+1. https://developers.kakao.com 에서 앱을 만들고 **플랫폼 → Web** 에 `https://kongi-room.anbu-pilot.workers.dev` 를 등록합니다.
 2. 앱 키 중 **JavaScript 키**를 복사해 `app.js` 의 `const KAKAO_JS_KEY=''` 안에 넣습니다.
 3. 배포하면 카카오톡 버튼이 카카오 공유창(미리보기 그림 + "나도 해 보기" 버튼)을 엽니다.
 
@@ -113,6 +138,28 @@ python3 -m http.server 8000
 ## 🗺️ robots.txt 참고
 
 프로젝트 사이트라 `robots.txt` 는 `/Kongi-room/robots.txt` 에 있고, 검색엔진이 보는 도메인 루트(`anbucare.github.io/robots.txt`)에는 올라가지 않습니다. 루트에 두려면 `anbucare.github.io` 이름의 저장소를 만들어 그 안에 robots.txt 를 두고 `Sitemap: https://anbucare.github.io/Kongi-room/sitemap.xml` 줄을 적으면 됩니다. 페이지 `<head>` 에는 `<link rel="sitemap">` 으로 사이트맵 위치를 적어 두었습니다.
+
+## 🚀 사이트 배포 (kongi-room.anbu-pilot.workers.dev)
+
+실제 사이트는 Cloudflare Workers + KV 에서 서비스됩니다. GitHub Pages 주소(`anbucare.github.io/Kongi-room`)는 방문자를 이 주소로 넘기는 이동용입니다. main 에 합쳐도 자동으로 올라가지 않으니, 합친 뒤 아래 한 줄을 실행합니다.
+
+처음 한 번만 Cloudflare 에 로그인합니다 (브라우저가 열리고, 토큰은 wrangler 가 알아서 보관합니다):
+
+```bash
+npx wrangler login
+```
+
+그 뒤에는 main 이 바뀔 때마다 저장소 루트에서:
+
+```bash
+node deploy/workers-kv/deploy-wrangler.mjs
+```
+
+- `--dry-run` 을 붙이면 올리지 않고 무엇을 올릴지만 보여 줍니다.
+- `--prune` 을 붙이면 올린 뒤 직전 버전만 남기고 더 오래된 버전 파일을 KV 에서 지웁니다 (의견·옮기기 코드 데이터는 건드리지 않습니다).
+- 끝나면 `https://kongi-room.anbu-pilot.workers.dev/` 를 열어 푸터의 "업데이트 소식"이 바뀌었는지 확인합니다. 설치된 앱은 `sw.js` 의 `VERSION` 이 바뀌면 다음에 열 때 새 파일을 받습니다.
+
+토큰 방식(`deploy/workers-kv/deploy.py`, 로그인을 쓸 수 없는 CI 나 다른 컴퓨터용)도 그대로 있습니다. 환경변수 `CLOUDFLARE_ACCOUNT_ID` 와 `CLOUDFLARE_API_TOKEN`(Workers Scripts: Edit + Workers KV Storage: Edit) 이 필요합니다. 토큰 값은 파일·저장소·대화에 적지 않고, 터미널에 손으로 붙여 넣지도 않습니다(클립보드에서 `pbpaste` 로 바로 환경변수에 넣는 식으로 다룹니다).
 
 ## 🔗 결과 링크 미리보기 (Cloudflare Worker, 선택)
 
