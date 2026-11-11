@@ -196,10 +196,11 @@ export default {
       const ua = request.headers.get('user-agent') || '';
       const wantsHtml = BOT_UA.test(ua) || url.searchParams.get('preview') === '1';
       if (!wantsHtml) return Response.redirect(`${SITE}?${paramsOf(r)}`, 302);
-      return new Response(resultHtml(r, origin, dynamic), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
+      // noindex 는 HTML 의 meta 에도 있지만, 헤더로도 함께 보내 크롤러가 본문을 읽기 전에 알 수 있게 한다 (검색 결과에는 본문 주소만 나오게).
+      return new Response(resultHtml(r, origin, dynamic), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600', 'x-robots-tag': 'noindex', 'x-content-type-options': 'nosniff' } });
     }
 
-    if (path === '/health') return new Response('ok', { headers: { 'content-type': 'text/plain' } });
+    if (path === '/health') return new Response('ok', { headers: { 'content-type': 'text/plain; charset=utf-8', 'x-robots-tag': 'noindex' } });
     return Response.redirect(SITE, 302);
   },
 };

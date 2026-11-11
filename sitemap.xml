@@ -2,12 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://kongi-room.anbu-pilot.workers.dev/</loc>
-    <lastmod>2026-11-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-11-11</lastmod>
     <image:image>
       <image:loc>https://kongi-room.anbu-pilot.workers.dev/assets/og.jpg</image:loc>
-      <image:title>콩이네 방 · 고양이와 함께하는 집중 타이머</image:title>
     </image:image>
   </url>
 </urlset>

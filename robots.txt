@@ -1,4 +1,32 @@
+# 콩이네 방 robots.txt — https://kongi-room.anbu-pilot.workers.dev/
+# 방침(2026-11-11): 검색엔진과 AI 크롤러 모두 허용. 가입 없는 공개 서비스라 숨길 내용이 없음.
+# /r, /og(친구에게 보내는 결과 링크의 미리보기 페이지·그림)는 일부러 막지 않음:
+#   /r 페이지는 noindex 로 표시돼 있고, 크롤러가 그 표시를 읽으려면 크롤링은 허용돼야 함.
+# /api/ 는 의견·기록 옮기기용 JSON 뿐이라 검색에 쓸 내용이 없어 제외.
+
 User-agent: *
 Allow: /
+Disallow: /api/
+
+# AI 검색·답변 엔진이 인용하려고 읽는 크롤러 — 허용(막으면 그 엔진의 답변에서 빠짐)
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+Allow: /
+Disallow: /api/
+
+# AI 모델 학습용 크롤러 — 기본 허용(공개 무료 서비스, AI 답변에서 언급되는 쪽이 이득).
+# 학습에 쓰이는 것이 싫으면 이 그룹의 "Allow: /" 를 "Disallow: /" 로 바꾸면 됨. 검색 노출에는 영향 없음.
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: CCBot
+User-agent: Bytespider
+Allow: /
+Disallow: /api/
 
 Sitemap: https://kongi-room.anbu-pilot.workers.dev/sitemap.xml
