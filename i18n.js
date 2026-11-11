@@ -773,6 +773,7 @@ Object.assign(window.KONGI_I18N.ko,{
   'fb.mailOpened':'메일 앱을 열었어요. 보내기만 누르면 돼요 💛',
   'fb.failMail':'지금은 앱 안에서 보내지 못해 메일 앱을 열었어요. 적은 내용은 복사해 두었어요',
   'theme.broken':'그림을 불러오지 못했어요',
+  'fb.privacy':'메일로 보내면 내 메일 앱에서 바로 가요. 앱 안에서 보내면 개발자만 볼 수 있는 곳에 저장돼요. 두 경우 모두 화면 크기·언어만 함께 적혀요.',
   'foot.u6':'11.11 반영했어요: WhatsApp 공유, 메일 우선 의견 보내기, 자동 테스트(규칙·번역 완전성)'
 });
 Object.assign(window.KONGI_I18N.en,{
@@ -785,6 +786,7 @@ Object.assign(window.KONGI_I18N.en,{
   'fb.mailOpened':'Your email app is open — just press send 💛',
   'fb.failMail':'Couldn’t send in-app right now, so your email app was opened. Your text was copied too',
   'theme.broken':'Picture didn’t load',
+  'fb.privacy':'Sent by email, it goes straight from your mail app. Sent inside the app, only the developer can read it. Either way, only your screen size and language are included.',
   'foot.u6':'11.11 added: WhatsApp sharing, email-first feedback, automated tests (rules, translation completeness)'
 });
 Object.assign(window.KONGI_I18N.de,{
@@ -797,5 +799,6 @@ Object.assign(window.KONGI_I18N.de,{
   'fb.mailOpened':'Deine Mail-App ist offen – nur noch auf Senden tippen 💛',
   'fb.failMail':'Gerade nicht in der App gesendet, deshalb wurde deine Mail-App geöffnet. Dein Text wurde auch kopiert',
   'theme.broken':'Bild konnte nicht geladen werden',
+  'fb.privacy':'Per E-Mail geht es direkt aus deiner Mail-App. In der App gesendet kann es nur der Entwickler lesen. In beiden Fällen werden nur Bildschirmgröße und Sprache mitgeschickt.',
   'foot.u6':'11.11 ergänzt: Teilen per WhatsApp, Feedback zuerst per E-Mail, automatische Tests (Regeln, Übersetzungsvollständigkeit)'
 });

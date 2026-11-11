@@ -159,7 +159,7 @@ node deploy/workers-kv/deploy-wrangler.mjs
 - `--prune` 을 붙이면 올린 뒤 직전 버전만 남기고 더 오래된 버전 파일을 KV 에서 지웁니다 (의견·옮기기 코드 데이터는 건드리지 않습니다).
 - 끝나면 `https://kongi-room.anbu-pilot.workers.dev/` 를 열어 푸터의 "업데이트 소식"이 바뀌었는지 확인합니다. 설치된 앱은 `sw.js` 의 `VERSION` 이 바뀌면 다음에 열 때 새 파일을 받습니다.
 
-토큰 방식(`deploy/workers-kv/deploy.py`, CI 나 다른 컴퓨터용)도 그대로 있습니다. 환경변수 `CLOUDFLARE_ACCOUNT_ID` 와 `CLOUDFLARE_API_TOKEN`(Workers Scripts: Edit + Workers KV Storage: Edit) 이 필요하며, 토큰 값은 파일이나 저장소에 적지 않습니다.
+토큰 방식(`deploy/workers-kv/deploy.py`, 로그인을 쓸 수 없는 CI 나 다른 컴퓨터용)도 그대로 있습니다. 환경변수 `CLOUDFLARE_ACCOUNT_ID` 와 `CLOUDFLARE_API_TOKEN`(Workers Scripts: Edit + Workers KV Storage: Edit) 이 필요합니다. 토큰 값은 파일·저장소·대화에 적지 않고, 터미널에 손으로 붙여 넣지도 않습니다(클립보드에서 `pbpaste` 로 바로 환경변수에 넣는 식으로 다룹니다).
 
 ## 🔗 결과 링크 미리보기 (Cloudflare Worker, 선택)
 

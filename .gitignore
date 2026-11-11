@@ -1,3 +1,4 @@
 node_modules/
 *.zip
 tests/e2e/shots/
+.wrangler/

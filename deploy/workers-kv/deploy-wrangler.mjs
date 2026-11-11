@@ -106,6 +106,7 @@ function main() {
   console.log(`  올릴 파일 ${files.length}개 (${(total / 1e6).toFixed(1)} MB) → 버전 ${version}`);
   if (!files.some((f) => f.rel === 'index.html')) { console.error('✖ index.html 이 없어요. 저장소 루트에서 실행했나요?'); process.exit(2); }
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kongi-deploy-'));
+  try {
   const bulk = files.map((f) => ({ key: version + '/' + f.rel, value: f.buf.toString('base64'), base64: true, metadata: { etag: createHash('sha1').update(f.buf).digest('hex').slice(0, 16) } }));
   const bulkFile = path.join(tmp, 'bulk.json');
   fs.writeFileSync(bulkFile, JSON.stringify(bulk));
@@ -149,7 +150,7 @@ function main() {
       wrangler(['kv', 'bulk', 'delete', delFile, '--namespace-id', ns.id, '--remote']); // wrangler asks once before deleting
     } else console.log('  지울 오래된 버전 없음');
   }
-  fs.rmSync(tmp, { recursive: true, force: true });
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
   if (DRY) console.log('✔ dry-run 끝. 실제로 올리려면 --dry-run 을 빼고 다시 실행하세요.');
   else console.log(`✔ 끝. 확인: https://${WORKER_NAME}.anbu-pilot.workers.dev/  (버전 ${version}, 설치된 앱은 sw.js 버전이 바뀌면 다음 열 때 새 파일을 받아요)`);
 }

@@ -417,7 +417,7 @@ body[data-tod="night"]{--bg:#2a211d;--fg:#f3e6d4;--muted:#bba591;--panel:#33291f
 .btn{border-radius:14px;min-height:44px;font-weight:700}
 .btn.secondary{border:1px solid var(--line)}
 .btn.small{font-size:14px;padding:10px 14px}
-.chip{min-height:40px}
+.chip{min-height:44px}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .lead{flex-basis:100%;margin:-4px 0 0;font-size:14px;line-height:1.5;color:var(--muted)}
 .lead b{color:var(--fg);font-weight:700}

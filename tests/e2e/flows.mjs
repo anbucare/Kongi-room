@@ -277,7 +277,7 @@ const browser = await chromium.launch();
   check('모바일: 가로 스크롤 없음', noHScroll, await page.evaluate(() => document.documentElement.scrollWidth + ' vs ' + window.innerWidth));
   const hs = await page.$$eval('.hotspot', (els) => els.filter((e) => getComputedStyle(e).display !== 'none').map((e) => { const r = e.getBoundingClientRect(); return [e.id, Math.round(r.width), Math.round(r.height)]; }));
   check('모바일: 방 핫스팟 모두 44px 이상', hs.length >= 5 && hs.every((h) => h[1] >= 44 && h[2] >= 44), JSON.stringify(hs));
-  const btns = await page.$$eval('#startBtn,#demoBtn,#togetherBtn,.hdr-right .btn,#intimacyBtn,#goalBtn', (els) => els.map((e) => { const r = e.getBoundingClientRect(); return [e.id || e.textContent.trim().slice(0, 8), Math.round(r.height)]; }));
+  const btns = await page.$$eval('#startBtn,#demoBtn,#togetherBtn,.hdr-right .btn,#intimacyBtn,#goalBtn,.presets .chip[data-min]', (els) => els.map((e) => { const r = e.getBoundingClientRect(); return [e.id || e.textContent.trim().slice(0, 8), Math.round(r.height)]; }));
   check('모바일: 주요 버튼 44px 이상', btns.every((b) => b[1] >= 44), JSON.stringify(btns));
   await page.screenshot({ path: OUT + 'mobile-setup.png', fullPage: true });
   await page.click('#startBtn'); await page.clock.runFor(2000);
