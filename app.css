@@ -456,7 +456,7 @@ body[data-tod="night"] .stat-unlock .stat-top{color:#f0c48f}
 @keyframes hsPopUp{0%{opacity:0;transform:translate(-50%,0) scale(.5)}20%{opacity:1;transform:translate(calc(-50% + var(--dx,0)),-3cqw) scale(1.15)}100%{opacity:0;transform:translate(calc(-50% + var(--dx,0)),-11cqw) scale(1)}}
 #shelf .shelf-items{position:absolute;left:50%;top:100%;bottom:auto;right:auto;transform:translateX(-50%);margin-top:2px;display:flex;gap:1px;font-size:max(11px,1.5cqw);white-space:nowrap;pointer-events:none;background:rgba(40,25,15,.55);border-radius:999px;padding:1px 5px}
 #shelf .shelf-items:empty{display:none}
-.scene.lap-view-on .hotspot,.scene.lap-view-on .decor-layer{opacity:0;pointer-events:none}
+.scene.lap-view-on .hotspot,.scene.lap-view-on .decor-layer,.scene.lap-view-on .decor-items{opacity:0;pointer-events:none}
 body[data-ui="focus"] .hotspot{opacity:.75}
 
 /* ===== Kongi's activity tag, emotes, eye contact ===== */
@@ -504,7 +504,7 @@ body[data-ui="focus"] .hotspot{opacity:.75}
 @keyframes friendIn{from{opacity:0;transform:translateX(30%)}to{opacity:1;transform:none}}
 
 /* ===== growth: decorations, seasons, today's item ===== */
-.decor-layer{position:absolute;inset:0;z-index:13;pointer-events:none}
+.decor-layer,.decor-items{position:absolute;inset:0;z-index:13;pointer-events:none}
 .decor{position:absolute;transform:translate(-50%,-50%);font-size:max(16px,2.6cqw);filter:drop-shadow(0 .3cqw .4cqw rgba(0,0,0,.4));animation:popIn .5s ease-out}
 .daily-item{left:76%;top:86%;pointer-events:auto;cursor:pointer;background:transparent;border:0;padding:0;width:max(44px,5cqw);height:max(44px,5cqw);display:grid;place-items:center;font-size:max(22px,3.2cqw);animation:dailyBob 3s ease-in-out infinite}
 @keyframes dailyBob{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,-62%)}}

@@ -14,8 +14,8 @@ const START = new Date('2026-11-11T10:00:00+01:00');
 async function newPage(browser, mobile) {
   // serviceWorkers:'block' — the app shell SW would answer image requests from its cache and bypass page.route (the thumbnail-failure test needs the 404 to reach the page)
   const ctx = await browser.newContext(Object.assign({ serviceWorkers: 'block' }, mobile ? { ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true } : { viewport: { width: 1280, height: 900 } }));
-  // the treat button pulses (CSS scale animation), which Playwright reads as 'not stable': freeze that one animation in tests
-  await ctx.addInitScript(() => { document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); s.textContent = '.btn.big{animation:none!important}'; document.head.appendChild(s); }); });
+  // the treat button pulses and today's item bobs (CSS animations), which Playwright reads as 'not stable': freeze those two in tests
+  await ctx.addInitScript(() => { document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); s.textContent = '.btn.big,.daily-item{animation:none!important}'; document.head.appendChild(s); }); });
   const page = await ctx.newPage();
   page.setDefaultTimeout(12000);
   const errors = [];
@@ -158,6 +158,14 @@ const browser = await chromium.launch();
   check('화분 핫스팟: 효과+콩이 반응', plantPops > 0 && /화분|창가|식물/.test(await txt(page, '#caption')), await txt(page, '#caption'));
   await page.click('#hotspotBowl'); await page.clock.runFor(1500);
   check('밥그릇 핫스팟: 말풍선/자막', (await vis(page, '#bubble')) || /밥/.test(await txt(page, '#caption')), await txt(page, '#caption'));
+  // today's little thing: a real <button> outside the aria-hidden decor layer (2026-11-12 audit H-4)
+  const di = await page.evaluate(() => { const b = document.querySelector('.daily-item'); if (!b) return null; const r = b.getBoundingClientRect(); return { tag: b.tagName, parent: b.parentElement.id, hiddenAncestor: !!b.closest('[aria-hidden="true"]'), name: b.getAttribute('aria-label') || '', w: Math.round(r.width), h: Math.round(r.height) }; });
+  check('오늘의 소품: aria-hidden 층 밖의 button, 접근성 이름, 44px 이상', di && di.tag === 'BUTTON' && di.parent === 'decorItems' && !di.hiddenAncestor && di.name.length > 0 && di.w >= 44 && di.h >= 44, JSON.stringify(di));
+  await page.click('.daily-item'); const itemPops = await pops();
+  let itemSaid = false; for (let i = 0; i < 10 && !itemSaid; i++) { await page.clock.runFor(400); itemSaid = (await vis(page, '#bubble')) && /좋다냥|favourite|Liebling/.test(await txt(page, '#bubble')); }
+  check('오늘의 소품 누르면 효과+콩이 말풍선', itemPops > 0 && itemSaid, itemPops + ' / ' + (await txt(page, '#bubble')));
+  const hiddenFocusable = await page.$$eval('[aria-hidden="true"] :is(button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"]))', (els) => els.map((e) => e.tagName + (e.id ? '#' + e.id : '.' + e.className)));
+  check('aria-hidden 조상 아래에 포커스 가능한 요소 없음 (JS 실행 뒤)', hiddenFocusable.length === 0, hiddenFocusable.join(','));
   await page.click('#shelf'); await page.clock.runFor(400);
   check('선반 핫스팟: 보물 도감 열림', await vis(page, '#shelfModal') && (await page.locator('.dex-card').count()) === 48);
   await page.keyboard.press('Escape');
@@ -277,6 +285,8 @@ const browser = await chromium.launch();
   check('모바일: 가로 스크롤 없음', noHScroll, await page.evaluate(() => document.documentElement.scrollWidth + ' vs ' + window.innerWidth));
   const hs = await page.$$eval('.hotspot', (els) => els.filter((e) => getComputedStyle(e).display !== 'none').map((e) => { const r = e.getBoundingClientRect(); return [e.id, Math.round(r.width), Math.round(r.height)]; }));
   check('모바일: 방 핫스팟 모두 44px 이상', hs.length >= 5 && hs.every((h) => h[1] >= 44 && h[2] >= 44), JSON.stringify(hs));
+  const dim = await page.evaluate(() => { const b = document.querySelector('.daily-item'); if (!b) return null; const s = document.querySelector('#scene').getBoundingClientRect(); const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), r.left >= s.left && r.right <= s.right && r.top >= s.top && r.bottom <= s.bottom, !b.closest('[aria-hidden="true"]')]; });
+  check('모바일: 오늘의 소품 버튼 44px 이상·방 그림 안·aria-hidden 밖', dim && dim[0] >= 44 && dim[1] >= 44 && dim[2] && dim[3], JSON.stringify(dim));
   const btns = await page.$$eval('#startBtn,#demoBtn,#togetherBtn,.hdr-right .btn,#intimacyBtn,#goalBtn,.presets .chip[data-min]', (els) => els.map((e) => { const r = e.getBoundingClientRect(); return [e.id || e.textContent.trim().slice(0, 8), Math.round(r.height)]; }));
   check('모바일: 주요 버튼 44px 이상', btns.every((b) => b[1] >= 44), JSON.stringify(btns));
   await page.screenshot({ path: OUT + 'mobile-setup.png', fullPage: true });
