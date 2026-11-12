@@ -30,7 +30,9 @@ const DRY = args.has('--dry-run');
 const PRUNE = args.has('--prune');
 
 // Only the files a visitor needs. Source, docs, tests and the deploy scripts stay out.
-const SITE_FILES = ['index.html', 'app.css', 'app.js', 'core.js', 'i18n.js', 'sw.js', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml'];
+const SITE_FILES = ['index.html', 'app.css', 'app.js', 'core.js', 'i18n.js', 'sw.js', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml',
+  // Google Search Console ownership file (her account). Never remove: deleting it un-verifies the property.
+  'google18dcee8c3b07397c.html'];
 const SITE_DIRS = ['icons', 'assets'];
 
 // Always a 4.x wrangler: the kv commands need its --remote flag (worker/ pins an older 4.27 for the share Worker).
