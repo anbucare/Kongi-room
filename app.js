@@ -931,11 +931,12 @@ function seasonNow(){return CORE.seasonFor(lifeMin())}
 function nextUnlock(){return CORE.nextUnlock(lifeMin())}
 function renderDecor(){
   const layer=$('#decorLayer');if(!layer)return;layer.innerHTML='';
+  const items=$('#decorItems')||layer;items.innerHTML='';  // 누를 수 있는 소품은 aria-hidden 장식 층 밖(형제 층)에 둔다 — 보조기기·에이전트 접근성 트리에 보이도록
   const m=lifeMin();
   DECOR.forEach(d=>{if(m<d.min)return;const el=document.createElement('span');el.className='decor';el.textContent=d.icon;el.style.left=d.at[0]+'%';el.style.top=d.at[1]+'%';el.title=t('dc.'+d.id);layer.appendChild(el)});
   const di=dailyInfo();const it=document.createElement('button');it.type='button';it.className='decor daily-item';it.textContent=di.item;it.title=t('daily.itemTitle');it.setAttribute('aria-label',t('daily.itemTitle'));
   it.addEventListener('click',e=>{e.stopPropagation();hsReact(it,['✨','❓']);if(run&&run.state==='focus')return;moveCat('rug','sit',1).then(()=>{say(t('daily.itemSay'),2600);hearts(2);setTag('tag.curious')})});
-  layer.appendChild(it);
+  items.appendChild(it);
   const fx=$('#seasonFx');if(fx){const s=seasonNow();if(fx.dataset.season!==s.id){fx.dataset.season=s.id;fx.innerHTML='';
     const ch={spring:'🌸',summer:'✨',autumn:'🍂',winter:'❄'}[s.id];
     for(let i=0;i<9;i++){const p=document.createElement('i');p.textContent=ch;p.style.left=(Math.random()*96)+'%';p.style.animationDuration=(9+Math.random()*9)+'s';p.style.animationDelay=(-Math.random()*16)+'s';p.style.fontSize=(1.1+Math.random()*1)+'cqw';fx.appendChild(p)}}}

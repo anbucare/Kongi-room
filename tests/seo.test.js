@@ -153,3 +153,35 @@ test('manifest.webmanifest: 유효한 JSON, 이름·시작 주소·표시 방식
   assert.ok(m.icons.some((i) => i.purpose === 'maskable'));
   for (const i of m.icons) assert.ok(fs.existsSync(path.join(root, i.src)), '아이콘 파일 없음: ' + i.src);
 });
+
+// aria-hidden="true" 요소의 안쪽 HTML 을 태그 짝을 맞춰 잘라낸다 (void 요소는 닫는 태그가 없음).
+function hiddenSubtrees(src) {
+  const VOID = new Set(['img', 'input', 'br', 'hr', 'meta', 'link', 'source', 'wbr', 'area', 'base', 'col', 'embed', 'track']);
+  const out = [];
+  for (const m of src.matchAll(/<([a-z][a-z0-9-]*)\b[^>]*\saria-hidden="true"[^>]*>/g)) {
+    const tag = m[1]; if (VOID.has(tag)) continue;
+    const re = new RegExp('<(/?)' + tag + '\\b[^>]*>', 'g'); re.lastIndex = m.index + m[0].length;
+    let depth = 1, x;
+    while ((x = re.exec(src))) { depth += x[1] ? -1 : 1; if (depth === 0) break; }
+    assert.ok(x, 'aria-hidden 요소의 닫는 태그를 못 찾음: ' + m[0].slice(0, 80));
+    out.push({ open: m[0], inner: src.slice(m.index + m[0].length, x.index) });
+  }
+  return out;
+}
+
+test('aria-hidden 조상 아래에 button·a[href]·input·select·textarea·tabindex 가 없다 (정적 HTML + 장식 층을 채우는 app.js)', () => {
+  const trees = hiddenSubtrees(html);
+  assert.ok(trees.length >= 5, 'aria-hidden 장식 요소가 있어야 정상: ' + trees.length);
+  const bad = [];
+  for (const { open, inner } of trees) {
+    for (const f of inner.matchAll(/<(button|select|textarea)\b|<a\b[^>]*\shref=|<input\b(?![^>]*type="hidden")|\stabindex="(?!-1")/g)) bad.push(open.slice(0, 60) + ' ⊃ ' + inner.slice(f.index, f.index + 50));
+  }
+  assert.deepEqual(bad, [], '보조기기·에이전트 접근성 트리에서 숨겨지는 조작 요소');
+  // 장식 층(#decorLayer)은 계속 aria-hidden, 누를 수 있는 오늘의 소품은 그 밖의 형제 층(#decorItems)에 — 2026-11-12 감사 H-4
+  assert.match(html, /<div class="decor-layer" id="decorLayer" aria-hidden="true"><\/div>\n\s*<div class="decor-items" id="decorItems"><\/div>/);
+  const app = read('app.js');
+  assert.match(app, /const items=\$\('#decorItems'\)/, 'app.js 가 #decorItems 를 쓴다');
+  assert.match(app, /className='decor daily-item'[\s\S]{0,400}items\.appendChild\(it\)/, '오늘의 소품 버튼은 #decorItems 에 붙인다');
+  assert.ok(!/layer\.appendChild\(it\)/.test(app), '버튼을 aria-hidden 장식 층에 넣지 않는다');
+  assert.match(app, /it\.setAttribute\('aria-label',t\('daily\.itemTitle'\)\)/, '버튼 접근성 이름은 i18n 키 daily.itemTitle');
+});
