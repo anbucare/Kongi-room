@@ -2108,7 +2108,7 @@ $('#feedbackBtn').addEventListener('click',()=>{$('#feedbackModal').hidden=false
 $('#fbClose').addEventListener('click',()=>{$('#feedbackModal').hidden=true});
 // The mail link is the first channel (a static site has no inbox of its own); the in-app form posts to
 // /api/feedback where that API exists and opens the mail app with the same text everywhere else.
-const FEEDBACK_MAIL='hana.park86@outlook.com';
+const FEEDBACK_MAIL='hana@qwerklab.com';
 function fbMailto(){
   const text=$('#fbText').value.trim(),contact=$('#fbContact').value.trim(),kind=t('fb.'+fbKind);
   const body=[kind,'',text,'',contact,'— '+lang+' · '+innerWidth+'x'+innerHeight].filter(Boolean).join('\n');
