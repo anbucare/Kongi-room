@@ -197,7 +197,7 @@ const browser = await chromium.launch();
   // feedback: mail first; in-app send falls back to mail when no API
   const footOrder = await page.$$eval('.foot-links > *', (els) => els.map((e) => e.id || e.tagName));
   check('푸터: 메일 링크가 앱 안 양식보다 먼저', footOrder.indexOf('mailLink') < footOrder.indexOf('feedbackBtn'), footOrder.join(','));
-  check('푸터 만든 사람 + mailto', (await txt(page, '.maker-note')).includes('박하나') && (await page.getAttribute('#mailLink', 'href')).startsWith('mailto:hana.park86@outlook.com'));
+  check('푸터 만든 사람 + mailto', (await txt(page, '.maker-note')).includes('박하나') && (await page.getAttribute('#mailLink', 'href')).startsWith('mailto:hana@qwerklab.com'));
   check('GitHub 계정 필요 링크 없음', (await page.locator('a[href*="github.com"]').count()) === 0);
   await page.click('#feedbackBtn'); await page.fill('#fbText', '테스트 의견입니다');
   let mailHref = null; await page.exposeFunction('__mail', (h) => { mailHref = h; });
@@ -205,7 +205,7 @@ const browser = await chromium.launch();
   if (LIVE) console.log('SKIP 라이브에서는 앱 안 보내기를 실제로 전송하지 않음 (/api/feedback 에 테스트 글이 남지 않도록)');
   else {
     await page.click('#fbSend'); await page.clock.runFor(1500); await page.waitForTimeout(300);
-    check('API 없는 호스트에서 앱 안 보내기 → 메일 앱으로 열림', typeof mailHref === 'string' && mailHref.startsWith('mailto:hana.park86@outlook.com') && decodeURIComponent(mailHref).includes('테스트 의견입니다'), mailHref);
+    check('API 없는 호스트에서 앱 안 보내기 → 메일 앱으로 열림', typeof mailHref === 'string' && mailHref.startsWith('mailto:hana@qwerklab.com') && decodeURIComponent(mailHref).includes('테스트 의견입니다'), mailHref);
   }
   mailHref = null; await page.click('#fbMail'); await page.waitForTimeout(200);
   check('메일 앱으로 보내기 버튼 → mailto', typeof mailHref === 'string' && mailHref.includes('subject='), mailHref);

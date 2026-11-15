@@ -21,10 +21,10 @@ test('sw.js 캐시 목록에 index.html 이 쓰는 로컬 css/js/manifest 가 �
   for (const f of shell) assert.ok(fs.existsSync(path.join(root, f)), 'SHELL 에 적힌 파일이 저장소에 없음: ' + f);
 });
 
-test('sw.js 캐시 버전은 kongi-v32 이상이다 (파일을 바꾸면 올려야 함)', () => {
+test('sw.js 캐시 버전은 kongi-v33 이상이다 (파일을 바꾸면 올려야 함)', () => {
   const m = /const VERSION = 'kongi-v(\d+)'/.exec(read('sw.js'));
   assert.ok(m, 'VERSION 문자열을 찾지 못함');
-  assert.ok(+m[1] >= 32, '버전 ' + m[1]);
+  assert.ok(+m[1] >= 33, '버전 ' + m[1]);
 });
 
 test('외부 스크립트·추적 코드가 없다 (Google Fonts 스타일시트만 허용)', () => {
@@ -47,7 +47,7 @@ test('공유는 외부 스크립트 없이 링크만 쓴다: WhatsApp 은 wa.me,
 
 test('결제·계정 기능이 없고, 만든 사람과 메일 연락처가 푸터에 있다', () => {
   const html = read('index.html');
-  assert.match(html, /mailto:hana\.park86@outlook\.com/);
+  assert.match(html, /mailto:hana@qwerklab\.com/);
   assert.match(html, /class="maker-note"/);
   assert.ok(!/stripe\.com|paypal\.com|checkout|price_|구매하기|결제하기|회원가입|type="password"/i.test(html), '결제·계정 흔적');
   assert.ok(/가입 없이|no sign-up|ohne Anmeldung/i.test(html + read('i18n.js')), '계정 없는 무료 타이머 안내');
