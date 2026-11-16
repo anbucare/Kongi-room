@@ -1353,7 +1353,7 @@ const homeSpot=()=>(run&&run.lap)?'lap':'sofa';
 function renderStages(){
   const ol=$('#stages');if(!ol)return;
   ol.hidden=!(run&&run.state==='focus');
-  $$('li',ol).forEach((li,i)=>{const n=i+1;li.classList.toggle('active',n===stage);li.classList.toggle('done',n<stage)});
+  $$('li',ol).forEach((li,i)=>{const n=i+1;li.classList.toggle('active',n===stage);li.classList.toggle('done',n<stage);li.toggleAttribute('aria-current',n===stage);if(n===stage)li.setAttribute('aria-current','step')});
 }
 function startPurr(){
   stopPurr();
