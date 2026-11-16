@@ -119,6 +119,7 @@
   /* 애착 수첩 색 묶음: 밝은 화면 값 = 예전 고정 색 그대로. 어두운 화면 값은 아래 두 dark 블록에서 바꿈 (Modern Web Guidance dark-mode·color) */
   --note-hero-bg:linear-gradient(135deg,#fff8f5,#fff1eb); --note-hero-line:#f6cfc2; --note-hero-title:#b84224; --note-hero-text:#55443c; --note-track:#eed8ce;
   --note-surface:#fffaf8; --note-ok:#2e7d32; --note-chip-fg:#c04826;
+  --note-pop-bg:#fff6f2; --note-pop-title:#c04022; --note-pop-btn:#c04022;
   --body:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
   --hand:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -129,6 +130,7 @@
     --accent:#e8945a; --accent-fg:#2a1a10; --soft:#3a2d26; --danger:#d98a66; color-scheme:dark;
     --note-hero-bg:linear-gradient(135deg,#3b2a23,#33241e); --note-hero-line:#6b4636; --note-hero-title:#f4a98d; --note-hero-text:#e9d9c5; --note-track:#1f1714;
     --note-surface:#3a2a24; --note-ok:#8fd18f; --note-chip-fg:#f4a98d;
+    --note-pop-bg:#3a2a24; --note-pop-title:#f4a98d; --note-pop-btn:#e8945a;
   }
 }
 :root[data-theme="dark"]{
@@ -136,6 +138,7 @@
   --accent:#e8945a; --accent-fg:#2a1a10; --soft:#3a2d26; --danger:#d98a66; color-scheme:dark;
   --note-hero-bg:linear-gradient(135deg,#3b2a23,#33241e); --note-hero-line:#6b4636; --note-hero-title:#f4a98d; --note-hero-text:#e9d9c5; --note-track:#1f1714;
   --note-surface:#3a2a24; --note-ok:#8fd18f; --note-chip-fg:#f4a98d;
+  --note-pop-bg:#3a2a24; --note-pop-title:#f4a98d; --note-pop-btn:#e8945a;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -438,7 +441,7 @@ body{transition:background-color .8s,color .8s}
 .brand input,.lead b,.stat,.panel,footer,.daily{transition:background-color .8s,color .8s,border-color .8s}
 body[data-tod="morning"]{--bg:#f6ead6}
 body[data-tod="sunset"]{--bg:#f2dcc6;--soft:#f0d7bf}
-body[data-tod="night"]{--bg:#2a211d;--fg:#f3e6d4;--muted:#bba591;--panel:#33291f;--line:#4d3c30;--soft:#3d3027;--accent:#e8945a;--accent-fg:#2a1a10;color-scheme:dark;--note-hero-bg:linear-gradient(135deg,#3b2a23,#33241e);--note-hero-line:#6b4636;--note-hero-title:#f4a98d;--note-hero-text:#e9d9c5;--note-track:#1f1714;--note-surface:#3a2a24;--note-ok:#8fd18f;--note-chip-fg:#f4a98d}
+body[data-tod="night"]{--bg:#2a211d;--fg:#f3e6d4;--muted:#bba591;--panel:#33291f;--line:#4d3c30;--soft:#3d3027;--accent:#e8945a;--accent-fg:#2a1a10;color-scheme:dark;--note-hero-bg:linear-gradient(135deg,#3b2a23,#33241e);--note-hero-line:#6b4636;--note-hero-title:#f4a98d;--note-hero-text:#e9d9c5;--note-track:#1f1714;--note-surface:#3a2a24;--note-ok:#8fd18f;--note-chip-fg:#f4a98d;--note-pop-bg:#3a2a24;--note-pop-title:#f4a98d;--note-pop-btn:#e8945a}
 .btn{border-radius:14px;min-height:44px;font-weight:700}
 .btn.secondary{border:1px solid var(--line)}
 .btn.small{font-size:14px;padding:10px 14px}
