@@ -34,7 +34,21 @@ const KAKAO_JS_KEY='';
 const RESULT_BASE=SITE_URL+'r';
 const RESULT_WORKER='https://kongi-room-share.anbu-pilot.workers.dev/r';
 const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(navigator.userAgent);
-function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},ms||2600)}
+// An open modal <dialog> is drawn above the page and makes the rest of it inert, so while one is open the toast lives inside the top one.
+function toast(msg,ms){const t=$('#toast');const host=dlgStack[dlgStack.length-1]||document.body;if(t.parentNode!==host)host.appendChild(t);t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},ms||2600)}
+// Text goes in as text (textContent), never as HTML: records can come back from a backup file or a transfer code.
+function textEl(tag,cls,text){const e=document.createElement(tag);e.className=cls;e.textContent=text;return e}
+// ---- Dialogs are native <dialog> elements opened with showModal(): the page behind becomes inert, focus stays inside,
+// Esc or the back gesture closes the top one, and focus returns to the button that opened it. (Browsers older than
+// showModal() get the open attribute, so the dialog still shows.)
+const dlgStack=[];
+function dlgEl(d){return typeof d==='string'?$(d):d}
+function isOpen(d){d=dlgEl(d);return !!(d&&d.hasAttribute('open'))}
+function openModal(d){d=dlgEl(d);if(!d||isOpen(d))return;if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','');dlgStack.push(d)}
+function hideModal(d){d=dlgEl(d);if(!d||!isOpen(d))return;if(typeof d.close==='function')d.close();else{d.removeAttribute('open');dlgClosed(d)}}
+// Runs however a dialog closed (button, Esc, back gesture, tap outside).
+function dlgClosed(d){const i=dlgStack.indexOf(d);if(i>=0)dlgStack.splice(i,1);const tt=$('#toast');if(tt&&tt.parentNode===d)(dlgStack[dlgStack.length-1]||document.body).appendChild(tt);
+  if(d.id==='polaroidDetailModal')renderAlbum()}
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Durations with seconds: "12분 30초" / "12m 30s" / "12 Min. 30 Sek."
 function fmtDur(sec){return CORE.fmtDur(sec,lang)}
@@ -477,7 +491,7 @@ function renderShelf(){
   const items = getShelfItems();
   const el = $('#shelfItems');
   if(!el) return;
-  el.innerHTML = '';
+  el.replaceChildren();
   items.slice(-6).forEach(it => {
     const span = document.createElement('span');
     span.className = 'shelf-item';
@@ -491,7 +505,7 @@ function renderShelf(){
 function showShelfModal(){
   const items = getShelfItems();
   const list = $('#shelfDetailList');
-  list.innerHTML = '';
+  list.replaceChildren();
   const owned = items.filter(i => TREASURES.some(tr => tr.id === i.id)).length;
   $('#shelfTitle').textContent = t('dex.title');
   $('#shelfSubtitle').textContent = fill(t('dex.sub',{a:owned,b:TREASURES.length}));
@@ -510,12 +524,12 @@ function showShelfModal(){
       const no = 'No.' + String(i + 1).padStart(3, '0');
       const hint = tr.id === 'bell' ? t('dex.special') : fill(t('dex.hint',{m:tr.tier}));
       card.title = has ? `${no} ${t(tr.name)}: ${t(tr.desc)}` : `${no} ${hint}`;
-      card.innerHTML = `<div class="dex-no">${no}</div><div class="dex-icon">${has ? tr.icon : '❓'}</div><div class="dex-name">${has ? t(tr.name) : t('dex.locked')}</div><div class="dex-desc">${has ? t(tr.desc) : hint}</div>`;
+      card.append(textEl('div', 'dex-no', no), textEl('div', 'dex-icon', has ? tr.icon : '❓'), textEl('div', 'dex-name', has ? t(tr.name) : t('dex.locked')), textEl('div', 'dex-desc', has ? t(tr.desc) : hint));
       grid.appendChild(card);
     });
     list.appendChild(grid);
   });
-  $('#shelfModal').hidden = false;
+  openModal('#shelfModal');
 }
 
 async function checkTreasureReward(sessionMin, wasDemo){
@@ -597,32 +611,45 @@ function renderAlbum(){
   const album = store.get('album', []);
   const grid = $('#albumGrid');
   if(!grid) return;
-  grid.innerHTML = '';
   if(!album.length){
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--muted)">'+fill(t('album.empty'))+'</div>';
+    // the sentence has a line break and the pet's name: build it from text so a name can never turn into markup
+    const empty = document.createElement('div');
+    empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--muted)';
+    t('album.empty').split('<br>').forEach((part, i) => { if(i) empty.append(document.createElement('br')); empty.append(fill(part)); });
+    grid.replaceChildren(empty);
     return;
   }
-  album.forEach((item, idx) => {
-    const card = document.createElement('div');
+  // Each photo is a <button> (keyboard and screen readers can open it). Records may come from a backup file or a
+  // transfer code, so every value goes in as text or as one of our own picture paths, never as HTML.
+  grid.replaceChildren(...album.map((item, idx) => {
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'polaroid-card';
     card.style.setProperty('--rot', ((idx % 5) - 2) * 1.8);
-    
+
     const todName = item.rain ? t('tag.rain') : item.tod==='night' ? t('tag.night') : item.tod==='sunset' ? t('tag.sunset') : item.tod==='morning' ? t('tag.morning') : t('tag.day');
 
-    card.innerHTML = `
-      <div class="polaroid-thumb" style="background-image:url('${roomSrc(item)}');background-size:cover;background-position:center;position:relative">
-        ${item.rain ? '<div style="position:absolute;inset:0;background:rgba(40,60,80,.25)"></div>' : ''}
-        <img src="${item.sprite||'assets/cat_sit.png'}" alt="${t('cat.alt')}" style="position:absolute;bottom:6%;left:50%;transform:translateX(-50%);width:42%;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">
-        <span style="position:absolute;top:6px;right:6px;font-size:10px;background:rgba(0,0,0,.6);color:#fff;padding:2px 6px;border-radius:10px;backdrop-filter:blur(2px)">${todName}</span>
-      </div>
-      <div class="polaroid-caption">${esc(item.memo) || noteOf(item)}</div>
-      <div class="polaroid-date">${item.dateStr} ${item.timeStr} · ${item.demo?t('demoShort'):t('minShort',{m:item.min})}</div>
-    `;
+    const thumb = document.createElement('span');
+    thumb.className = 'polaroid-thumb';
+    thumb.style.cssText = 'background-size:cover;background-position:center;position:relative';
+    thumb.style.backgroundImage = 'url("' + roomSrc(item) + '")';
+    if(item.rain){ const dim = document.createElement('span'); dim.style.cssText = 'position:absolute;inset:0;background:rgba(40,60,80,.25)'; thumb.append(dim); }
+    const img = document.createElement('img');
+    img.src = spriteOf(item);
+    img.alt = t('cat.alt');
+    img.style.cssText = 'position:absolute;bottom:6%;left:50%;transform:translateX(-50%);width:42%;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))';
+    const tag = document.createElement('span');
+    tag.style.cssText = 'position:absolute;top:6px;right:6px;font-size:10px;background:rgba(0,0,0,.6);color:#fff;padding:2px 6px;border-radius:10px;backdrop-filter:blur(2px)';
+    tag.textContent = todName;
+    thumb.append(img, tag);
+    card.append(thumb,
+      textEl('span', 'polaroid-caption', item.memo ? String(item.memo) : noteOf(item)),
+      textEl('span', 'polaroid-date', `${item.dateStr} ${item.timeStr} · ${item.demo?t('demoShort'):t('minShort',{m:item.min})}`));
     card.addEventListener('click', () => {
       openPolaroidDetail(idx);
     });
-    grid.appendChild(card);
-  });
+    return card;
+  }));
 }
 
 function openPolaroidDetail(idx){
@@ -635,14 +662,14 @@ function openPolaroidDetail(idx){
   $('#polMemoInput').value = currentPolaroidItem.memo || '';
   const pi = $('#polPlaceInput'); if(pi) pi.value = currentPolaroidItem.place || store.get('place','') || '';
   setPolStyle(polStyle);
-  $('#polaroidDetailModal').hidden = false;
+  openModal('#polaroidDetailModal');
 }
 function setPolStyle(s){
   polStyle = s === 'essay' ? 'essay' : 'classic';
   store.set('polStyle', polStyle);
   const tc = $('#polTabClassic'), te = $('#polTabEssay');
-  if(tc) tc.classList.toggle('active', polStyle === 'classic');
-  if(te) te.classList.toggle('active', polStyle === 'essay');
+  if(tc){ tc.classList.toggle('active', polStyle === 'classic'); tc.setAttribute('aria-selected', String(polStyle === 'classic')); }
+  if(te){ te.classList.toggle('active', polStyle === 'essay'); te.setAttribute('aria-selected', String(polStyle === 'essay')); }
   const pw = $('#polPlaceWrap'); if(pw) pw.hidden = polStyle !== 'essay';
   if(currentPolaroidItem) drawPolaroidCanvas(currentPolaroidItem);
 }
@@ -724,7 +751,7 @@ function drawEssayCanvas(item){
   ctx.fillStyle = '#fffdf9'; ctx.fillRect(px - 14, py - 14, pw + 28, ph + 28);
   ctx.strokeStyle = line; ctx.lineWidth = 1.5; ctx.strokeRect(px - 14, py - 14, pw + 28, ph + 28);
   const roomImg = new Image(); roomImg.src = roomSrc(item);
-  const catImg = new Image(); catImg.src = item.sprite || 'assets/cat_sit.png';
+  const catImg = new Image(); catImg.src = spriteOf(item);
   if(item.rain){const mk=getRainMask(item.theme);if(!mk.complete)mk.addEventListener('load',()=>renderContents(),{once:true})}
   const renderContents = () => {
     ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
@@ -785,7 +812,7 @@ function drawPolaroidCanvas(item){
   const roomImg = new Image();
   roomImg.src = roomSrc(item);
   const catImg = new Image();
-  catImg.src = item.sprite || 'assets/cat_sit.png';
+  catImg.src = spriteOf(item);
   if (item.rain) { const mk = getRainMask(item.theme); if (!mk.complete) mk.addEventListener('load', () => renderContents(), { once: true }); }
 
   const renderContents = () => {
@@ -930,14 +957,14 @@ function lifeMin(){return Math.floor(STATS.get().sec/60)}
 function seasonNow(){return CORE.seasonFor(lifeMin())}
 function nextUnlock(){return CORE.nextUnlock(lifeMin())}
 function renderDecor(){
-  const layer=$('#decorLayer');if(!layer)return;layer.innerHTML='';
-  const items=$('#decorItems')||layer;items.innerHTML='';  // 누를 수 있는 소품은 aria-hidden 장식 층 밖(형제 층)에 둔다 — 보조기기·에이전트 접근성 트리에 보이도록
+  const layer=$('#decorLayer');if(!layer)return;layer.replaceChildren();
+  const items=$('#decorItems')||layer;items.replaceChildren();  // 누를 수 있는 소품은 aria-hidden 장식 층 밖(형제 층)에 둔다 — 보조기기·에이전트 접근성 트리에 보이도록
   const m=lifeMin();
   DECOR.forEach(d=>{if(m<d.min)return;const el=document.createElement('span');el.className='decor';el.textContent=d.icon;el.style.left=d.at[0]+'%';el.style.top=d.at[1]+'%';el.title=t('dc.'+d.id);layer.appendChild(el)});
   const di=dailyInfo();const it=document.createElement('button');it.type='button';it.className='decor daily-item';it.textContent=di.item;it.title=t('daily.itemTitle');it.setAttribute('aria-label',t('daily.itemTitle'));
   it.addEventListener('click',e=>{e.stopPropagation();hsReact(it,['✨','❓']);if(run&&run.state==='focus')return;moveCat('rug','sit',1).then(()=>{say(t('daily.itemSay'),2600);hearts(2);setTag('tag.curious')})});
   items.appendChild(it);
-  const fx=$('#seasonFx');if(fx){const s=seasonNow();if(fx.dataset.season!==s.id){fx.dataset.season=s.id;fx.innerHTML='';
+  const fx=$('#seasonFx');if(fx){const s=seasonNow();if(fx.dataset.season!==s.id){fx.dataset.season=s.id;fx.replaceChildren();
     const ch={spring:'🌸',summer:'✨',autumn:'🍂',winter:'❄'}[s.id];
     for(let i=0;i<9;i++){const p=document.createElement('i');p.textContent=ch;p.style.left=(Math.random()*96)+'%';p.style.animationDuration=(9+Math.random()*9)+'s';p.style.animationDelay=(-Math.random()*16)+'s';p.style.fontSize=(1.1+Math.random()*1)+'cqw';fx.appendChild(p)}}}
 }
@@ -972,7 +999,7 @@ function renderStatus(){
   const tsub=$('#todaySub');if(tsub)tsub.textContent=sub.length?sub.join(' · '):t('st.todayHint');
   const g=goalGet();
   const gt=$('#goalTop');if(gt)gt.textContent=g?'🎯 '+t('st.goal',{a:Math.min(tt.sessions,g),b:g}):'🎯 '+t('st.goalSet');
-  const gb=$('#goalBar');if(gb){gb.innerHTML='';for(let i=0;i<g;i++){const d=document.createElement('i');if(i<tt.sessions)d.className='on';gb.appendChild(d)}gb.hidden=!g}
+  const gb=$('#goalBar');if(gb){gb.replaceChildren();for(let i=0;i<g;i++){const d=document.createElement('i');if(i<tt.sessions)d.className='on';gb.appendChild(d)}gb.hidden=!g}
   const gs=$('#goalSub');if(gs)gs.textContent=g?(tt.sessions>=g?t('st.goalDone'):t('st.goalLeft',{n:g-tt.sessions})):t('st.goalHint');
   const sk=STREAK.get(),n=STREAK.valid();
   const sb=$('#streakBadge');if(sb){sb.classList.toggle('hot',n>=3);sb.classList.toggle('cold',n<1)}
@@ -1053,7 +1080,7 @@ function showLevelUpModal(info) {
   $('#lvlTitle').textContent = t('lvl.title');
   $('#lvlSubtitle').textContent = t('lvl.sub',{l:info.level,name:t(info.name)});
   $('#lvlMotionDesc').textContent = t('lvl.motion',{m:t(info.motion)});
-  $('#levelUpModal').hidden = false;
+  openModal('#levelUpModal');
   hearts(6);
 }
 
@@ -1072,7 +1099,7 @@ function renderIntimacyModal() {
   $('#intimacyStats').textContent = t('intimacy.stats',{m:totalMin,n:doneCount});
 
   const list = $('#intimacyLevelList');
-  list.innerHTML = '';
+  list.replaceChildren();
   INTIMACY_LEVELS.forEach(lvl => {
     const isUnlocked = cur.xp >= lvl.minXp;
     const card = document.createElement('div');
@@ -1096,7 +1123,7 @@ function renderIntimacyModal() {
     b.addEventListener('click', (e) => {
       const p = e.target.dataset.poseAction;
       const s = e.target.dataset.spotAction;
-      $('#intimacyModal').hidden = true;
+      hideModal('#intimacyModal');
       executeCatAction(s, p);
     });
   });
@@ -1165,7 +1192,7 @@ function applyTheme(id,opts){
     el.style.display='';el.style.left=v[0]+'%';el.style.top=v[1]+'%';
   });
   const fx=$('#themeFx');
-  if(fx){fx.innerHTML='';
+  if(fx){fx.replaceChildren();
     if(id==='cabin'){for(let i=0;i<26;i++){const s=document.createElement('i');s.style.left=(Math.random()*100)+'%';s.style.animationDuration=(5+Math.random()*6)+'s';s.style.animationDelay=(-Math.random()*10)+'s';s.style.opacity=(.5+Math.random()*.5);s.style.fontSize=(.4+Math.random()*.6)+'cqw';fx.appendChild(s)}}
     if(id==='train'){for(let i=0;i<34;i++){const s=document.createElement('b');s.style.top=(Math.random()*70)+'%';s.style.animationDuration=(9+Math.random()*12)+'s';s.style.animationDelay=(-Math.random()*20)+'s';s.style.opacity=(.3+Math.random()*.7);s.style.width=s.style.height=(.15+Math.random()*.3)+'cqw';fx.appendChild(s)}}
   }
@@ -1179,7 +1206,9 @@ function applyTheme(id,opts){
     if(lastStatus)$('#focusStatus').textContent=fill(t(lastStatus.k,lastStatus.v));
   }
 }
-function roomSrc(item){if(item&&item.theme&&item.theme!=='room')return 'assets/theme_'+item.theme+'.webp';const tod=(item&&item.tod)||'day';if(item&&item.rain)return tod==='night'?'assets/room_bg.webp':'assets/room_'+tod+'_rain.webp';return 'assets/room_'+tod+'.webp'}
+// Album records can be restored from a file or a code, so only known spaces and times of day become picture paths.
+const TOD_IDS=['morning','day','sunset','night'];
+function roomSrc(item){const th=item&&THEME_IDS.includes(item.theme)?item.theme:'room';if(th!=='room')return 'assets/theme_'+th+'.webp';const tod=item&&TOD_IDS.includes(item.tod)?item.tod:'day';if(item&&item.rain)return tod==='night'?'assets/room_bg.webp':'assets/room_'+tod+'_rain.webp';return 'assets/room_'+tod+'.webp'}
 const SPRITES={
   sleep:'assets/cat_sleep.png',
   lie:'assets/cat_sleep.png',
@@ -1194,6 +1223,8 @@ const SPRITES={
   desk:'assets/cat_desk.png',
   belly:'assets/cat_belly.png'
 };
+const SPRITE_SRCS=new Set(Object.values(SPRITES));
+function spriteOf(item){return item&&SPRITE_SRCS.has(item.sprite)?item.sprite:'assets/cat_sit.png'}
 function setPose(p){
   catEl.dataset.pose=p;
   const img=$('#catImg');
@@ -1445,7 +1476,7 @@ const fmt=s=>{s=Math.ceil(s/1000);const h=Math.floor(s/3600),m=Math.floor(s%3600
 function remainOf(r){r=r||run;if(!r)return 0;return r.paused?Math.max(0,r.pausedRemain|0):Math.max(0,r.endAt-Date.now())}
 function elapsedSec(r){r=r||run;if(!r)return 0;return Math.max(0,Math.round((r.dur*1000-remainOf(r))/1000))}
 function tick(){
-  if(!run){if($('#resultModal').hidden&&$('#joinModal').hidden)document.title=roomTitle()+' · '+t('tagline');return}
+  if(!run){if(!isOpen('#resultModal')&&!isOpen('#joinModal'))document.title=roomTitle()+' · '+t('tagline');return}
   const rem=remainOf();
   if(run.state==='focus'){
     $('#clock').textContent=fmt(rem);$('#barFill').style.width=(100-rem/(run.dur*1000)*100)+'%';
@@ -1664,7 +1695,7 @@ function endBreak(timeUp){
 }
 function doStop(){
   const elapsed=elapsedSec();
-  $('#stopModal').hidden=true;
+  hideModal('#stopModal');
   if(run&&run.state==='focus'&&run.lap&&!awake){wakeCat(true);setTimeout(()=>finishStop(elapsed),1100);return}
   finishStop(elapsed);
 }
@@ -1694,7 +1725,7 @@ function renderLog(){
   if(ls){const parts=[];if(tt.sec>0)parts.push(t('log.todayT',{t:fmtDur(tt.sec)}));if(tt.sessions)parts.push(sessionsOf(tt.sessions));if(tt.stops)parts.push(t('st.parts',{n:tt.stops}));if(tt.demos)parts.push(t('st.demos',{n:tt.demos}));ls.textContent=parts.join(' · ')}
   const it=$('#logItems');
   if(it){
-    it.innerHTML='';
+    it.replaceChildren();
     log.items.forEach((x,i)=>{
       const d=document.createElement('span');
       const sec=typeof x.sec==='number'?x.sec:(x.min|0)*60;
@@ -1805,11 +1836,22 @@ async function openShareSheet(ctx){
   const grid=$('#shareGrid');
   if(IN_APP){grid.prepend($('#shCopyText'));grid.prepend($('#shCopy'));$('#sheetHint').textContent=t('sheet.hintInApp')}
   else $('#sheetHint').textContent=navigator.share?t('sheet.hintNative'):t('sheet.hintCopy');
-  $('#shareSheet').hidden=false;
+  openModal('#shareSheet');
 }
+// Where the clipboard API is refused (KakaoTalk, Instagram and other in-app browsers) copy from a temporary textarea.
+// An open modal dialog makes the rest of the page inert, so the textarea goes inside the top dialog, and the "copied"
+// toast only shows when the text was really selected and copied.
 async function copyText(txt,msg){
-  try{await navigator.clipboard.writeText(txt);toast(msg||t('toast.copied'))}
-  catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(msg||t('toast.copied'))}catch(_){toast(t('toast.copyBlocked'))}ta.remove()}
+  try{await navigator.clipboard.writeText(txt);toast(msg||t('toast.copied'));return true}
+  catch(e){
+    const host=dlgStack[dlgStack.length-1]||document.body,back=document.activeElement;
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:0;left:-9999px;font-size:12pt';
+    host.appendChild(ta);ta.focus({preventScroll:true});ta.select();
+    let ok=false;
+    if(document.activeElement===ta&&ta.selectionEnd-ta.selectionStart===txt.length){try{ok=document.execCommand('copy')}catch(_){}}
+    ta.remove();if(back&&back!==document.body&&back.isConnected)back.focus({preventScroll:true});
+    toast(ok?(msg||t('toast.copied')):t('toast.copyBlocked'));return ok;
+  }
 }
 async function shareNative(){
   if(!sheetCtx)return;
@@ -1854,8 +1896,8 @@ function openResultView(){
   document.title=t('result.docTitle');
   const cd=Object.assign({canvas:$('#resultCard'),tod:todq,rain:false,theme:'room',shelf:[],streak:0,name,date,sec:st.mins*60},st);
   withFonts(()=>prepCard(cd)).then(()=>drawCard(cd));
-  $('#resultModal').hidden=false;
-  const leave=()=>{history.replaceState(null,'',location.pathname);$('#resultModal').hidden=true};
+  openModal('#resultModal');
+  const leave=()=>{history.replaceState(null,'',location.pathname);hideModal('#resultModal')};
   $('#resultTry').onclick=()=>{leave();start(30,true)};
   $('#resultClose').onclick=leave;
   return true;
@@ -1866,8 +1908,8 @@ $('#customMin').addEventListener('input',e=>{$$('.chip:not(.pchip)').forEach(c=>
 $('#startBtn').addEventListener('click',()=>{let v=parseInt($('#customMin').value,10);if(!(v>=5)){v=5;$('#customMin').value=5}if(v>180){v=180;$('#customMin').value=180}start(v*60,false)});
 $('#demoBtn').addEventListener('click',()=>start(30,true));
 // Stopping first pauses the timer, so the clock doesn't keep running behind the dialog.
-$('#stopBtn').addEventListener('click',()=>{pauseRun(true);setT('#stopMsg',run&&!run.demo&&elapsedSec()>=60?'stop.confirm2':'stop.confirmShort',{t:{dur:elapsedSec()}});$('#stopModal').hidden=false;$('#keepBtn').focus()});
-$('#keepBtn').addEventListener('click',()=>{$('#stopModal').hidden=true;if(run&&run.autoPaused)resumeRun()});
+$('#stopBtn').addEventListener('click',()=>{pauseRun(true);setT('#stopMsg',run&&!run.demo&&elapsedSec()>=60?'stop.confirm2':'stop.confirmShort',{t:{dur:elapsedSec()}});openModal('#stopModal')});
+$('#keepBtn').addEventListener('click',()=>{hideModal('#stopModal');if(run&&run.autoPaused)resumeRun()});
 $('#confirmStop').addEventListener('click',doStop);
 $('#pauseBtn').addEventListener('click',()=>{if(run&&run.paused)resumeRun();else pauseRun(false)});
 $('#treatBtn').addEventListener('click',()=>{ensureAudio();giveTreat()});
@@ -1924,12 +1966,12 @@ const sizeName=()=>{const i=$('#petName');if(!i)return;let m=$('#petNameMirror')
 $('#petName').addEventListener('change',e=>{const v=e.target.value.trim()||'콩이';petName=v;e.target.value=v;store.set('petName',v);renderLog();tick();if(lastCaption)caption(lastCaption.k,lastCaption.v)});
 $('#todSel').value=store.get('tod','auto');
 $('#todSel').addEventListener('change',e=>{store.set('tod',e.target.value);applyTod();caption('tod.cap',{d:t('tod.'+tod())})});
-$('#shareBtn').addEventListener('click',()=>{const d=cardData();withFonts(()=>prepCard(d)).then(()=>{drawCard(d);$('#shareModal').hidden=false})});
+$('#shareBtn').addEventListener('click',()=>{const d=cardData();withFonts(()=>prepCard(d)).then(()=>{drawCard(d);openModal('#shareModal')})});
 function openDayShare(){const d=cardData();withFonts(()=>prepCard(d)).then(()=>{drawCard(d);const st=shareStats();openShareSheet({canvas:$('#card'),title:roomTitle(),text:shareLine(st),url:resultUrl(st),fileName:'kongi-room-'+todayKey()+'.png'})})}
 $('#openShareBtn').addEventListener('click',openDayShare);
 $('#afterShareBtn').addEventListener('click',openDayShare);
-$('#shareCardBtn').addEventListener('click',()=>{$('#shareModal').hidden=true;openDayShare()});
-$('#closeSheet').addEventListener('click',()=>{$('#shareSheet').hidden=true});
+$('#shareCardBtn').addEventListener('click',()=>{hideModal('#shareModal');openDayShare()});
+$('#closeSheet').addEventListener('click',()=>hideModal('#shareSheet'));
 $('#shNative').addEventListener('click',shareNative);
 $('#shCopy').addEventListener('click',()=>{if(sheetCtx)copyText(sheetCtx.url,t('toast.linkCopied'))});
 $('#shCopyText').addEventListener('click',()=>{if(sheetCtx)copyText(sheetCtx.text+'\n'+sheetCtx.url,t('toast.textCopied'))});
@@ -1941,20 +1983,20 @@ $('#shThreads').addEventListener('click',()=>{if(!sheetCtx)return;window.open('h
 $('#shSave').addEventListener('click',()=>{if(sheetCtx)saveImage(sheetCtx.canvas,sheetCtx.fileName||'kongi-room.png')});
 $('#sharePolaroidBtn').addEventListener('click',()=>{if(!currentPolaroidItem)return;const it=currentPolaroidItem;const st=shareStats();
   openShareSheet({canvas:$('#polaroidCanvas'),title:roomTitle(),text:fill(t('pol.shareText',{d:it.demo?t('demoShort'):t('minShort',{m:it.min}),memo:it.memo?'"'+it.memo+'" ':''})),url:resultUrl(st),fileName:'kongi-room-polaroid.png'})});
-$('#closeShare').addEventListener('click',()=>{$('#shareModal').hidden=true});
+$('#closeShare').addEventListener('click',()=>hideModal('#shareModal'));
 $('#rainBtn').addEventListener('click',()=>toggleRain());
-$('#closeRadio').addEventListener('click',()=>{$('#radioModal').hidden=true});
+$('#closeRadio').addEventListener('click',()=>hideModal('#radioModal'));
 $$('.mix-range').forEach(r=>{r.value=Math.round((mix[r.dataset.mix]||0)*100);const l=$('.mix-val[data-mix="'+r.dataset.mix+'"]');if(l)l.textContent=r.value+'%';
   r.addEventListener('input',e=>mixSet(r.dataset.mix,e.target.value/100,{fromUi:true}))});
 $$('[data-preset]').forEach(b=>b.addEventListener('click',()=>mixPreset(b.dataset.preset)));
 const mixKick=()=>{if(MIX_IDS.some(id=>mix[id]>0))ensureAudio()};
 window.addEventListener('pointerdown',mixKick,{once:true});window.addEventListener('keydown',mixKick,{once:true});
 
-function openMixer(){renderSoundNow();$('#radioModal').hidden=false;ensureAudio()}
+function openMixer(){renderSoundNow();openModal('#radioModal');ensureAudio()}
 $('#hotspotRadio').addEventListener('click',e=>{hsReact(e.currentTarget,['🎵','🎶']);if(!(run&&run.state==='focus'))say(t('radio.say'),1800);setTimeout(openMixer,260)});
 $('#soundBtn').addEventListener('click',openMixer);
-$('#hotspotBook').addEventListener('click',e=>{hsReact(e.currentTarget,['📖']);setTimeout(()=>{$('#toolsModal').hidden=false},260)});
-$('#closeTools').addEventListener('click',()=>{$('#toolsModal').hidden=true});
+$('#hotspotBook').addEventListener('click',e=>{hsReact(e.currentTarget,['📖']);setTimeout(()=>openModal('#toolsModal'),260)});
+$('#closeTools').addEventListener('click',()=>hideModal('#toolsModal'));
 $('#hotspotCoffee').addEventListener('click',e=>{
   hsReact(e.currentTarget,['☁️','☕']);
   say(t('coffee.say'), 2600);hearts(2);
@@ -1972,9 +2014,9 @@ $('#hotspotBowl').addEventListener('click',e=>{
   catNotice('bowl',1).then(()=>{say(t('bowl.say'),2400);emote('👀');setTag('tag.waitBowl');caption('bowl.cap')});
 });
 $('#shelf').addEventListener('click',e=>{hsReact(e.currentTarget,['🏆','✨']);setTimeout(showShelfModal,260)});
-$('#closeShelf').addEventListener('click',()=>{$('#shelfModal').hidden=true});
-$('#albumBtn').addEventListener('click',()=>{renderAlbum();$('#albumModal').hidden=false;});
-$('#closeAlbum').addEventListener('click',()=>{$('#albumModal').hidden=true});
+$('#closeShelf').addEventListener('click',()=>hideModal('#shelfModal'));
+$('#albumBtn').addEventListener('click',()=>{renderAlbum();openModal('#albumModal')});
+$('#closeAlbum').addEventListener('click',()=>hideModal('#albumModal'));
 
 const afterPolBtn = $('#afterPolaroidBtn');
 if (afterPolBtn) {
@@ -1983,10 +2025,8 @@ if (afterPolBtn) {
   });
 }
 
-$('#closePolaroid').addEventListener('click', () => {
-  $('#polaroidDetailModal').hidden = true;
-  renderAlbum();
-});
+// the album grid is refreshed in dlgClosed(), so Esc, the back gesture and a tap outside update the memo too
+$('#closePolaroid').addEventListener('click', () => hideModal('#polaroidDetailModal'));
 
 $('#polTabClassic').addEventListener('click', () => setPolStyle('classic'));
 $('#polTabEssay').addEventListener('click', () => setPolStyle('essay'));
@@ -2037,20 +2077,36 @@ $('#copyPolaroidTextBtn').addEventListener('click', () => {
   }
 });
 
-$('#intimacyBtn').addEventListener('click',()=>{renderIntimacyModal();$('#intimacyModal').hidden=false;});
-$('#closeIntimacy').addEventListener('click',()=>{$('#intimacyModal').hidden=true;});
-$('#closeLevelUp').addEventListener('click',()=>{$('#levelUpModal').hidden=true;});
+$('#intimacyBtn').addEventListener('click',()=>{renderIntimacyModal();openModal('#intimacyModal')});
+$('#closeIntimacy').addEventListener('click',()=>hideModal('#intimacyModal'));
+$('#closeLevelUp').addEventListener('click',()=>hideModal('#levelUpModal'));
 $('#lvlActionBtn').addEventListener('click',()=>{
-  $('#levelUpModal').hidden=true;
+  hideModal('#levelUpModal');
   const curLv = getLevelInfo(getIntimacy().xp).level;
   if(curLv === 2) executeCatAction('desk','desk');
   else if(curLv === 3) executeCatAction('rug','belly');
 });
 
-// Escape or a tap on the dark backdrop closes whichever panel is open.
-function closeModal(m){if(!m||m.hidden)return;m.hidden=true;if(m.id==='stopModal'&&run&&run.autoPaused)resumeRun();if(m.id==='joinModal')leaveJoin();if(m.id==='resultModal')history.replaceState(null,'',location.pathname)}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal').forEach(m=>{if(!m.hidden)closeModal(m)})});
-$$('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m)}));
+// Esc (or the phone's back gesture) and a tap on the dim area close the dialog on top. Some dialogs undo something when dismissed.
+function onDismiss(m){if(m.id==='stopModal'&&run&&run.autoPaused)resumeRun();if(m.id==='joinModal')leaveJoin();if(m.id==='resultModal')history.replaceState(null,'',location.pathname)}
+function closeModal(m){if(!isOpen(m))return;hideModal(m);onDismiss(m)}
+// Esc can also cancel a Korean (or other IME) syllable that is still being composed; that keystroke must not close the dialog.
+let imeEsc=false;
+document.addEventListener('keydown',e=>{imeEsc=e.key==='Escape'&&(e.isComposing||e.keyCode===229)},true);
+document.addEventListener('keyup',()=>{imeEsc=false},true);
+$$('dialog.modal').forEach(m=>{
+  m.addEventListener('cancel',e=>{if(imeEsc){e.preventDefault();return}onDismiss(m)});
+  m.addEventListener('close',()=>dlgClosed(m));
+  // only a press that starts AND ends on the dim area closes it (pressing outside and letting go on the panel, or dragging
+  // a text selection out of the panel, does not). Release is checked by position: a touch stays targeted at where it began.
+  const outsidePanel=e=>{const r=m.querySelector('.sheet').getBoundingClientRect();return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom};
+  let downOnDim=false,upOnDim=false;
+  m.addEventListener('pointerdown',e=>{downOnDim=e.target===m&&outsidePanel(e);upOnDim=false});
+  m.addEventListener('pointerup',e=>{upOnDim=downOnDim&&outsidePanel(e)});
+  m.addEventListener('pointercancel',()=>{downOnDim=upOnDim=false});
+  m.addEventListener('click',e=>{if(e.target===m&&downOnDim&&upOnDim)closeModal(m);downOnDim=upOnDim=false});
+});
+if(typeof HTMLDialogElement!=='function')document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.isComposing&&e.keyCode!==229&&dlgStack.length)closeModal(dlgStack[dlgStack.length-1])});
 
 // ---- Kongi's room sound: each space and time of day has its own signature mix ----
 const SPACE_SOUND={
@@ -2097,15 +2153,15 @@ $('#pmNotify').addEventListener('change',async e=>{
 
 // ---- Today's goal ----
 $('#goalBtn').addEventListener('click',()=>{const g=goalGet();$('#goalChips').innerHTML=[1,2,3,4,6,8].map(n=>`<button class="chip" type="button" data-goal="${n}" aria-pressed="${n===g}">${esc(t('goal.n',{n}))}</button>`).join('');
-  $$('[data-goal]').forEach(b=>b.addEventListener('click',()=>{goalSet(+b.dataset.goal);$('#goalModal').hidden=true;say(t('goal.setSay',{n:+b.dataset.goal}),2400);hearts(2)}));$('#goalModal').hidden=false});
-$('#goalClose').addEventListener('click',()=>{$('#goalModal').hidden=true});
-$('#unlockBtn').addEventListener('click',()=>{renderIntimacyModal();$('#intimacyModal').hidden=false});
+  $$('[data-goal]').forEach(b=>b.addEventListener('click',()=>{goalSet(+b.dataset.goal);hideModal('#goalModal');say(t('goal.setSay',{n:+b.dataset.goal}),2400);hearts(2)}));openModal('#goalModal')});
+$('#goalClose').addEventListener('click',()=>hideModal('#goalModal'));
+$('#unlockBtn').addEventListener('click',()=>{renderIntimacyModal();openModal('#intimacyModal')});
 
 // ---- In-app feedback (no GitHub account needed) ----
 let fbKind='idea';
 $$('[data-fb]').forEach(b=>b.addEventListener('click',()=>{fbKind=b.dataset.fb;$$('[data-fb]').forEach(c=>c.setAttribute('aria-pressed',String(c===b)))}));
-$('#feedbackBtn').addEventListener('click',()=>{$('#feedbackModal').hidden=false;setTimeout(()=>$('#fbText').focus(),50)});
-$('#fbClose').addEventListener('click',()=>{$('#feedbackModal').hidden=true});
+$('#feedbackBtn').addEventListener('click',()=>openModal('#feedbackModal'));
+$('#fbClose').addEventListener('click',()=>hideModal('#feedbackModal'));
 // The mail link is the first channel (a static site has no inbox of its own); the in-app form posts to
 // /api/feedback where that API exists and opens the mail app with the same text everywhere else.
 const FEEDBACK_MAIL='hana@qwerklab.com';
@@ -2124,7 +2180,7 @@ $('#fbSend').addEventListener('click',async()=>{
   const btn=$('#fbSend');btn.disabled=true;
   const body={kind:fbKind,text,contact:$('#fbContact').value.trim(),lang,screen:innerWidth+'x'+innerHeight,lv:getLevelInfo(getIntimacy().xp).level};
   try{const r=await fetch('/api/feedback',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(r.status);
-    $('#fbText').value='';$('#fbContact').value='';$('#feedbackModal').hidden=true;toast(t('fb.thanks'),3600);say(t('fb.say'),2400);hearts(3)}
+    $('#fbText').value='';$('#fbContact').value='';hideModal('#feedbackModal');toast(t('fb.thanks'),3600);say(t('fb.say'),2400);hearts(3)}
   catch(e){const href=fbMailto();copyText(text,t('fb.failMail'));openMail(href)}
   finally{btn.disabled=false}
 });
@@ -2139,9 +2195,9 @@ function restore(snap){
   toast(t('bk.restored'));setTimeout(()=>location.reload(),900);return true;
 }
 function renderBackup(){const l=store.get('lastBackup',null);$('#bkLast').textContent=l?t('bk.lastAt',{d:new Date(l).toLocaleString(lang==='ko'?'ko-KR':lang==='de'?'de-DE':'en-US')}):t('bk.never');$('#bkCode').hidden=true}
-function openBackup(){renderBackup();$('#backupModal').hidden=false}
+function openBackup(){renderBackup();openModal('#backupModal')}
 $('#backupBtn').addEventListener('click',openBackup);$('#backupBtn2').addEventListener('click',openBackup);
-$('#bkClose').addEventListener('click',()=>{$('#backupModal').hidden=true});
+$('#bkClose').addEventListener('click',()=>hideModal('#backupModal'));
 $('#bkExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify(snapshot(),null,1)],{type:'application/json'});const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download='kongi-room-backup-'+todayKey()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -2170,8 +2226,8 @@ function renderFriend(){
   fc.hidden=!(tg&&run.state==='focus');
   if(tg)$('#friendTag').textContent=t('tg.friendTag',{n:tg.name||t('tg.friend')});
 }
-$('#togetherBtn').addEventListener('click',()=>{const v=focusMin();const sel=$('#tgMin');if(![...sel.options].some(o=>+o.value===v)){const o=document.createElement('option');o.textContent=v;sel.appendChild(o)}sel.value=String(v);$('#tgInfo').textContent='';$('#togetherModal').hidden=false});
-$('#tgClose').addEventListener('click',()=>{$('#togetherModal').hidden=true});
+$('#togetherBtn').addEventListener('click',()=>{const v=focusMin();const sel=$('#tgMin');if(![...sel.options].some(o=>+o.value===v)){const o=document.createElement('option');o.textContent=v;sel.appendChild(o)}sel.value=String(v);$('#tgInfo').textContent='';openModal('#togetherModal')});
+$('#tgClose').addEventListener('click',()=>hideModal('#togetherModal'));
 // Builds the shared-start link, closes the panel and starts this room's countdown; returns what to send.
 function buildTogether(){
   const m=+$('#tgMin').value,delay=+$('#tgDelay').value;const startAt=Date.now()+delay*60000;
@@ -2179,7 +2235,7 @@ function buildTogether(){
   const url=SITE_URL+'?'+p.toString();
   const hh=new Date(startAt);const at=pad(hh.getHours())+':'+pad(hh.getMinutes());
   const text=fill(t('tg.shareText',{m,at}));
-  $('#togetherModal').hidden=true;
+  hideModal('#togetherModal');
   scheduleTogether({start:startAt,m,name:t('tg.friends'),host:true});
   return {url,text};
 }
@@ -2197,8 +2253,8 @@ function scheduleTogether(info){
   if(Date.now()>=endAt){toast(t('tg.over'),3600);history.replaceState(null,'',location.pathname);return}
   setT('#joinTitle',info.host?'tg.hostTitle':'tg.joinTitle',{n:info.name});
   const hh=new Date(info.start);setT('#joinLine','tg.joinLine',{m:info.m,at:pad(hh.getHours())+':'+pad(hh.getMinutes())});
-  $('#joinGo').hidden=!!info.host;$('#joinModal').hidden=false;
-  const go=()=>{clearInterval(joinTimer);joinTimer=null;$('#joinModal').hidden=true;info.started=true;history.replaceState(null,'',location.pathname);
+  $('#joinGo').hidden=!!info.host;openModal('#joinModal');
+  const go=()=>{clearInterval(joinTimer);joinTimer=null;hideModal('#joinModal');info.started=true;history.replaceState(null,'',location.pathname);
     const left=Math.round((endAt-Date.now())/1000);start(info.m*60,false,{together:{start:info.start,name:info.name}});if(left<info.m*60)toast(t('tg.joinedLate',{t:fmtDur(info.m*60-left)}),3600);
     moveCat('sofa','sit',1);say(t('tg.startSay'),2600);hearts(4)};
   const upd=()=>{const ms=info.start-Date.now();if(ms<=0){if(info.host||info.accepted)go();else{$('#joinClock').textContent=t('tg.now')}return}$('#joinClock').textContent=fmt(ms)};
@@ -2238,16 +2294,16 @@ function applyLang(){
   renderLog();renderShelf();
   if(lastCaption)caption(lastCaption.k,lastCaption.v);
   if(lastStatus){$('#focusStatus').textContent=fill(t(lastStatus.k,lastStatus.v))}
-  if(!$('#albumModal').hidden)renderAlbum();
-  if(!$('#intimacyModal').hidden)renderIntimacyModal();
-  if(!$('#shelfModal').hidden)showShelfModal();
+  if(isOpen('#albumModal'))renderAlbum();
+  if(isOpen('#intimacyModal'))renderIntimacyModal();
+  if(isOpen('#shelfModal'))showShelfModal();
   renderCycle();tick();
 }
 const lapToggle=$('#lapToggle');
 if(lapToggle){lapToggle.checked=lapMode;lapToggle.addEventListener('change',e=>{lapMode=!!e.target.checked;store.set('lapMode',lapMode);if(lapMode){scene.classList.add('lap-preview');setLapView(true,3);setTimeout(()=>{scene.classList.remove('lap-preview');if(!(run&&run.state==='focus'&&run.lap))setLapView(false)},2600)}})}
-$('#themeBtn').addEventListener('click',()=>{$('#themeModal').hidden=false});
-$('#closeTheme').addEventListener('click',()=>{$('#themeModal').hidden=true});
-$$('.theme-card').forEach(c=>c.addEventListener('click',()=>{applyTheme(c.dataset.theme);$('#themeModal').hidden=true;caption('theme.cap');followSound()}));
+$('#themeBtn').addEventListener('click',()=>openModal('#themeModal'));
+$('#closeTheme').addEventListener('click',()=>hideModal('#themeModal'));
+$$('.theme-card').forEach(c=>c.addEventListener('click',()=>{applyTheme(c.dataset.theme);hideModal('#themeModal');caption('theme.cap');followSound()}));
 $$('.theme-card img').forEach(im=>{const bad=()=>{im.classList.add('broken');const c=im.closest('.theme-card');if(c)c.classList.add('broken')};im.addEventListener('error',bad);if(im.complete&&!im.naturalWidth)bad()});
 const langSel=$('#langSel');
 if(langSel){langSel.addEventListener('change',e=>{const v=e.target.value;if(!LANGS.includes(v))return;lang=v;store.set('lang',v);applyLang()})}

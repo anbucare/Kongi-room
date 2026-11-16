@@ -119,6 +119,7 @@ npm test
 npm i && npx playwright install chromium
 python3 -m http.server 8787   # 다른 터미널에서
 npm run test:e2e              # 스크린샷은 tests/e2e/shots/ 에 남아요
+npx playwright install webkit && BROWSER=webkit npm run test:e2e   # 같은 흐름을 Safari 엔진으로 (선택)
 ```
 
 ---
