@@ -446,7 +446,7 @@ body{transition:background-color .8s,color .8s}
 /* 아침·노을: 밝은 화면이면 따뜻한 바탕 색조, 어두운 화면이면 어두운 색 묶음 그대로(방 그림만 시간대를 따름). 값은 :root·어두운 블록의 --bg-morning 등 */
 body[data-tod="morning"]{--bg:var(--bg-morning)}
 body[data-tod="sunset"]{--bg:var(--bg-sunset);--soft:var(--soft-sunset)}
-body[data-tod="night"]{--bg:#2a211d;--fg:#f3e6d4;--muted:#bba591;--panel:#33291f;--line:#4d3c30;--soft:#3d3027;--accent:#e8945a;--accent-fg:#2a1a10;color-scheme:dark;--note-hero-bg:linear-gradient(135deg,#3b2a23,#33241e);--note-hero-line:#6b4636;--note-hero-title:#f4a98d;--note-hero-text:#e9d9c5;--note-track:#1f1714;--note-surface:#3a2a24;--note-ok:#8fd18f;--note-chip-fg:#f4a98d;--note-pop-bg:#3a2a24;--note-pop-title:#f4a98d;--note-pop-btn:#e8945a}
+body[data-tod="night"]{--bg:#2a211d;--fg:#f3e6d4;--muted:#bba591;--panel:#33291f;--line:#4d3c30;--soft:#3d3027;--accent:#e8945a;--accent-fg:#2a1a10;--brown:#f0c48f;color-scheme:dark;--note-hero-bg:linear-gradient(135deg,#3b2a23,#33241e);--note-hero-line:#6b4636;--note-hero-title:#f4a98d;--note-hero-text:#e9d9c5;--note-track:#1f1714;--note-surface:#3a2a24;--note-ok:#8fd18f;--note-chip-fg:#f4a98d;--note-pop-bg:#3a2a24;--note-pop-title:#f4a98d;--note-pop-btn:#e8945a}
 .btn{border-radius:14px;min-height:44px;font-weight:700}
 .btn.secondary{border:1px solid var(--line)}
 .btn.small{font-size:14px;padding:10px 14px}
@@ -469,7 +469,6 @@ button.stat:hover{transform:translateY(-1px);border-color:var(--accent)}
 #streakBadge.hot{border-color:#f0a35c;background:linear-gradient(135deg,var(--panel),rgba(240,163,92,.18))}
 #streakBadge.cold .stat-top{color:var(--muted)}
 .stat-unlock .stat-top{color:var(--brown)}
-body[data-tod="night"] .stat-unlock .stat-top{color:#f0c48f}
 @media (max-width:900px){.statusbar{grid-template-columns:repeat(3,minmax(0,1fr))}.stat-lv{grid-column:1/-1}}
 @media (max-width:520px){.statusbar{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.stat{padding:7px 10px;min-height:52px}.stat-top{font-size:13px}.stat-sub{font-size:11px}}
 
