@@ -1,5 +1,5 @@
 /* 콩이네 방 service worker: keeps the app shell offline, caches room art lazily. */
-const VERSION = 'kongi-v33';
+const VERSION = 'kongi-v34';
 const SHELL = [
   './',
   './index.html',
@@ -54,7 +54,8 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       caches.match(req).then((hit) => {
         const fetching = fetch(req).then((res) => {
-          if (res && res.ok) caches.open(VERSION).then((c) => c.put(req, res.clone()));
+          // clone now: once the page starts reading the body, a later res.clone() throws "body already used"
+          if (res && res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
           return res;
         }).catch(() => hit);
         return hit || fetching;
@@ -67,7 +68,8 @@ self.addEventListener('fetch', (e) => {
   if (url.hostname.endsWith('gstatic.com') || url.hostname.endsWith('googleapis.com')) {
     e.respondWith(
       fetch(req).then((res) => {
-        caches.open(VERSION).then((c) => c.put(req, res.clone()));
+        const copy = res.clone();
+        caches.open(VERSION).then((c) => c.put(req, copy));
         return res;
       }).catch(() => caches.match(req))
     );
