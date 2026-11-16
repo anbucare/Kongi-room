@@ -1109,7 +1109,7 @@ function renderIntimacyModal() {
       <div class="level-info">
         <div class="level-name">
           <span>Lv.${lvl.level} ${t(lvl.name)}</span>
-          ${isUnlocked ? `<span style="font-size:11px;color:#2e7d32;font-weight:700">${t('lvl.unlocked')}</span>` : `<span style="font-size:11px;color:var(--muted)">${t('lvl.need',{xp:lvl.minXp})}</span>`}
+          ${isUnlocked ? `<span style="font-size:11px;color:var(--note-ok);font-weight:700">${t('lvl.unlocked')}</span>` : `<span style="font-size:11px;color:var(--muted)">${t('lvl.need',{xp:lvl.minXp})}</span>`}
         </div>
         <div class="level-desc">${t(lvl.desc)}</div>
         <div class="level-motion">${t('lvl.motionLabel',{m:t(lvl.motion)})}</div>
