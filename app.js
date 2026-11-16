@@ -46,7 +46,9 @@ function dlgEl(d){return typeof d==='string'?$(d):d}
 function isOpen(d){d=dlgEl(d);return !!(d&&d.hasAttribute('open'))}
 function openModal(d){d=dlgEl(d);if(!d||isOpen(d))return;if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','');dlgStack.push(d)}
 function hideModal(d){d=dlgEl(d);if(!d||!isOpen(d))return;if(typeof d.close==='function')d.close();else{d.removeAttribute('open');dlgClosed(d)}}
-function dlgClosed(d){const i=dlgStack.indexOf(d);if(i>=0)dlgStack.splice(i,1);const tt=$('#toast');if(tt&&tt.parentNode===d)(dlgStack[dlgStack.length-1]||document.body).appendChild(tt)}
+// Runs however a dialog closed (button, Esc, back gesture, tap outside).
+function dlgClosed(d){const i=dlgStack.indexOf(d);if(i>=0)dlgStack.splice(i,1);const tt=$('#toast');if(tt&&tt.parentNode===d)(dlgStack[dlgStack.length-1]||document.body).appendChild(tt);
+  if(d.id==='polaroidDetailModal')renderAlbum()}
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Durations with seconds: "12분 30초" / "12m 30s" / "12 Min. 30 Sek."
 function fmtDur(sec){return CORE.fmtDur(sec,lang)}
@@ -1836,9 +1838,20 @@ async function openShareSheet(ctx){
   else $('#sheetHint').textContent=navigator.share?t('sheet.hintNative'):t('sheet.hintCopy');
   openModal('#shareSheet');
 }
+// Where the clipboard API is refused (KakaoTalk, Instagram and other in-app browsers) copy from a temporary textarea.
+// An open modal dialog makes the rest of the page inert, so the textarea goes inside the top dialog, and the "copied"
+// toast only shows when the text was really selected and copied.
 async function copyText(txt,msg){
-  try{await navigator.clipboard.writeText(txt);toast(msg||t('toast.copied'))}
-  catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(msg||t('toast.copied'))}catch(_){toast(t('toast.copyBlocked'))}ta.remove()}
+  try{await navigator.clipboard.writeText(txt);toast(msg||t('toast.copied'));return true}
+  catch(e){
+    const host=dlgStack[dlgStack.length-1]||document.body,back=document.activeElement;
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:0;left:-9999px;font-size:12pt';
+    host.appendChild(ta);ta.focus({preventScroll:true});ta.select();
+    let ok=false;
+    if(document.activeElement===ta&&ta.selectionEnd-ta.selectionStart===txt.length){try{ok=document.execCommand('copy')}catch(_){}}
+    ta.remove();if(back&&back!==document.body&&back.isConnected)back.focus({preventScroll:true});
+    toast(ok?(msg||t('toast.copied')):t('toast.copyBlocked'));return ok;
+  }
 }
 async function shareNative(){
   if(!sheetCtx)return;
@@ -2012,10 +2025,8 @@ if (afterPolBtn) {
   });
 }
 
-$('#closePolaroid').addEventListener('click', () => {
-  hideModal('#polaroidDetailModal');
-  renderAlbum();
-});
+// the album grid is refreshed in dlgClosed(), so Esc, the back gesture and a tap outside update the memo too
+$('#closePolaroid').addEventListener('click', () => hideModal('#polaroidDetailModal'));
 
 $('#polTabClassic').addEventListener('click', () => setPolStyle('classic'));
 $('#polTabEssay').addEventListener('click', () => setPolStyle('essay'));
@@ -2086,10 +2097,14 @@ document.addEventListener('keyup',()=>{imeEsc=false},true);
 $$('dialog.modal').forEach(m=>{
   m.addEventListener('cancel',e=>{if(imeEsc){e.preventDefault();return}onDismiss(m)});
   m.addEventListener('close',()=>dlgClosed(m));
-  // only a press that starts and ends on the dim area closes it (a text selection dragged out of the panel does not)
-  let downOnDim=false;
-  m.addEventListener('pointerdown',e=>{downOnDim=e.target===m});
-  m.addEventListener('click',e=>{if(e.target===m&&downOnDim)closeModal(m);downOnDim=false});
+  // only a press that starts AND ends on the dim area closes it (pressing outside and letting go on the panel, or dragging
+  // a text selection out of the panel, does not). Release is checked by position: a touch stays targeted at where it began.
+  const outsidePanel=e=>{const r=m.querySelector('.sheet').getBoundingClientRect();return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom};
+  let downOnDim=false,upOnDim=false;
+  m.addEventListener('pointerdown',e=>{downOnDim=e.target===m&&outsidePanel(e);upOnDim=false});
+  m.addEventListener('pointerup',e=>{upOnDim=downOnDim&&outsidePanel(e)});
+  m.addEventListener('pointercancel',()=>{downOnDim=upOnDim=false});
+  m.addEventListener('click',e=>{if(e.target===m&&downOnDim&&upOnDim)closeModal(m);downOnDim=upOnDim=false});
 });
 if(typeof HTMLDialogElement!=='function')document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.isComposing&&e.keyCode!==229&&dlgStack.length)closeModal(dlgStack[dlgStack.length-1])});
 

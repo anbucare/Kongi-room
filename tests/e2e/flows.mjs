@@ -1,7 +1,7 @@
 // 끝까지 흐름 검증 (Playwright headless Chromium, 가짜 시계 page.clock, 데스크톱 + 모바일 390×844).
 // 실행: npm i && npx playwright install chromium && python3 -m http.server 8787 (다른 터미널) && npm run test:e2e
 // 스크린샷·결과는 tests/e2e/shots/ 에 남는다 (git 에는 넣지 않음).
-import { chromium, devices } from 'playwright';
+import { chromium, webkit, devices } from 'playwright';
 import fs from 'node:fs';
 const base = process.env.BASE || 'http://localhost:8787/';
 const LIVE = !/localhost|127\.0\.0\.1/.test(base); // on the real site, skip anything that would write to its API
@@ -32,7 +32,10 @@ async function newPage(browser, mobile) {
 const txt = (page, sel) => page.locator(sel).first().textContent().then((s) => (s || '').trim());
 const vis = (page, sel) => page.locator(sel).first().isVisible();
 
-const browser = await chromium.launch();
+// BROWSER=webkit runs the same flows in Safari's engine (needs: npx playwright install webkit)
+const ENGINE = process.env.BROWSER === 'webkit' ? webkit : chromium;
+const browser = await ENGINE.launch();
+console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
 
 // ---------- 1. 30s demo → treat → no level-up, numbers reflect immediately ----------
 {
@@ -329,6 +332,65 @@ const browser = await chromium.launch();
   await page.screenshot({ path: OUT + 'desktop-night.png' });
   const nightBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   check('밤 시간대: 어두운 배경색으로 전환', nightBg === 'rgb(42, 33, 29)', nightBg);
+  await ctx.close();
+}
+
+// ---------- 9. Native <dialog>: copy fallback inside an open dialog, every way of closing, tap-outside rules ----------
+{
+  const { page, ctx, errors } = await newPage(browser, false);
+  await page.evaluate(() => localStorage.setItem('album', JSON.stringify([{ id: 1, dateStr: '2026.11.11', timeStr: '10:00', min: 25, demo: false, tod: 'day', rain: false, theme: 'room', sprite: 'assets/cat_sit.png', memo: '', no: 1 }])));
+  await page.reload({ waitUntil: 'load' }); await page.clock.runFor(1000);
+  // in-app browsers (KakaoTalk, Instagram) refuse the clipboard API, so the app copies from a temporary textarea.
+  // An open modal dialog makes the page behind it inert: the textarea must live inside the dialog or nothing is copied.
+  await page.evaluate(() => {
+    navigator.clipboard.writeText = () => Promise.reject(new DOMException('blocked', 'NotAllowedError'));
+    window.__copied = null;
+    document.addEventListener('copy', (e) => { const el = e.target; window.__copied = el && typeof el.value === 'string' ? el.value.slice(el.selectionStart, el.selectionEnd) : String(document.getSelection()); }, true);
+  });
+  await page.click('#openShareBtn');
+  await page.locator('#shareSheet').waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
+  // Safari does not focus a button on click, so "where focus was" differs by engine: compare before and after
+  const focusAt = () => page.evaluate(() => { const a = document.activeElement; return a ? a.id || a.className || a.tagName : null; });
+  await page.hover('#shCopy'); await page.mouse.down(); const focusBefore = await focusAt(); await page.mouse.up(); await page.clock.runFor(300);
+  const copied = await page.evaluate(() => window.__copied);
+  check('클립보드가 막힌 앱 안 브라우저: 공유 시트 링크 복사가 실제로 링크를 복사', typeof copied === 'string' && copied.startsWith('https://kongi-room.anbu-pilot.workers.dev/'), String(copied));
+  const focusAfter = await focusAt();
+  check('… 성공 알림이 팝업 위에 보이고 포커스는 복사 전 자리(팝업 안)로', (await txt(page, '#toast')) === '링크를 복사했어요' && await vis(page, '#toast') && focusAfter === focusBefore && await page.evaluate(() => !!(document.activeElement && document.activeElement.closest('#shareSheet'))), `${await txt(page, '#toast')} · ${focusBefore} → ${focusAfter}`);
+  await page.evaluate(() => { document.execCommand = () => false; });
+  await page.clock.runFor(3000);
+  await page.click('#shCopy'); await page.clock.runFor(300);
+  check('복사가 정말 실패하면 성공 알림 대신 "막혀 있어요" 안내', /막혀/.test(await txt(page, '#toast')), await txt(page, '#toast'));
+  await page.keyboard.press('Escape'); await page.clock.runFor(200);
+  check('Esc 로 공유 시트 닫힘', !(await vis(page, '#shareSheet')));
+  // a memo typed in the photo window reaches the album card whichever way the window is closed
+  await page.click('#albumBtn'); await page.clock.runFor(300);
+  await page.locator('.polaroid-card').first().click(); await page.clock.runFor(300);
+  await page.fill('#polMemoInput', '영단어 50개');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+  check('사진 창을 Esc 로 닫아도 앨범 카드에 새 메모', !(await vis(page, '#polaroidDetailModal')) && (await txt(page, '.polaroid-card .polaroid-caption')) === '영단어 50개', await txt(page, '.polaroid-card .polaroid-caption'));
+  check('Esc 는 맨 위 팝업만 닫음 (앨범은 열린 채)', await vis(page, '#albumModal'));
+  // tap outside: only a press AND release on the dim area closes
+  const sb = await page.locator('#albumModal .sheet').boundingBox();
+  await page.mouse.move(6, 6); await page.mouse.down(); await page.mouse.move(sb.x + 30, sb.y + 30); await page.mouse.up(); await page.clock.runFor(100);
+  check('어두운 곳을 누르고 판 위에서 떼면 안 닫힘', await vis(page, '#albumModal'));
+  await page.mouse.move(sb.x + 30, sb.y + 30); await page.mouse.down(); await page.mouse.move(6, 6); await page.mouse.up(); await page.clock.runFor(100);
+  check('판에서 누르고 어두운 곳에서 떼도 안 닫힘', await vis(page, '#albumModal'));
+  await page.mouse.click(6, 6); await page.clock.runFor(100);
+  check('어두운 곳을 누르고 떼면 닫힘', !(await vis(page, '#albumModal')));
+  // keyboard: focus goes into the dialog, stays there, and comes back to the opener
+  await page.focus('#themeBtn'); await page.keyboard.press('Enter'); await page.clock.runFor(200);
+  const inTheme = () => page.evaluate(() => !!(document.activeElement && document.activeElement.closest('#themeModal')));
+  check('키보드로 연 팝업: 포커스가 팝업 안', await inTheme());
+  // Safari's plain Tab skips buttons by default (Option+Tab reaches every control), so use the key that walks the buttons
+  const TAB = ENGINE === webkit ? 'Alt+Tab' : 'Tab';
+  // after the last control focus may visit the browser's own toolbar (the page then reports <body>) and comes back in;
+  // what must never happen is focus landing on the page behind the dialog
+  const trail = [];
+  for (let i = 0; i < 12; i++) { await page.keyboard.press(TAB); trail.push(await page.evaluate(() => { const a = document.activeElement; return a && a.closest('#themeModal') ? 'in' : a && a.closest('.app') ? 'BEHIND' : 'browser'; })); }
+  check(`${TAB} 12번: 포커스가 뒤 화면으로 가지 않고 팝업 안을 돎`, !trail.includes('BEHIND') && trail.filter((x) => x === 'in').length >= 10, trail.join(','));
+  await page.keyboard.press('Escape'); await page.clock.runFor(200);
+  check('Esc 뒤 포커스가 연 버튼으로 돌아옴', await page.evaluate(() => document.activeElement && document.activeElement.id) === 'themeBtn');
+  check('팝업 시험 콘솔 오류 없음', errors.length === 0, errors.join(' | '));
   await ctx.close();
 }
 
