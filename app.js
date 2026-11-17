@@ -747,9 +747,13 @@ function drawEssayCanvas(item){
   titleLines.forEach((l, i) => ctx.fillText(l, W/2, 300 + i * 72));
   const subY = 300 + (titleLines.length - 1) * 72 + 60;
   ctx.fillStyle = mut; ctx.font = '400 30px ' + sf;
-  wrapLines(ctx, essaySub(item), W - 240, 2).forEach((l, i) => ctx.fillText(l, W/2, subY + i * 40));
+  const subLines = wrapLines(ctx, essaySub(item), W - 240, 2);
+  subLines.forEach((l, i) => ctx.fillText(l, W/2, subY + i * 40));
 
-  const px = 160, py = 470, pw = 760, ph = 475;
+  // 제목·부제가 둘 다 두 줄이면(영어·독일어, 긴 장소·세 자리 분) 부제 둘째 줄이 사진 테두리에 가렸다 —
+  // 그럴 때만 사진을 그만큼 내리고 비율 그대로 작게 해서, 사진 아래쪽 끝(945)과 그 아래 글자 자리는 그대로 둔다.
+  const extra = Math.max(0, subY + (subLines.length - 1) * 40 + 24 - 456);
+  const ph = 475 - extra, pw = Math.round(ph * 760 / 475), px = Math.round((W - pw) / 2), py = 470 + extra;
   ctx.fillStyle = '#fffdf9'; ctx.fillRect(px - 14, py - 14, pw + 28, ph + 28);
   ctx.strokeStyle = line; ctx.lineWidth = 1.5; ctx.strokeRect(px - 14, py - 14, pw + 28, ph + 28);
   const roomImg = new Image(); roomImg.src = roomSrc(item);
