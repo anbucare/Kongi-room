@@ -47,6 +47,14 @@ test('올리기: 두 CSS 는 버전마다, 글꼴 조각은 fonts/ 키로 없을
   assert.match(d, /'--prefix', 'fonts\/'/);
   assert.match(d, /have\.get\(f\.key\) !== f\.etag/);
   assert.match(d, /\/\^v\\d\{14\}\\\/\//, '오래된 버전 지우기는 v…/ 키만 (fonts/ 는 건드리지 않음)');
+  // dry-run 에서는 글꼴을 올리지 않고, 올린 뒤에는 모두 도착했는지 확인하고, 이 모든 것이 사이트 전환보다 먼저
+  assert.match(d, /if \(todo\.length && !DRY\) \{/, 'dry-run 에서 글꼴을 올리면 안 됨');
+  const iFontPut = d.indexOf("wrangler(['kv', 'bulk', 'put', fontBulk");
+  const iCheck = d.indexOf('const missing = fonts.filter((f) => after.get(f.key) !== f.etag);');
+  const iSitePut = d.indexOf("wrangler(['kv', 'bulk', 'put', bulkFile");
+  const iDeploy = d.indexOf("wrangler(['deploy'");
+  assert.ok(iFontPut > 0 && iCheck > iFontPut && iSitePut > iCheck && iDeploy > iSitePut, '순서: 글꼴 올리기 → 도착 확인 → 버전 파일 → 사이트 전환');
+  assert.match(d.slice(iCheck, iSitePut), /throw new Error/, '글꼴이 빠졌으면 전환 전에 멈춰야 함');
 });
 
 test('사이트 서버: fonts/ 는 버전 없는 키에서, 없으면 버전 키에서 꺼내고, 1년 캐시', async () => {

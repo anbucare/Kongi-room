@@ -120,15 +120,20 @@ function main() {
     const buf = fs.readFileSync(path.join(fontDir, f));
     return { key: 'fonts/' + f, buf, etag: createHash('sha1').update(buf).digest('hex').slice(0, 16) };
   }) : [];
+  const fontsInKv = () => new Map(jsonFrom(wrangler(['kv', 'key', 'list', '--namespace-id', ns.id, '--prefix', 'fonts/', '--remote'], { capture: true }))
+    .map((k) => [k.name, k.metadata && k.metadata.etag]));
   if (fonts.length) {
-    const have = new Map(jsonFrom(wrangler(['kv', 'key', 'list', '--namespace-id', ns.id, '--prefix', 'fonts/', '--remote'], { capture: true }))
-      .map((k) => [k.name, k.metadata && k.metadata.etag]));
+    const have = fontsInKv();
     const todo = fonts.filter((f) => have.get(f.key) !== f.etag);
     console.log(`  글꼴 파일 ${fonts.length}개 중 새로 올릴 것 ${todo.length}개` + (DRY ? ' (dry-run)' : ''));
     if (todo.length && !DRY) {
       const fontBulk = path.join(tmp, 'fonts.json');
       fs.writeFileSync(fontBulk, JSON.stringify(todo.map((f) => ({ key: f.key, value: f.buf.toString('base64'), base64: true, metadata: { etag: f.etag } }))));
       wrangler(['kv', 'bulk', 'put', fontBulk, '--namespace-id', ns.id, '--remote']);
+      // wrangler only checks the overall "success" flag, so confirm every font key really arrived before switching the site
+      const after = fontsInKv();
+      const missing = fonts.filter((f) => after.get(f.key) !== f.etag);
+      if (missing.length) throw new Error(`글꼴 파일 ${missing.length}개가 KV 에 올라가지 않았어요 (하루 쓰기 한도일 수 있음). 사이트는 그대로예요. 내일 다시 실행하면 남은 것만 올립니다.`);
     }
   }
   const bulk = files.map((f) => ({ key: version + '/' + f.rel, value: f.buf.toString('base64'), base64: true, metadata: { etag: createHash('sha1').update(f.buf).digest('hex').slice(0, 16) } }));
