@@ -675,6 +675,7 @@ function setPolStyle(s){
 }
 
 let polStyle = store.get('polStyle', 'classic');
+let polDrawGen = 0; // 앨범 카드를 새로 그릴 때마다 늘어남 — 앞 카드의 늦은 그리기(그림 onload·0.12초 뒤)가 새 카드를 덮지 않게
 let serifReady = false, serifAsked = false;
 function ensureSerif(cb){
   if(serifReady){ cb(); return; }
@@ -725,6 +726,7 @@ function essaySub(item){
 function drawEssayCanvas(item){
   const c = $('#polaroidCanvas');
   if(!c) return;
+  const gen = ++polDrawGen;
   const ctx = c.getContext('2d');
   const W = 1080, H = 1350;
   const sf = '"Gowun Batang","Nanum Myeongjo","Apple Myungjo","Noto Serif KR",Georgia,"Times New Roman",serif';
@@ -754,6 +756,7 @@ function drawEssayCanvas(item){
   const catImg = new Image(); catImg.src = spriteOf(item);
   if(item.rain){const mk=getRainMask(item.theme);if(!mk.complete)mk.addEventListener('load',()=>renderContents(),{once:true})}
   const renderContents = () => {
+    if(gen !== polDrawGen) return;
     ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
     ctx.imageSmoothingEnabled = false;
     if(roomImg.complete && roomImg.naturalWidth) ctx.drawImage(roomImg, px, py, pw, ph);
@@ -797,6 +800,7 @@ function drawPolaroidCanvas(item){
     if(!serifReady) ensureSerif(() => { if(polStyle === 'essay' && currentPolaroidItem === item) drawEssayCanvas(item); });
     return;
   }
+  const gen = ++polDrawGen;
   const ctx = c.getContext('2d');
   const W = 1080, H = 1350;
   
@@ -818,6 +822,7 @@ function drawPolaroidCanvas(item){
   if (item.rain) { const mk = getRainMask(item.theme); if (!mk.complete) mk.addEventListener('load', () => renderContents(), { once: true }); }
 
   const renderContents = () => {
+    if (gen !== polDrawGen) return;
     ctx.save();
     ctx.beginPath();
     ctx.roundRect(px, py, pw, ph, 8);
@@ -860,6 +865,7 @@ function drawPolaroidCanvas(item){
     const ff = '"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
     // 두 번 불려도 글자가 겹쳐 그려지지 않게 사진 아래 글자 자리를 먼저 바탕색으로 지움
     ctx.fillStyle = '#fdfaf5'; ctx.fillRect(6, py + ph + 1, W - 12, H - 6 - (py + ph + 1));
+    ctx.fillRect(6, 6, W - 12, py - 6); // 기울어진 연속 도장 모서리가 사진 위 테두리로 삐져나오는 자리도
     ctx.textAlign = 'left';
     ctx.fillStyle = '#715b4a'; // 앱 --muted 와 같은 색, 바탕 #fdfaf5 위 6.1 (예전 #8c7b6f 3.9)
     ctx.font = '500 28px ' + ff;
@@ -889,7 +895,7 @@ function drawPolaroidCanvas(item){
     ctx.fillText(`✏️ ${userMemo}`, px + 10, 1075);
 
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#715b4a';
+    ctx.fillStyle = '#7d6858'; // 맨아래 한 줄은 날짜보다 조금 옅게 (바탕 위 5.05)
     ctx.font = '400 24px ' + ff;
     ctx.fillText(t('pol.footer'), W / 2, 1280);
 
