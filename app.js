@@ -675,6 +675,7 @@ function setPolStyle(s){
 }
 
 let polStyle = store.get('polStyle', 'classic');
+let polDrawGen = 0; // 앨범 카드를 새로 그릴 때마다 늘어남 — 앞 카드의 늦은 그리기(그림 onload·0.12초 뒤)가 새 카드를 덮지 않게
 let serifReady = false, serifAsked = false;
 function ensureSerif(cb){
   if(serifReady){ cb(); return; }
@@ -725,10 +726,11 @@ function essaySub(item){
 function drawEssayCanvas(item){
   const c = $('#polaroidCanvas');
   if(!c) return;
+  const gen = ++polDrawGen;
   const ctx = c.getContext('2d');
   const W = 1080, H = 1350;
   const sf = '"Gowun Batang","Nanum Myeongjo","Apple Myungjo","Noto Serif KR",Georgia,"Times New Roman",serif';
-  const ink = '#2b2521', mut = '#8a7f74', line = '#d8cfc3';
+  const ink = '#2b2521', mut = '#70665d', line = '#d8cfc3'; // 공유 카드 글자 4.5:1 (2026-11-17): mut #8a7f74→#70665d (바탕 #f7f3ec 위 5.07)
   ctx.fillStyle = '#f7f3ec'; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = line; ctx.lineWidth = 2; ctx.strokeRect(40, 40, W - 80, H - 80);
   const ls = (v) => { try{ ctx.letterSpacing = v; }catch(e){} };
@@ -754,6 +756,7 @@ function drawEssayCanvas(item){
   const catImg = new Image(); catImg.src = spriteOf(item);
   if(item.rain){const mk=getRainMask(item.theme);if(!mk.complete)mk.addEventListener('load',()=>renderContents(),{once:true})}
   const renderContents = () => {
+    if(gen !== polDrawGen) return;
     ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
     ctx.imageSmoothingEnabled = false;
     if(roomImg.complete && roomImg.naturalWidth) ctx.drawImage(roomImg, px, py, pw, ph);
@@ -766,6 +769,8 @@ function drawEssayCanvas(item){
     ctx.fillStyle = 'rgba(247,243,236,.08)'; ctx.fillRect(px, py, pw, ph);
     ctx.restore();
 
+    // 이 함수는 그림이 늦게 오면 두 번 불린다 — 글자 자리를 먼저 바탕색으로 지워서 마지막 한 번만 보이게 (같은 글자가 두 번 겹쳐 굵고 번져 보이거나, 글꼴이 늦게 오면 두 글꼴이 겹쳐 보이던 문제)
+    ctx.fillStyle = '#f7f3ec'; ctx.fillRect(42, py + ph + 16, W - 84, H - 42 - (py + ph + 16));
     ctx.textAlign = 'center';
     const body = item.memo ? item.memo : quoteOf(item);
     ctx.fillStyle = ink; ctx.font = '400 34px ' + sf;
@@ -795,6 +800,7 @@ function drawPolaroidCanvas(item){
     if(!serifReady) ensureSerif(() => { if(polStyle === 'essay' && currentPolaroidItem === item) drawEssayCanvas(item); });
     return;
   }
+  const gen = ++polDrawGen;
   const ctx = c.getContext('2d');
   const W = 1080, H = 1350;
   
@@ -816,6 +822,7 @@ function drawPolaroidCanvas(item){
   if (item.rain) { const mk = getRainMask(item.theme); if (!mk.complete) mk.addEventListener('load', () => renderContents(), { once: true }); }
 
   const renderContents = () => {
+    if (gen !== polDrawGen) return;
     ctx.save();
     ctx.beginPath();
     ctx.roundRect(px, py, pw, ph, 8);
@@ -856,9 +863,11 @@ function drawPolaroidCanvas(item){
     ctx.restore();
 
     const ff = '"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
-    
+    // 두 번 불려도 글자가 겹쳐 그려지지 않게 사진 아래 글자 자리를 먼저 바탕색으로 지움
+    ctx.fillStyle = '#fdfaf5'; ctx.fillRect(6, py + ph + 1, W - 12, H - 6 - (py + ph + 1));
+    ctx.fillRect(6, 6, W - 12, py - 6); // 기울어진 연속 도장 모서리가 사진 위 테두리로 삐져나오는 자리도
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#8c7b6f';
+    ctx.fillStyle = '#715b4a'; // 앱 --muted 와 같은 색, 바탕 #fdfaf5 위 6.1 (예전 #8c7b6f 3.9)
     ctx.font = '500 28px ' + ff;
     ctx.fillText(`📅 ${item.dateStr} ${item.timeStr}`, px + 10, 915);
 
@@ -881,12 +890,12 @@ function drawPolaroidCanvas(item){
     ctx.fillText(quoteText, px + 10, 1005);
 
     const userMemo = item.memo || t('pol.memoDefault');
-    ctx.fillStyle = item.memo ? '#1b4a32' : '#887768';
+    ctx.fillStyle = item.memo ? '#1b4a32' : '#715b4a';
     ctx.font = '700 32px ' + ff;
     ctx.fillText(`✏️ ${userMemo}`, px + 10, 1075);
 
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#a69485';
+    ctx.fillStyle = '#7d6858'; // 맨아래 한 줄은 날짜보다 조금 옅게 (바탕 위 5.05)
     ctx.font = '400 24px ' + ff;
     ctx.fillText(t('pol.footer'), W / 2, 1280);
 
@@ -897,11 +906,11 @@ function drawPolaroidCanvas(item){
       ctx.font = '700 30px ' + ff;
       const stampText = '🔥 ' + t('pol.stamp',{n:item.streak});
       const stw = ctx.measureText(stampText).width + 36;
-      ctx.fillStyle = 'rgba(255,249,238,.88)';
+      ctx.fillStyle = 'rgba(255,249,238,.95)'; // 아래 방 그림이 어두워도 도장 글자 4.5 이상
       ctx.strokeStyle = 'rgba(192,64,34,.85)';
       ctx.lineWidth = 4;
       ctx.beginPath(); ctx.roundRect(0,0,stw,54,14); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = 'rgba(179,64,34,.95)';
+      ctx.fillStyle = '#b34022';
       ctx.textAlign = 'left';
       ctx.fillText(stampText, 18, 38);
       ctx.restore();
@@ -1775,7 +1784,8 @@ function drawCard(data){
   const c=data.canvas,x=c.getContext('2d'),W=1080,H=1920,todv=data.tod;
   const P={morning:['#f8ead2','#efd6b4'],day:['#f4e6cf','#e8d0ad'],sunset:['#f3d6bb','#dfae86'],night:['#3a2c2a','#221a1a']}[todv]||['#f4e6cf','#e8d0ad'];
   const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,P[0]);g.addColorStop(1,P[1]);x.fillStyle=g;x.fillRect(0,0,W,H);
-  const dark=todv==='night';const ink=dark?'#f5e8d6':'#3a2a20',mut=dark?'#c9b6a2':'#8a6f5a',acc=dark?'#f0a462':'#b5612f';
+  // 공유 카드 글자 4.5:1 (2026-11-17): 노을 카드는 아래쪽 바탕이 가장 진해서 보조 글자도 한 단계 더 진하게. acc = 앱 --accent, 칩 바탕 .9
+  const dark=todv==='night';const ink=dark?'#f5e8d6':'#3a2a20',mut=dark?'#c9b6a2':todv==='sunset'?'#5a4434':'#6a5444',acc=dark?'#f0a462':'#aa5724';
   const ff='"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
   const name=data.name||dname(),sessions=Math.max(0,data.sessions|0);
   const sec=typeof data.sec==='number'?data.sec:(data.mins|0)*60;
@@ -1812,7 +1822,7 @@ function drawCard(data){
   const stk=(data.streak!=null)?data.streak:STREAK.valid();
   const lvl=data.level;
   const chips=[];if(lvl)chips.push(lvl.icon+' Lv.'+lvl.level+' '+t(lvl.name));if(stk>=1)chips.push('🔥 '+t('st.streak',{n:stk}));
-  if(chips.length){x.font='700 40px '+ff;const txt=chips.join('   ');const tw=x.measureText(txt).width+64;x.fillStyle=dark?'rgba(255,240,220,.12)':'rgba(255,250,240,.75)';x.beginPath();x.roundRect(W/2-tw/2,1640,tw,80,40);x.fill();x.fillStyle=acc;x.fillText(txt,W/2,1694)}
+  if(chips.length){x.font='700 40px '+ff;const txt=chips.join('   ');const tw=x.measureText(txt).width+64;x.fillStyle=dark?'rgba(255,240,220,.12)':'rgba(255,250,240,.9)';x.beginPath();x.roundRect(W/2-tw/2,1640,tw,80,40);x.fill();x.fillStyle=acc;x.fillText(txt,W/2,1694)}
   x.font='400 40px '+ff;x.fillStyle=mut;x.fillText(t('title.room').replace('{N}',name)+' · '+t('tagline'),W/2,1830);
 }
 
