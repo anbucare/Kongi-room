@@ -2011,6 +2011,23 @@ $('#hotspotRadio').addEventListener('click',e=>{hsReact(e.currentTarget,['🎵',
 $('#soundBtn').addEventListener('click',openMixer);
 $('#hotspotBook').addEventListener('click',e=>{hsReact(e.currentTarget,['📖']);setTimeout(()=>openModal('#toolsModal'),260)});
 $('#closeTools').addEventListener('click',()=>hideModal('#toolsModal'));
+// 제휴(수수료) 링크는 여기에만 넣는다 (대표님이 각 제휴 프로그램에서 받은 링크, https 로 시작).
+// 비어 있으면 그 카드는 지금처럼 보통 링크이고 '광고' 표시도 없다. 넣으면 그 카드에 '광고' 표시(tools.ad)가 붙고
+// rel="sponsored" 가 되며, 창 위에 설명(tools.adNote)이 보인다. 설명은 impressum.html·datenschutz.html 에도 있다.
+// noreferrer 는 일부러 빼서, 상대가 이 사이트에서 왔다는 것을 볼 수 있게 한다(브라우저는 기본으로 주소의 앞부분만 보냄).
+const AFFILIATE={toolNotion:'',toolTodoist:'',toolSpeechify:'',toolFreedom:'',toolSkillshare:''};
+function applyAffiliates(){
+  let n=0;
+  for(const id of Object.keys(AFFILIATE)){
+    const card=document.getElementById(id),url=AFFILIATE[id];
+    if(!card||!/^https:\/\//.test(url))continue;
+    card.href=url;card.rel='sponsored noopener';n++;
+    const col=card.children[1];
+    if(col&&!col.querySelector('.ad-label')){const s=document.createElement('span');s.className='ad-label';s.dataset.i18n='tools.ad';s.textContent=t('tools.ad');col.insertBefore(s,col.firstChild)}
+  }
+  const note=$('#toolsAdNote');if(note)note.hidden=!n;
+}
+applyAffiliates();
 $('#hotspotCoffee').addEventListener('click',e=>{
   hsReact(e.currentTarget,['☁️','☕']);
   say(t('coffee.say'), 2600);hearts(2);
