@@ -21,7 +21,7 @@ ko: {
   'radio.title':'📻 콩이의 Lo-Fi 라디오','radio.sub':'공부하거나 일할 때 잡생각을 지워주는 편안한 사운드 트랙이에요.',
   'radio.s1':'전 세계 수험생과 개발자들의 집중 메이트 (YouTube)','radio.listen':'듣기 ↗','radio.s2':'따뜻하고 차분한 재즈 힙합 비트 모음',
   'radio.rain':'창밖 잔잔한 빗소리 ASMR','radio.rainSub':'방 안의 실시간 빗소리 오디오 켜기 / 끄기','radio.toggle':'토글',
-  'tools.title':'📖 콩이의 추천 집중 도구','tools.sub':'콩이가 집중할 때 함께 쓰기 좋은 엄선된 도구들이에요. 일부 링크는 제휴 링크를 포함할 수 있어요.',
+  'tools.title':'📖 콩이의 추천 집중 도구','tools.sub':'콩이가 집중할 때 함께 쓰기 좋은 엄선된 도구들이에요.',
   'tools.notion':'Notion (노션)','tools.notionDesc':'공부 계획, 스터디 노트, 일일 루틴을 한눈에 정리하는 올인원 툴',
   'tools.todoist':'Todoist (투두이스트)','tools.todoistDesc':'공부 일정과 해야 할 일을 정리하고, 매일 하는 습관은 반복 일정으로 챙길 수 있는 앱',
   'tools.speechify':'Speechify (스피치파이)','tools.speechifyDesc':'PDF와 수험 자료를 자연스러운 AI 음성으로 읽어주는 집중 리더기',
@@ -215,7 +215,7 @@ en: {
   'radio.title':"📻 Kongi's lo-fi radio",'radio.sub':'Calm soundtracks that clear your head while you study or work.',
   'radio.s1':'A focus companion for students and developers worldwide (YouTube)','radio.listen':'Listen ↗','radio.s2':'Warm, mellow jazz-hop beats',
   'radio.rain':'Gentle rain ASMR outside the window','radio.rainSub':"Turn the room's live rain audio on / off",'radio.toggle':'Toggle',
-  'tools.title':"📖 Kongi's favorite focus tools",'tools.sub':"Handpicked tools to boost your focus sessions. Some links may include affiliate links.",
+  'tools.title':"📖 Kongi's favorite focus tools",'tools.sub':'Handpicked tools to boost your focus sessions.',
   'tools.notion':'Notion','tools.notionDesc':'An all-in-one tool for study plans, notes and daily routines',
   'tools.todoist':'Todoist','tools.todoistDesc':'Organize study plans and to-dos, and set repeating tasks for daily habits',
   'tools.speechify':'Speechify','tools.speechifyDesc':'Listen to PDFs, textbooks, and study notes with natural AI voices',
@@ -409,7 +409,7 @@ de: {
   'radio.title':'📻 Kongis Lo-Fi-Radio','radio.sub':'Ruhige Klänge, die beim Lernen oder Arbeiten den Kopf frei machen.',
   'radio.s1':'Fokus-Begleiter für Lernende und Entwickler weltweit (YouTube)','radio.listen':'Anhören ↗','radio.s2':'Warme, ruhige Jazz-Hop-Beats',
   'radio.rain':'Sanftes Regen-ASMR vor dem Fenster','radio.rainSub':'Live-Regengeräusche im Zimmer ein-/ausschalten','radio.toggle':'Umschalten',
-  'tools.title':'📖 Kongis Lieblings-Fokus-Tools','tools.sub':'Ausgewählte Tools für mehr Fokus beim Lernen. Einige Links können Partner-Links sein.',
+  'tools.title':'📖 Kongis Lieblings-Fokus-Tools','tools.sub':'Ausgewählte Tools für mehr Fokus beim Lernen.',
   'tools.notion':'Notion','tools.notionDesc':'Ein Alles-in-einem-Tool für Lernpläne, Notizen und Tagesroutinen',
   'tools.todoist':'Todoist','tools.todoistDesc':'Lernpläne und To-dos ordnen, mit wiederkehrenden Aufgaben für jeden Tag',
   'tools.speechify':'Speechify','tools.speechifyDesc':'PDFs und Lerntexte mit natürlichen KI-Stimmen bequem anhören',
@@ -629,7 +629,7 @@ Object.assign(window.KONGI_I18N.ko, {
   'tg.join':'함께 집중하기','tg.later':'다음에','tg.waiting':'좋아요! 시작 시각이 되면 자동으로 시작해요.','tg.now':'지금 시작!','tg.over':'이 함께 집중은 이미 끝났어요',
   'tg.joinedLate':'조금 늦게 합류했어요 ({t} 지난 뒤)','tg.startSay':'친구도 같이 집중한다냥!','tg.friendTag':'{n}의 고양이 · 함께 집중 중','tg.friend':'친구','tg.friends':'친구들','tg.busy':'이미 집중 중이에요. 지금 세션을 마친 뒤 링크를 다시 열어 주세요',
   'fb.title':'💬 콩이네 방에 의견 보내기','fb.sub':'로그인이나 가입 없이 바로 보내져요. 불편한 점, 바라는 기능, 좋았던 점 모두 반가워요.','fb.idea':'💡 아이디어','fb.bug':'🐞 불편·오류','fb.love':'💛 좋았어요',
-  'fb.ph':'어떤 점이 좋았거나 불편했나요?','fb.contact':'답장 받을 연락처 (선택)','fb.privacy':'보낸 글은 개발자만 볼 수 있어요. 화면 크기·언어만 함께 저장돼요.','fb.send':'보내기',
+  'fb.ph':'어떤 점이 좋았거나 불편했나요?','fb.contact':'답장 받을 연락처 (선택)','fb.privacy':'메일 앱으로 보내면 내 메일 앱에서 바로 가고, 화면 크기·언어가 함께 적혀요. 앱 안에서 보내면 운영자만 볼 수 있는 곳에 저장되고, 화면 크기·언어·콩이 레벨·접속한 나라가 함께 저장돼요.','fb.send':'보내기',
   'fb.empty':'내용을 한 줄만 적어 주세요','fb.thanks':'고마워요! 의견이 잘 전달됐어요 💛','fb.say':'고맙다냥!','fb.failCopied':'지금은 보내지 못했어요. 적은 내용을 복사해 두었어요',
   'bk.btn':'💾 기록 지키기','bk.foot':'💾 기록 백업·옮기기','bk.note':'기록은 이 브라우저에만 저장돼요. 기기·브라우저를 바꾸거나 방문 기록을 지우면 사라질 수 있어요 — 💾 기록 지키기에서 옮기거나 백업하세요.',
   'bk.title':'💾 콩이와의 기록 지키기','bk.warn':'계정이 없어서 기록(레벨·XP·책·보물·앨범)은 이 브라우저에만 저장돼요. 기기나 브라우저를 바꾸거나, 방문 기록·사이트 데이터를 지우면 콩이와의 기록이 사라질 수 있어요.',
@@ -685,7 +685,7 @@ Object.assign(window.KONGI_I18N.en, {
   'tg.join':'Focus together','tg.later':'Not now','tg.waiting':'Great! It starts automatically at the start time.','tg.now':'Starting!','tg.over':'That shared session is already over',
   'tg.joinedLate':'You joined a bit late ({t} in)','tg.startSay':'Your friend is focusing too, meow!','tg.friendTag':'{n}’s cat · focusing together','tg.friend':'Friend','tg.friends':'Friends','tg.busy':'You are already focusing. Open the link again after this session',
   'fb.title':'💬 Send feedback to Kongi’s Room','fb.sub':'Sent straight away, no login or sign-up. Problems, wishes and things you liked are all welcome.','fb.idea':'💡 Idea','fb.bug':'🐞 Problem','fb.love':'💛 Liked it',
-  'fb.ph':'What did you like, or what got in the way?','fb.contact':'How to reply to you (optional)','fb.privacy':'Only the developer can read it. Just screen size and language are saved with it.','fb.send':'Send',
+  'fb.ph':'What did you like, or what got in the way?','fb.contact':'How to reply to you (optional)','fb.privacy':'Sent with your email app, it goes straight from your mail app with your screen size and language. Sent inside the app, only the maker can read it; your screen size, language, Kongi level and country are saved with it.','fb.send':'Send',
   'fb.empty':'Please write at least a few words','fb.thanks':'Thank you! Your feedback was sent 💛','fb.say':'Thank you, meow!','fb.failCopied':'Couldn’t send right now. Your text was copied',
   'bk.btn':'💾 Keep my progress','bk.foot':'💾 Back up or move progress','bk.note':'Your progress lives only in this browser. Switching devices or browsers, or clearing site data, can erase it — back it up under 💾 Keep my progress.',
   'bk.title':'💾 Keep your time with Kongi','bk.warn':'There are no accounts, so your progress (level, XP, books, treasures, album) is stored only in this browser. Changing device or browser, or clearing history or site data, can erase it.',
@@ -741,7 +741,7 @@ Object.assign(window.KONGI_I18N.de, {
   'tg.join':'Gemeinsam fokussieren','tg.later':'Später','tg.waiting':'Super! Es startet automatisch zur Startzeit.','tg.now':'Los geht’s!','tg.over':'Diese gemeinsame Sitzung ist schon vorbei',
   'tg.joinedLate':'Etwas später eingestiegen ({t} nach Start)','tg.startSay':'Deine Begleitung fokussiert auch, miau!','tg.friendTag':'Katze von {n} · fokussiert mit','tg.friend':'Freund:in','tg.friends':'Freunde','tg.busy':'Du fokussierst schon. Öffne den Link nach dieser Sitzung noch einmal',
   'fb.title':'💬 Feedback an Kongis Zimmer','fb.sub':'Wird sofort gesendet, ohne Login oder Anmeldung. Probleme, Wünsche und Lob sind willkommen.','fb.idea':'💡 Idee','fb.bug':'🐞 Problem','fb.love':'💛 Gefällt mir',
-  'fb.ph':'Was hat dir gefallen oder gestört?','fb.contact':'Kontakt für eine Antwort (optional)','fb.privacy':'Nur der Entwickler kann es lesen. Gespeichert werden nur Bildschirmgröße und Sprache.','fb.send':'Senden',
+  'fb.ph':'Was hat dir gefallen oder gestört?','fb.contact':'Kontakt für eine Antwort (optional)','fb.privacy':'Mit deiner Mail-App geht es direkt von dort, mit Bildschirmgröße und Sprache. In der App gesendet kann es nur die Betreiberin lesen; gespeichert werden dazu Bildschirmgröße, Sprache, Kongi-Stufe und Land.','fb.send':'Senden',
   'fb.empty':'Bitte schreib mindestens ein paar Worte','fb.thanks':'Danke! Dein Feedback ist angekommen 💛','fb.say':'Danke, miau!','fb.failCopied':'Gerade nicht gesendet. Dein Text wurde kopiert',
   'bk.btn':'💾 Fortschritt sichern','bk.foot':'💾 Sichern oder übertragen','bk.note':'Dein Fortschritt liegt nur in diesem Browser. Gerätewechsel, anderer Browser oder gelöschte Website-Daten können ihn löschen – sichere ihn unter 💾 Fortschritt sichern.',
   'bk.title':'💾 Deine Zeit mit Kongi sichern','bk.warn':'Es gibt keine Konten, deshalb liegt dein Fortschritt (Stufe, XP, Bücher, Schätze, Album) nur in diesem Browser. Gerätewechsel, anderer Browser oder gelöschte Verläufe und Website-Daten können ihn löschen.',
@@ -773,7 +773,7 @@ Object.assign(window.KONGI_I18N.ko,{
   'fb.mailOpened':'메일 앱을 열었어요. 보내기만 누르면 돼요 💛',
   'fb.failMail':'지금은 앱 안에서 보내지 못해 메일 앱을 열었어요. 적은 내용은 복사해 두었어요',
   'theme.broken':'그림을 불러오지 못했어요',
-  'fb.privacy':'메일로 보내면 내 메일 앱에서 바로 가요. 앱 안에서 보내면 개발자만 볼 수 있는 곳에 저장돼요. 두 경우 모두 화면 크기·언어만 함께 적혀요.',
+  'fb.privacy':'메일 앱으로 보내면 내 메일 앱에서 바로 가고, 화면 크기·언어가 함께 적혀요. 앱 안에서 보내면 운영자만 볼 수 있는 곳에 저장되고, 화면 크기·언어·콩이 레벨·접속한 나라가 함께 저장돼요.',
   'foot.u6':'11.11 반영했어요: WhatsApp 공유, 메일 우선 의견 보내기, 자동 테스트(규칙·번역 완전성)'
 });
 Object.assign(window.KONGI_I18N.en,{
@@ -786,7 +786,7 @@ Object.assign(window.KONGI_I18N.en,{
   'fb.mailOpened':'Your email app is open — just press send 💛',
   'fb.failMail':'Couldn’t send in-app right now, so your email app was opened. Your text was copied too',
   'theme.broken':'Picture didn’t load',
-  'fb.privacy':'Sent by email, it goes straight from your mail app. Sent inside the app, only the developer can read it. Either way, only your screen size and language are included.',
+  'fb.privacy':'Sent with your email app, it goes straight from your mail app with your screen size and language. Sent inside the app, only the maker can read it; your screen size, language, Kongi level and country are saved with it.',
   'foot.u6':'11.11 added: WhatsApp sharing, email-first feedback, automated tests (rules, translation completeness)'
 });
 Object.assign(window.KONGI_I18N.de,{
@@ -799,6 +799,11 @@ Object.assign(window.KONGI_I18N.de,{
   'fb.mailOpened':'Deine Mail-App ist offen – nur noch auf Senden tippen 💛',
   'fb.failMail':'Gerade nicht in der App gesendet, deshalb wurde deine Mail-App geöffnet. Dein Text wurde auch kopiert',
   'theme.broken':'Bild konnte nicht geladen werden',
-  'fb.privacy':'Per E-Mail geht es direkt aus deiner Mail-App. In der App gesendet kann es nur der Entwickler lesen. In beiden Fällen werden nur Bildschirmgröße und Sprache mitgeschickt.',
+  'fb.privacy':'Mit deiner Mail-App geht es direkt von dort, mit Bildschirmgröße und Sprache. In der App gesendet kann es nur die Betreiberin lesen; gespeichert werden dazu Bildschirmgröße, Sprache, Kongi-Stufe und Land.',
   'foot.u6':'11.11 ergänzt: Teilen per WhatsApp, Feedback zuerst per E-Mail, automatische Tests (Regeln, Übersetzungsvollständigkeit)'
 });
+// 제휴(광고) 표시와 법적 안내 링크 (2026-11-17). 'tools.ad' 는 app.js 의 AFFILIATE 에 링크가 들어간 카드에만 붙고,
+// 'tools.adNote' 도 그런 카드가 하나 이상일 때만 보인다. 한국 추천·보증 심사지침은 'AD' 같은 영어 표기만으로는 부족하다고 보므로 한국어는 '광고'.
+Object.assign(window.KONGI_I18N.ko,{'tools.ad':'광고 · 수수료 제휴 링크','tools.adNote':'‘광고’ 표시가 있는 카드는 제휴 링크예요. 그 링크로 가입하거나 결제하면 운영자가 수수료를 받아요.','foot.impressum':'운영자 정보','foot.privacy':'개인정보 안내'});
+Object.assign(window.KONGI_I18N.en,{'tools.ad':'Ad · paid link','tools.adNote':'Cards marked “Ad” are paid links: if you sign up or buy through one, the maker earns a commission.','foot.impressum':'Legal notice','foot.privacy':'Privacy'});
+Object.assign(window.KONGI_I18N.de,{'tools.ad':'Anzeige · Partner-Link mit Provision','tools.adNote':'Mit „Anzeige“ markierte Karten sind Partner-Links: Kommt darüber ein Abo oder Kauf zustande, erhält die Betreiberin eine Provision.','foot.impressum':'Impressum','foot.privacy':'Datenschutz'});

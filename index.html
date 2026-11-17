@@ -302,6 +302,7 @@ img{max-width:100%}
         </ul>
       </details>
       <p class="maker-note" data-i18n="foot.maker">만든 사람: 박하나 · 독일에서 혼자 만들고 운영해요</p>
+      <p class="legal-links"><a href="impressum.html" target="_blank" rel="noopener" data-i18n="foot.impressum">운영자 정보</a><span aria-hidden="true">·</span><a href="datenschutz.html" target="_blank" rel="noopener" data-i18n="foot.privacy">개인정보 안내</a></p>
     </div>
   </footer>
 </div>
@@ -379,7 +380,8 @@ img{max-width:100%}
 <dialog class="modal" id="toolsModal" aria-labelledby="toolsTitle">
   <div class="sheet" tabindex="-1" autofocus style="max-width:540px">
     <h3 id="toolsTitle" data-i18n="tools.title">📖 콩이의 추천 집중 도구</h3>
-    <p data-i18n="tools.sub">콩이가 집중할 때 함께 쓰기 좋은 엄선된 도구들이에요. 일부 링크는 제휴 링크를 포함할 수 있어요.</p>
+    <p data-i18n="tools.sub">콩이가 집중할 때 함께 쓰기 좋은 엄선된 도구들이에요.</p>
+    <p class="hint" id="toolsAdNote" hidden data-i18n="tools.adNote">‘광고’ 표시가 있는 카드는 제휴 링크예요. 그 링크로 가입하거나 결제하면 운영자가 수수료를 받아요.</p>
     <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0" id="toolsList">
       <a class="tool-card" id="toolNotion" href="https://www.notion.so" target="_blank" rel="noopener">
         <div style="font-size:28px">📝</div>
@@ -562,7 +564,7 @@ img{max-width:100%}
     </div>
     <textarea id="fbText" autofocus rows="5" maxlength="2000" aria-label="어떤 점이 좋았거나 불편했나요?" data-i18n-aria="fb.ph" data-i18n-ph="fb.ph" placeholder="어떤 점이 좋았거나 불편했나요?"></textarea>
     <input id="fbContact" type="text" maxlength="120" aria-label="답장 받을 연락처 (선택)" data-i18n-aria="fb.contact" data-i18n-ph="fb.contact" placeholder="답장 받을 연락처 (선택)">
-    <p class="hint" data-i18n="fb.privacy">메일로 보내면 내 메일 앱에서 바로 가요. 앱 안에서 보내면 개발자만 볼 수 있는 곳에 저장돼요. 두 경우 모두 화면 크기·언어만 함께 적혀요.</p>
+    <p class="hint" data-i18n="fb.privacy">메일 앱으로 보내면 내 메일 앱에서 바로 가고, 화면 크기·언어가 함께 적혀요. 앱 안에서 보내면 운영자만 볼 수 있는 곳에 저장되고, 화면 크기·언어·콩이 레벨·접속한 나라가 함께 저장돼요.</p>
     <div class="btn-row"><button class="btn" id="fbMail" type="button" data-i18n="fb.mail">✉️ 메일 앱으로 보내기</button><button class="btn secondary" id="fbSend" type="button" data-i18n="fb.send">앱 안에서 바로 보내기</button><button class="btn secondary" id="fbClose" type="button" data-i18n="close">닫기</button></div>
   </div>
 </dialog>

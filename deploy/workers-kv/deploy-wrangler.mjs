@@ -31,6 +31,8 @@ const PRUNE = args.has('--prune');
 
 // Only the files a visitor needs. Source, docs, tests and the deploy scripts stay out.
 const SITE_FILES = ['index.html', 'app.css', 'app.js', 'core.js', 'i18n.js', 'sw.js', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml',
+  // Impressum (§ 5 DDG) and Datenschutzerklärung, linked from the footer
+  'impressum.html', 'datenschutz.html',
   // Google Search Console ownership file (her account). Never remove: deleting it un-verifies the property.
   'google18dcee8c3b07397c.html'];
 const SITE_DIRS = ['icons', 'assets'];
