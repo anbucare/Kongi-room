@@ -27,11 +27,11 @@ test('sw.js 캐시 버전은 kongi-v34 이상이다 (파일을 바꾸면 올려�
   assert.ok(+m[1] >= 34, '버전 ' + m[1]);
 });
 
-test('외부 스크립트·추적 코드가 없다 (Google Fonts 스타일시트만 허용)', () => {
+test('외부 스크립트·추적 코드·외부 글꼴이 없다 (글꼴은 fonts.css 로 직접 내보냄)', () => {
   const html = read('index.html');
   const ext = [...html.matchAll(/<script[^>]*src="(https?:[^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(ext, [], '외부 스크립트');
-  const links = [...html.matchAll(/<link[^>]*href="(https?:[^"]+)"/g)].map((m) => m[1]).filter((u) => !/^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com|kongi-room\.anbu-pilot\.workers\.dev)/.test(u));
+  const links = [...html.matchAll(/<link[^>]*href="(https?:[^"]+)"/g)].map((m) => m[1]).filter((u) => !/^https:\/\/kongi-room\.anbu-pilot\.workers\.dev/.test(u));
   assert.deepEqual(links, [], '허용되지 않은 외부 링크');
   assert.ok(!/gtag|googletagmanager|analytics\.js|hotjar|plausible|umami/i.test(html + read('app.js')), '추적 스크립트 흔적');
 });

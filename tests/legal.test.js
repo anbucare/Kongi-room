@@ -97,7 +97,7 @@ test('개인정보 안내의 결과 링크·함께 집중 링크 항목 = 링크
   function paramsOf(body) { return paramsIn(/new URLSearchParams\(\{([\s\S]*?)\}\)/.exec(body)[1] + ' ' + body.slice(body.indexOf('p.set'))); }
 });
 
-test('브라우저가 다른 회사 서버에서 불러오는 것은 개인정보 안내에 적힌 Google 글꼴뿐이다 (링크는 제외)', () => {
+test('브라우저가 다른 회사 서버에서 불러오는 것이 없다 — 글꼴도 이 사이트가 직접 내보냄 (링크는 제외)', () => {
   const html = read('index.html'), app = read('app.js') + read('core.js');
   const loads = new Set();
   const host = (u) => new URL(u).host;
@@ -112,12 +112,11 @@ test('브라우저가 다른 회사 서버에서 불러오는 것은 개인정�
   assert.ok(!/sendBeacon\(\s*[A-Za-z_]/.test(html + app), '변수 주소로 보내는 sendBeacon 은 이 시험이 셀 수 없음 → datenschutz.html 직접 확인');
   for (const m of html.matchAll(/fetch\(\s*([A-Z]+)\s*\+/g)) loads.add(host(new RegExp('var ' + m[1] + "='([^']+)'").exec(html)[1]));
   const own = 'kongi-room.anbu-pilot.workers.dev';
-  const allowed = new Set(['fonts.googleapis.com', 'fonts.gstatic.com', own,
-    't1.kakaocdn.net']); // 카카오 SDK: 키가 비어 있으면 불러오지 않음(아래에서 확인)
+  const allowed = new Set([own, 't1.kakaocdn.net']); // 카카오 SDK: 키가 비어 있으면 불러오지 않음(아래에서 확인)
   assert.deepEqual([...loads].filter((h) => !allowed.has(h)), [], '새 외부 불러오기가 생겼으면 datenschutz.html 에 적고 이 목록에 넣을 것');
-  assert.ok(loads.has('fonts.googleapis.com'), '시험이 Google 글꼴 불러오기를 찾지 못함 (정규식 확인)');
+  assert.match(html, /<link rel="stylesheet" href="fonts\.css">/, '시험이 글꼴 스타일시트를 찾지 못함 (정규식 확인)');
   const ds = read('datenschutz.html');
-  assert.ok(ds.includes('Google Fonts') && ds.includes('Gowun Dodum') && ds.includes('Gowun Batang'));
+  assert.ok(ds.includes('Gowun Dodum') && ds.includes('Gowun Batang') && !/Google Fonts|fonts\.google/.test(ds), '개인정보 안내 7번: 글꼴은 직접 내보낸다고 적혀 있어야 함');
   assert.match(read('app.js'), /const KAKAO_JS_KEY='';/, '카카오 키가 생겼으면 datenschutz.html 6번(카카오 프로그램을 불러오지 않음)을 고칠 것');
   assert.ok(!/youtube/i.test(html + app) || /YouTube/.test(ds), 'YouTube 를 쓰게 되면 datenschutz.html 에 적을 것');
 });

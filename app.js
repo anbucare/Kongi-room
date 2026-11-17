@@ -682,7 +682,7 @@ function ensureSerif(cb){
   if(!serifAsked){
     serifAsked = true;
     const l = document.createElement('link'); l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap';
+    l.href = 'fonts-batang.css'; // 이 사이트가 직접 내보내는 고운바탕 (deploy/fonts/fetch-google-fonts.mjs)
     document.head.appendChild(l);
   }
   if(document.fonts && document.fonts.load){

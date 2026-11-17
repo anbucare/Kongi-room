@@ -1,9 +1,10 @@
 /* 콩이네 방 service worker: keeps the app shell offline, caches room art lazily. */
-const VERSION = 'kongi-v41';
+const VERSION = 'kongi-v42';
 const SHELL = [
   './',
   './index.html',
   './app.css',
+  './fonts.css',
   './app.js',
   './core.js',
   './i18n.js',
@@ -63,15 +64,5 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
-
-  // Google Fonts: network first, fall back to what was cached earlier.
-  if (url.hostname.endsWith('gstatic.com') || url.hostname.endsWith('googleapis.com')) {
-    e.respondWith(
-      fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(VERSION).then((c) => c.put(req, copy));
-        return res;
-      }).catch(() => caches.match(req))
-    );
-  }
+  // Other origins: not handled here (fonts are self-hosted under /fonts/ since v42 and take the branch above).
 });
