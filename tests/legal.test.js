@@ -106,6 +106,10 @@ test('브라우저가 다른 회사 서버에서 불러오는 것은 개인정�
   for (const m of app.matchAll(/\.src\s*=\s*'(https?:[^']+)'/g)) loads.add(host(m[1]));
   for (const m of app.matchAll(/\b[a-z]\.href\s*=\s*'(https?:[^']+)'/g)) loads.add(host(m[1])); // JS 로 만든 <link rel=stylesheet>
   for (const m of (html + app).matchAll(/fetch\(\s*['"`](https?:[^'"`]+)/g)) loads.add(host(m[1]));
+  for (const m of (html + app).matchAll(/sendBeacon\(\s*['"`](https?:[^'"`]+)/g)) loads.add(host(m[1]));
+  for (const m of (html + read('app.css')).matchAll(/url\(\s*['"]?(https?:[^'")]+)/g)) loads.add(host(m[1]));
+  for (const m of html.matchAll(/<link\b[^>]*rel="(?:icon|apple-touch-icon|manifest)"[^>]*href="(https?:[^"]+)"/g)) loads.add(host(m[1]));
+  assert.ok(!/sendBeacon\(\s*[A-Za-z_]/.test(html + app), '변수 주소로 보내는 sendBeacon 은 이 시험이 셀 수 없음 → datenschutz.html 직접 확인');
   for (const m of html.matchAll(/fetch\(\s*([A-Z]+)\s*\+/g)) loads.add(host(new RegExp('var ' + m[1] + "='([^']+)'").exec(html)[1]));
   const own = 'kongi-room.anbu-pilot.workers.dev';
   const allowed = new Set(['fonts.googleapis.com', 'fonts.gstatic.com', own,
