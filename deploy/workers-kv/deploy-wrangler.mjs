@@ -33,6 +33,8 @@ const PRUNE = args.has('--prune');
 const SITE_FILES = ['index.html', 'app.css', 'app.js', 'core.js', 'i18n.js', 'sw.js', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml',
   // Impressum (§ 5 DDG) and Datenschutzerklärung, linked from the footer
   'impressum.html', 'datenschutz.html',
+  // self-hosted fonts: the two stylesheets go with each version, the font files themselves (fonts/) are uploaded once — see step 2a
+  'fonts.css', 'fonts-batang.css',
   // Google Search Console ownership file (her account). Never remove: deleting it un-verifies the property.
   'google18dcee8c3b07397c.html'];
 const SITE_DIRS = ['icons', 'assets'];
@@ -111,6 +113,24 @@ function main() {
   if (!files.some((f) => f.rel === 'index.html')) { console.error('✖ index.html 이 없어요. 저장소 루트에서 실행했나요?'); process.exit(2); }
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kongi-deploy-'));
   try {
+  // 2a. font files: kept once under "fonts/<name>" (no version), uploaded only when missing or changed.
+  //     Their names are content hashes, so this is ~290 writes the first time and usually 0 afterwards.
+  const fontDir = path.join(ROOT, 'fonts');
+  const fonts = fs.existsSync(fontDir) ? fs.readdirSync(fontDir).filter((f) => /\.(woff2|txt)$/.test(f)).map((f) => {
+    const buf = fs.readFileSync(path.join(fontDir, f));
+    return { key: 'fonts/' + f, buf, etag: createHash('sha1').update(buf).digest('hex').slice(0, 16) };
+  }) : [];
+  if (fonts.length) {
+    const have = new Map(jsonFrom(wrangler(['kv', 'key', 'list', '--namespace-id', ns.id, '--prefix', 'fonts/', '--remote'], { capture: true }))
+      .map((k) => [k.name, k.metadata && k.metadata.etag]));
+    const todo = fonts.filter((f) => have.get(f.key) !== f.etag);
+    console.log(`  글꼴 파일 ${fonts.length}개 중 새로 올릴 것 ${todo.length}개` + (DRY ? ' (dry-run)' : ''));
+    if (todo.length && !DRY) {
+      const fontBulk = path.join(tmp, 'fonts.json');
+      fs.writeFileSync(fontBulk, JSON.stringify(todo.map((f) => ({ key: f.key, value: f.buf.toString('base64'), base64: true, metadata: { etag: f.etag } }))));
+      wrangler(['kv', 'bulk', 'put', fontBulk, '--namespace-id', ns.id, '--remote']);
+    }
+  }
   const bulk = files.map((f) => ({ key: version + '/' + f.rel, value: f.buf.toString('base64'), base64: true, metadata: { etag: createHash('sha1').update(f.buf).digest('hex').slice(0, 16) } }));
   const bulkFile = path.join(tmp, 'bulk.json');
   fs.writeFileSync(bulkFile, JSON.stringify(bulk));

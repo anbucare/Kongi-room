@@ -82,7 +82,11 @@ export default {
     if (path === '' || path.endsWith('/')) path += 'index.html';
     if (path.includes('..')) return new Response('Bad Request', { status: 400 });
     const ext = (path.split('.').pop() || '').toLowerCase();
-    const { value, metadata } = await env.SITE.getWithMetadata(env.SITE_VERSION + '/' + path, { type: 'arrayBuffer', cacheTtl: 3600 });
+    // Self-hosted font files (fonts/<content hash>.woff2) live once under "fonts/…" without a version, so a deploy
+    // does not rewrite ~290 font keys (KV free plan: 1,000 writes a day). deploy.py still uploads them per version: fallback.
+    const isFont = path.startsWith('fonts/');
+    let { value, metadata } = await env.SITE.getWithMetadata((isFont ? '' : env.SITE_VERSION + '/') + path, { type: 'arrayBuffer', cacheTtl: 3600 });
+    if (value === null && isFont) ({ value, metadata } = await env.SITE.getWithMetadata(env.SITE_VERSION + '/' + path, { type: 'arrayBuffer', cacheTtl: 3600 }));
     if (value === null) {
       return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
     }
@@ -90,7 +94,8 @@ export default {
     const h = new Headers({
       'content-type': TYPES[ext] || 'application/octet-stream',
       'x-content-type-options': 'nosniff',
-      'cache-control': REVALIDATE.has(ext) ? 'public, max-age=0, must-revalidate' : 'public, max-age=604800'
+      // a font file's name is its content hash, so it never changes: cache it for a year
+      'cache-control': REVALIDATE.has(ext) ? 'public, max-age=0, must-revalidate' : (isFont && ext === 'woff2') ? 'public, max-age=31536000, immutable' : 'public, max-age=604800'
     });
     if (etag) h.set('etag', etag);
     if (etag && req.headers.get('if-none-match') === etag) return new Response(null, { status: 304, headers: h });

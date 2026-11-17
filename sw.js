@@ -1,9 +1,10 @@
 /* 콩이네 방 service worker: keeps the app shell offline, caches room art lazily. */
-const VERSION = 'kongi-v41';
+const VERSION = 'kongi-v42';
 const SHELL = [
   './',
   './index.html',
   './app.css',
+  './fonts.css',
   './app.js',
   './core.js',
   './i18n.js',
