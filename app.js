@@ -678,9 +678,10 @@ let polStyle = store.get('polStyle', 'classic');
 let polDrawGen = 0; // 앨범 카드를 새로 그릴 때마다 늘어남 — 앞 카드의 늦은 그리기(그림 onload·0.12초 뒤)가 새 카드를 덮지 않게
 // 에세이 카드의 고운바탕 (2026-11-18): 예전에는 글꼴 정의(fonts-batang.css)가 오기 전에 document.fonts.load 를 불러
 // 빈 결과로 끝났고, 카드가 늘 기기의 다른 명조체로 그려졌다. 이제 ① 정의가 도착한 뒤에 ② 카드에 실제로 쓰는 글자로
-// (한글은 글자 범위별 조각이라, 그 글자가 든 조각만 받는다) 400·700 을 불러오고, ③ 다 오면 카드를 한 번 다시 그린다.
+// (한글은 글자 범위별 조각이라, 그 글자가 든 조각만 받는다) 400 은 카드 글자 전부, 700 은 제목 글자만 불러오고,
+// ③ 끝나면(조각 하나가 실패해도) 카드를 한 번 다시 그린다.
 let serifCss = null, serifCssReady = false;
-function loadSerif(text){
+function loadSerif(text, boldText){
   if(!(document.fonts && document.fonts.load)) return Promise.resolve();
   if(!serifCss) serifCss = new Promise((res) => {
     const l = document.createElement('link'); l.rel = 'stylesheet';
@@ -688,13 +689,13 @@ function loadSerif(text){
     l.onload = l.onerror = () => { serifCssReady = true; res(); };
     document.head.appendChild(l);
   });
-  return serifCss.then(() => Promise.all(['400', '700'].map((w) => document.fonts.load(w + ' 40px "Gowun Batang"', text))));
+  return serifCss.then(() => Promise.allSettled([document.fonts.load('400 40px "Gowun Batang"', text), document.fonts.load('700 40px "Gowun Batang"', boldText)]));
 }
 // 정의가 도착하기 전에는 check 가 '맞는 글꼴 없음 = 참'을 돌려주므로, 도착한 뒤에만 믿는다
-function serifHas(text){
+function serifHas(text, boldText){
   if(!(document.fonts && document.fonts.check)) return true;
   if(!serifCssReady) return false;
-  try{ return document.fonts.check('400 40px "Gowun Batang"', text) && document.fonts.check('700 40px "Gowun Batang"', text); }catch(e){ return true; }
+  try{ return document.fonts.check('400 40px "Gowun Batang"', text) && document.fonts.check('700 40px "Gowun Batang"', boldText); }catch(e){ return true; }
 }
 function wrapLines(ctx, text, maxW, maxLines){
   const out = [];
@@ -814,8 +815,9 @@ function drawPolaroidCanvas(item){
   if(!c) return;
   if(polStyle === 'essay'){
     drawEssayCanvas(item);
-    const txt = essayText(item);
-    if(!serifHas(txt)) loadSerif(txt).then(() => { if(polStyle === 'essay' && currentPolaroidItem === item) drawEssayCanvas(item); }, () => {});
+    const txt = essayText(item), bold = essayTitle(item); // 700(굵게)은 제목에만 쓴다
+    const redraw = () => { if(polStyle === 'essay' && currentPolaroidItem === item) drawEssayCanvas(item); };
+    if(!serifHas(txt, bold)) loadSerif(txt, bold).then(redraw, redraw);
     return;
   }
   const gen = ++polDrawGen;

@@ -77,16 +77,19 @@ test('사이트 서버: fonts/ 는 버전 없는 키에서, 없으면 버전 키
   assert.deepEqual(calls.splice(0), ['v20261117000000/fonts.css']);
 });
 
-test('에세이 카드: 고운바탕 정의(fonts-batang.css)가 도착한 뒤, 카드에 쓰는 글자로 400·700 을 불러오고 다시 그린다', () => {
+test('에세이 카드: 고운바탕 정의(fonts-batang.css)가 도착한 뒤, 카드 글자(400)·제목 글자(700)로 불러오고, 끝나면(일부 실패해도) 다시 그린다', () => {
   const app = read('app.js');
-  const load = /function loadSerif\(text\)\{([\s\S]*?)\n\}/.exec(app);
+  const load = /function loadSerif\(text, boldText\)\{([\s\S]*?)\n\}/.exec(app);
   assert.ok(load, 'loadSerif 가 없음');
   const body = load[1];
   // 정의가 도착(onload)하기 전에 document.fonts.load 를 부르면 빈 결과로 끝난다 — 예전 버그
   assert.match(body, /l\.onload = l\.onerror = \(\) => \{ serifCssReady = true; res\(\); \}/);
-  assert.match(body, /return serifCss\.then\(\(\) => Promise\.all\(\['400', '700'\]\.map\(\(w\) => document\.fonts\.load\(w \+ ' 40px "Gowun Batang"', text\)\)\)\)/);
-  assert.match(app, /function serifHas\(text\)\{[\s\S]*?if\(!serifCssReady\) return false;/, '정의가 오기 전 check 는 믿지 않음');
-  assert.match(app, /const txt = essayText\(item\);\n\s*if\(!serifHas\(txt\)\) loadSerif\(txt\)\.then\(\(\) => \{ if\(polStyle === 'essay' && currentPolaroidItem === item\) drawEssayCanvas\(item\); \}/);
+  assert.match(body, /return serifCss\.then\(\(\) => Promise\.allSettled\(\[document\.fonts\.load\('400 40px "Gowun Batang"', text\), document\.fonts\.load\('700 40px "Gowun Batang"', boldText\)\]\)\)/,
+    'allSettled: 조각 하나가 실패해도 나머지를 기다린 뒤 다시 그림');
+  assert.match(app, /function serifHas\(text, boldText\)\{[\s\S]*?if\(!serifCssReady\) return false;/, '정의가 오기 전 check 는 믿지 않음');
+  assert.match(app, /const txt = essayText\(item\), bold = essayTitle\(item\);/, '700 은 제목 글자만');
+  assert.match(app, /if\(!serifHas\(txt, bold\)\) loadSerif\(txt, bold\)\.then\(redraw, redraw\);/, '성공·실패 모두 다시 그림');
+  assert.match(app, /const redraw = \(\) => \{ if\(polStyle === 'essay' && currentPolaroidItem === item\) drawEssayCanvas\(item\); \};/);
   assert.ok(!/ensureSerif|serifReady/.test(app), '예전 방식이 남음');
 });
 
@@ -97,7 +100,10 @@ test('에세이 카드: essayText 가 카드에 그리는 글자의 출처를 �
   const keys = (src) => new Set([...src.matchAll(/t\('([a-zA-Z.]+)'/g)].map((m) => m[1]));
   const missing = [...keys(draw)].filter((k) => !keys(text).has(k));
   assert.deepEqual(missing, [], 'drawEssayCanvas 가 그리는 문구 키가 essayText 에 없음');
-  for (const src of ['essayTitle(item)', 'essaySub(item)', 'quoteOf(item)', 'item.memo', 'item.dateStr', 'item.timeStr']) {
-    assert.ok(draw.includes(src.replace('quoteOf(item)', 'quoteOf(item)')) ? text.includes(src) : true, 'essayText 에 ' + src + ' 없음');
-  }
+  // 돌려주는 목록에 실제로 들어가는지 본다 (정의만 있고 목록에서 빠지는 실수 방지)
+  const list = /return \[([\s\S]*?)\]\.join\(' '\);/.exec(text)[1];
+  for (const part of ['essayTitle(item)', 'essaySub(item)', 'body', 'item.dateStr', 'item.timeStr', "t('essay.footer')", "t('essay.header')", "t('lap.wakes'"]) assert.ok(list.includes(part), 'essayText 목록에 ' + part + ' 없음');
+  const bodyDef = /const body = ([^;]+);/.exec(text)[1];
+  for (const part of ['item.memo', 'quoteOf(item)', '“', '”']) assert.ok(bodyDef.includes(part), 'essayText body 에 ' + part + ' 없음');
+  assert.ok(draw.includes("'“' + body + '”'") && draw.includes('quoteOf(item)'), 'drawEssayCanvas 가 그리는 본문 모양이 바뀌었으면 essayText 도 맞출 것');
 });
