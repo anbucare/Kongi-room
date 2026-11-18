@@ -676,19 +676,26 @@ function setPolStyle(s){
 
 let polStyle = store.get('polStyle', 'classic');
 let polDrawGen = 0; // 앨범 카드를 새로 그릴 때마다 늘어남 — 앞 카드의 늦은 그리기(그림 onload·0.12초 뒤)가 새 카드를 덮지 않게
-let serifReady = false, serifAsked = false;
-function ensureSerif(cb){
-  if(serifReady){ cb(); return; }
-  if(!serifAsked){
-    serifAsked = true;
+// 에세이 카드의 고운바탕 (2026-11-18): 예전에는 글꼴 정의(fonts-batang.css)가 오기 전에 document.fonts.load 를 불러
+// 빈 결과로 끝났고, 카드가 늘 기기의 다른 명조체로 그려졌다. 이제 ① 정의가 도착한 뒤에 ② 카드에 실제로 쓰는 글자로
+// (한글은 글자 범위별 조각이라, 그 글자가 든 조각만 받는다) 400 은 카드 글자 전부, 700 은 제목 글자만 불러오고,
+// ③ 끝나면(조각 하나가 실패해도) 카드를 한 번 다시 그린다.
+let serifCss = null, serifCssReady = false;
+function loadSerif(text, boldText){
+  if(!(document.fonts && document.fonts.load)) return Promise.resolve();
+  if(!serifCss) serifCss = new Promise((res) => {
     const l = document.createElement('link'); l.rel = 'stylesheet';
     l.href = 'fonts-batang.css'; // 이 사이트가 직접 내보내는 고운바탕 (deploy/fonts/fetch-google-fonts.mjs)
+    l.onload = l.onerror = () => { serifCssReady = true; res(); };
     document.head.appendChild(l);
-  }
-  if(document.fonts && document.fonts.load){
-    Promise.all([document.fonts.load('400 40px "Gowun Batang"'), document.fonts.load('700 40px "Gowun Batang"')])
-      .then(()=>{ serifReady = true; cb(); }, ()=>{});
-  }
+  });
+  return serifCss.then(() => Promise.allSettled([document.fonts.load('400 40px "Gowun Batang"', text), document.fonts.load('700 40px "Gowun Batang"', boldText)]));
+}
+// 정의가 도착하기 전에는 check 가 '맞는 글꼴 없음 = 참'을 돌려주므로, 도착한 뒤에만 믿는다
+function serifHas(text, boldText){
+  if(!(document.fonts && document.fonts.check)) return true;
+  if(!serifCssReady) return false;
+  try{ return document.fonts.check('400 40px "Gowun Batang"', text) && document.fonts.check('700 40px "Gowun Batang"', boldText); }catch(e){ return true; }
 }
 function wrapLines(ctx, text, maxW, maxLines){
   const out = [];
@@ -722,6 +729,13 @@ function essaySub(item){
   if(item.demo) return fill(t('essay.subDemo'));
   const place = (item.place || '').trim();
   return fill(place ? t('essay.sub',{place, tod:essayTod(item), m:item.min}) : t('essay.subNoPlace',{m:item.min}));
+}
+// 에세이 카드에 그리는 글자 전부 — 이 글자들이 든 고운바탕 조각을 미리 받기 위해 (drawEssayCanvas 와 같은 출처를 쓸 것)
+function essayText(item){
+  const body = item.memo ? item.memo : '“' + quoteOf(item) + '”';
+  return [t('essay.header'), t('essay.no',{n:String(item.no|0).padStart(3,'0')}), essayTitle(item), essaySub(item), body,
+    (item.lap && !item.demo) ? fill(item.wakes ? t('lap.wakes',{n:item.wakes}) : t('lap.noWake')) : '',
+    (item.dateStr || '') + '  ' + (item.timeStr || ''), t('essay.footer')].join(' ');
 }
 function drawEssayCanvas(item){
   const c = $('#polaroidCanvas');
@@ -800,8 +814,12 @@ function drawPolaroidCanvas(item){
   const c = $('#polaroidCanvas');
   if(!c) return;
   if(polStyle === 'essay'){
+    const txt = essayText(item), bold = essayTitle(item); // 700(굵게)은 제목에만 쓴다
+    // 그리기 전에 확인한다: 그리면 브라우저가 새 글자 조각을 받기 시작하는데, 사파리(WebKit)는 받는 중인 조각을 check 에서 '있음'으로 본다
+    const need = !serifHas(txt, bold);
     drawEssayCanvas(item);
-    if(!serifReady) ensureSerif(() => { if(polStyle === 'essay' && currentPolaroidItem === item) drawEssayCanvas(item); });
+    const redraw = () => { if(polStyle === 'essay' && currentPolaroidItem === item) drawEssayCanvas(item); };
+    if(need) loadSerif(txt, bold).then(redraw, redraw);
     return;
   }
   const gen = ++polDrawGen;
