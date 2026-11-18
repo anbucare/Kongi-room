@@ -76,3 +76,28 @@ test('사이트 서버: fonts/ 는 버전 없는 키에서, 없으면 버전 키
   assert.match(res.headers.get('cache-control'), /must-revalidate/);
   assert.deepEqual(calls.splice(0), ['v20261117000000/fonts.css']);
 });
+
+test('에세이 카드: 고운바탕 정의(fonts-batang.css)가 도착한 뒤, 카드에 쓰는 글자로 400·700 을 불러오고 다시 그린다', () => {
+  const app = read('app.js');
+  const load = /function loadSerif\(text\)\{([\s\S]*?)\n\}/.exec(app);
+  assert.ok(load, 'loadSerif 가 없음');
+  const body = load[1];
+  // 정의가 도착(onload)하기 전에 document.fonts.load 를 부르면 빈 결과로 끝난다 — 예전 버그
+  assert.match(body, /l\.onload = l\.onerror = \(\) => \{ serifCssReady = true; res\(\); \}/);
+  assert.match(body, /return serifCss\.then\(\(\) => Promise\.all\(\['400', '700'\]\.map\(\(w\) => document\.fonts\.load\(w \+ ' 40px "Gowun Batang"', text\)\)\)\)/);
+  assert.match(app, /function serifHas\(text\)\{[\s\S]*?if\(!serifCssReady\) return false;/, '정의가 오기 전 check 는 믿지 않음');
+  assert.match(app, /const txt = essayText\(item\);\n\s*if\(!serifHas\(txt\)\) loadSerif\(txt\)\.then\(\(\) => \{ if\(polStyle === 'essay' && currentPolaroidItem === item\) drawEssayCanvas\(item\); \}/);
+  assert.ok(!/ensureSerif|serifReady/.test(app), '예전 방식이 남음');
+});
+
+test('에세이 카드: essayText 가 카드에 그리는 글자의 출처를 모두 담는다 (빠지면 그 글자만 다른 글꼴로 그려짐)', () => {
+  const app = read('app.js');
+  const draw = /function drawEssayCanvas\(item\)\{([\s\S]*?)\nfunction drawPolaroidCanvas/.exec(app)[1];
+  const text = /function essayText\(item\)\{([\s\S]*?)\n\}/.exec(app)[1];
+  const keys = (src) => new Set([...src.matchAll(/t\('([a-zA-Z.]+)'/g)].map((m) => m[1]));
+  const missing = [...keys(draw)].filter((k) => !keys(text).has(k));
+  assert.deepEqual(missing, [], 'drawEssayCanvas 가 그리는 문구 키가 essayText 에 없음');
+  for (const src of ['essayTitle(item)', 'essaySub(item)', 'quoteOf(item)', 'item.memo', 'item.dateStr', 'item.timeStr']) {
+    assert.ok(draw.includes(src.replace('quoteOf(item)', 'quoteOf(item)')) ? text.includes(src) : true, 'essayText 에 ' + src + ' 없음');
+  }
+});
