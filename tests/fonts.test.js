@@ -88,7 +88,8 @@ test('에세이 카드: 고운바탕 정의(fonts-batang.css)가 도착한 뒤, 
     'allSettled: 조각 하나가 실패해도 나머지를 기다린 뒤 다시 그림');
   assert.match(app, /function serifHas\(text, boldText\)\{[\s\S]*?if\(!serifCssReady\) return false;/, '정의가 오기 전 check 는 믿지 않음');
   assert.match(app, /const txt = essayText\(item\), bold = essayTitle\(item\);/, '700 은 제목 글자만');
-  assert.match(app, /if\(!serifHas\(txt, bold\)\) loadSerif\(txt, bold\)\.then\(redraw, redraw\);/, '성공·실패 모두 다시 그림');
+  assert.match(app, /const need = !serifHas\(txt, bold\);\n\s*drawEssayCanvas\(item\);[\s\S]{0,200}?if\(need\) loadSerif\(txt, bold\)\.then\(redraw, redraw\);/,
+    '그리기 전에 확인(사파리는 받는 중인 조각을 있음으로 봄), 성공·실패 모두 다시 그림');
   assert.match(app, /const redraw = \(\) => \{ if\(polStyle === 'essay' && currentPolaroidItem === item\) drawEssayCanvas\(item\); \};/);
   assert.ok(!/ensureSerif|serifReady/.test(app), '예전 방식이 남음');
 });

@@ -814,10 +814,12 @@ function drawPolaroidCanvas(item){
   const c = $('#polaroidCanvas');
   if(!c) return;
   if(polStyle === 'essay'){
-    drawEssayCanvas(item);
     const txt = essayText(item), bold = essayTitle(item); // 700(굵게)은 제목에만 쓴다
+    // 그리기 전에 확인한다: 그리면 브라우저가 새 글자 조각을 받기 시작하는데, 사파리(WebKit)는 받는 중인 조각을 check 에서 '있음'으로 본다
+    const need = !serifHas(txt, bold);
+    drawEssayCanvas(item);
     const redraw = () => { if(polStyle === 'essay' && currentPolaroidItem === item) drawEssayCanvas(item); };
-    if(!serifHas(txt, bold)) loadSerif(txt, bold).then(redraw, redraw);
+    if(need) loadSerif(txt, bold).then(redraw, redraw);
     return;
   }
   const gen = ++polDrawGen;
