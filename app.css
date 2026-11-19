@@ -552,7 +552,7 @@ body[data-ui="focus"] .hotspot{opacity:.75}
   box-shadow:0 -1.2cqw 2.4cqw rgba(0,0,0,.35),inset 0 1.2cqw 1.6cqw rgba(255,230,190,.35)}
 .lap-blanket::after{content:"";position:absolute;left:8%;right:8%;top:10%;height:10%;border-top:.5cqw dashed rgba(255,240,215,.55);border-radius:50%}
 .lap-cat{position:absolute;left:50%;bottom:16%;width:40%;transform:translateX(-50%)}
-.lap-cat img{width:100%;display:block;image-rendering:pixelated;filter:drop-shadow(0 1.2cqw 1.4cqw rgba(0,0,0,.45))}
+.lap-cat img{width:100%;height:auto;display:block;image-rendering:pixelated;filter:drop-shadow(0 1.2cqw 1.4cqw rgba(0,0,0,.45))}
 @media (prefers-reduced-motion:no-preference){.lap-cat img{animation:pixelBreathe 4.2s ease-in-out infinite}}
 @media (prefers-reduced-motion:no-preference){.lap-view.s2 .lap-cat img{animation:loafBreathe 3.2s ease-in-out infinite}}
 @media (prefers-reduced-motion:reduce){.lap-view.s2 .lap-cat img{transform:scale(1.1,.86) translateY(2px)}}
@@ -572,7 +572,7 @@ body[data-ui="focus"] .hotspot{opacity:.75}
 
 /* ===== together: a friend's cat in the room ===== */
 .friend-cat{position:absolute;left:62%;bottom:7%;width:14%;z-index:19;pointer-events:none;animation:friendIn .8s ease-out}
-.friend-cat img{width:100%;display:block;image-rendering:pixelated;transform:scaleX(-1);filter:hue-rotate(185deg) saturate(.55) brightness(1.05) drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+.friend-cat img{width:100%;height:auto;display:block;image-rendering:pixelated;transform:scaleX(-1);filter:hue-rotate(185deg) saturate(.55) brightness(1.05) drop-shadow(0 2px 4px rgba(0,0,0,.45))}
 @media (prefers-reduced-motion:no-preference){.friend-cat img{animation:pixelBreathe 3.8s ease-in-out infinite}}
 .friend-tag{position:absolute;left:50%;bottom:102%;transform:translateX(-50%);white-space:nowrap;background:#fffaf2;color:#4a3b2f;border:2px solid #9cc0e0;font:700 max(1.7cqw,11px)/1 var(--hand);padding:.6cqw 1.1cqw;border-radius:999px}
 @keyframes friendIn{from{opacity:0;transform:translateX(30%)}to{opacity:1;transform:none}}

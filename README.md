@@ -110,7 +110,7 @@ npm test
 - `tests/core.test.js`: XP(체험 0, 분당 1 + 완주 5, 중단 시 절반)·레벨(60/180/420)·포모도로 상태기계(4회마다 긴 휴식, 자동 시작)·스트릭·성장 해금·초 단위 시간 표기
 - `tests/i18n.test.js`: ko/en/de 키 수·키 집합 일치, 영어·독일어 문구에 한글 없음, `{변수}` 일치, index.html·app.js 가 쓰는 키 존재
 - `tests/shell.test.js`: `sw.js` 캐시 목록에 페이지 파일 누락 없음, 캐시 버전, 외부 스크립트·추적 코드 없음, 공유는 링크(wa.me·intent)만, 푸터의 만든 사람·메일
-- `tests/lcp.test.js`: 첫 화면 속도 — head 의 "방 그림 미리 받기"가 앱이 첫 그리기에 쓰는 그림과 같은 파일을 고르는지(시간대·공간·저장소 막힘 포함), 글꼴 CSS 를 그림 도착 뒤에 켜는지, `core.js`·`i18n.js` defer, 이미지 크기, 썸네일 지연
+- `tests/lcp.test.js`: 첫 화면 속도 — head 의 "방 그림 미리 받기"가 앱이 첫 그리기에 쓰는 그림과 같은 파일을 고르는지(시간대·공간·저장소 막힘 포함), 글꼴 CSS 를 그림 도착 뒤에 켜는지, `core.js`·`i18n.js` defer, 이미지 크기(속성이 있으면 CSS 도 `height:auto`), 썸네일 지연
 
 첫 화면 속도(휴대폰·느린 4G·CPU 4배·처음 방문, 3회 중앙값)는 `node tests/perf/measure-lcp.mjs https://kongi-room.anbu-pilot.workers.dev/` 로 잴 수 있습니다(키 없는 PageSpeed API 는 429 라서). 배포 전 코드는 `--local . --h2` 로 같은 조건에서 잽니다. 결과·해석: `docs/seo/LCP_개선_2026-11-19.md`
 

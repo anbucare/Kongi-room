@@ -179,6 +179,19 @@ test('이미지: 고양이·밥그릇에 실제 파일 크기대로 width·heigh
     assert.ok(attr(tag, 'width') && attr(tag, 'height'), 'width·height 없음: ' + src);
     if (/\.png$/.test(src)) assert.deepEqual([+attr(tag, 'width'), +attr(tag, 'height')], dims(src), 'PNG 실제 크기와 다름: ' + src);
   }
+  // width·height 속성은 CSS 에 높이 규칙이 없으면 그대로 "고정 높이"가 되어 그림이 세로로 늘어난다(검토 지적 2026-11-19: 친구·무릎 고양이).
+  // 그래서 속성이 있는 <img> 마다 적용되는 CSS 규칙이 height:auto(또는 aspect-ratio)를 가져야 한다. 새로 크기를 단 <img> 가 생기면 아래 표에도 넣을 것.
+  const covered = [
+    ['.pixel-cat img', /id="catImg"/], ['.friend-cat img', /src="assets\/cat_sit\.png" alt="" width/], ['.lap-cat img', /id="lapCatImg"/],
+    ['#bowl img', /src="assets\/pixel_bowl\.png"/], ['.theme-card img', /theme_[a-z]+_thumb\.webp/]
+  ];
+  const ruleOf = (sel) => { const esc = sel.replace(/[.#]/g, '\\$&'); const m = new RegExp('(?:^|[,}\\n])\\s*(?:[^{}]*,)?' + esc + '(?:,[^{}]*)?\\{([^}]*)\\}', 'g'); return [...CSS.matchAll(m)].map((x) => x[1]).join(';'); };
+  const sized = imgs.filter((t) => attr(t, 'width') && attr(t, 'height'));
+  for (const tag of sized) {
+    const hit = covered.filter(([, re]) => re.test(tag));
+    assert.ok(hit.length >= 1, '표에 없는 크기 지정 <img>: ' + tag);
+    for (const [sel] of hit) assert.match(ruleOf(sel), /height:\s*auto|aspect-ratio/, `${sel} 규칙에 height:auto 없음 — 속성 height 가 그대로 고정 높이가 되어 그림이 늘어남`);
+  }
   const thumbs = imgs.filter((t) => /theme_[a-z]+_thumb\.webp/.test(t));
   assert.equal(thumbs.length, 5);
   for (const t of thumbs) assert.ok(attr(t, 'loading') === 'lazy', '썸네일은 lazy: ' + attr(t, 'src'));
@@ -186,8 +199,11 @@ test('이미지: 고양이·밥그릇에 실제 파일 크기대로 width·heigh
   assert.match(APP, /const pre=\(\)=>\{\$\$\('\.theme-card img'\)\.forEach\(im=>\{const i=new Image\(\);i\.src=im\.src\}\)\};const idle=\(\)=>\{if\(window\.requestIdleCallback\)requestIdleCallback\(pre,\{timeout:5000\}\);else setTimeout\(pre,3000\)\};if\(document\.readyState==='complete'\)idle\(\);else addEventListener\('load',idle\)/);
 });
 
-test('서비스 워커 캐시 버전이 올랐고(index.html 이 바뀜) 새 파일은 없다', () => {
+test('서비스 워커 캐시 버전이 올랐고, 시험·측정 파일은 배포 대상(SITE_FILES·SITE_DIRS)에 들어가지 않는다', () => {
   assert.ok(+/kongi-v(\d+)/.exec(read('sw.js'))[1] >= 45);
   const deploy = read('deploy/workers-kv/deploy-wrangler.mjs');
-  assert.ok(!/tests\/perf/.test(deploy), '측정 스크립트는 배포 대상이 아님');
+  const files = /const SITE_FILES = \[([\s\S]*?)\];/.exec(deploy)[1];
+  const dirs = /const SITE_DIRS = \[([^\]]*)\];/.exec(deploy)[1];
+  assert.ok(!/tests|perf|measure-lcp|lcp\.test/.test(files), 'SITE_FILES 에 시험·측정 파일');
+  assert.deepEqual([...dirs.matchAll(/'([^']+)'/g)].map((m) => m[1]), ['icons', 'assets'], '배포 폴더는 icons·assets 만');
 });

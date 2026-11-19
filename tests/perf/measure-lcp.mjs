@@ -52,9 +52,10 @@ function serve(root) {
   let server;
   if (H2) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kongi-h2-'));
-    execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', path.join(dir, 'k.pem'), '-out', path.join(dir, 'c.pem'), '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
-    server = http2.createSecureServer({ key: fs.readFileSync(path.join(dir, 'k.pem')), cert: fs.readFileSync(path.join(dir, 'c.pem')), allowHTTP1: true }, handler);
-    fs.rmSync(dir, { recursive: true, force: true });
+    try {
+      execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', path.join(dir, 'k.pem'), '-out', path.join(dir, 'c.pem'), '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
+      server = http2.createSecureServer({ key: fs.readFileSync(path.join(dir, 'k.pem')), cert: fs.readFileSync(path.join(dir, 'c.pem')), allowHTTP1: true }, handler);
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); } // 인증서는 읽은 직후 지움 (openssl 이 실패해도 임시 폴더를 남기지 않음)
   } else server = http.createServer(handler);
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, url: `${H2 ? 'https' : 'http'}://127.0.0.1:${server.address().port}/` })));
 }
