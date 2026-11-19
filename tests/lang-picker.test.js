@@ -381,6 +381,12 @@ test('윈도 고대비 모드: 배경색이 지워져도 지금 언어가 시스
   const m = /@media \(forced-colors:active\)\{\s*\.langbar-btn\[aria-pressed="true"\]\{([^}]*)\}/.exec(CSS);
   assert.ok(m, 'forced-colors 규칙');
   assert.ok(/forced-color-adjust:none/.test(m[1]) && /background:Highlight/.test(m[1]) && /color:HighlightText/.test(m[1]));
+  assert.ok(/@media \(forced-colors:active\)\{[^@]*\.langnote-btn\{border:1px solid ButtonText\}/.test(CSS), '안내 줄 단추는 배경이 지워져도 테두리로 단추처럼 보임');
+});
+
+test('안내 줄은 ?lang= 처리(openResultView·openTogetherLink)가 끝난 뒤에 정해진다 (지금 화면 언어를 보고 판정하므로)', () => {
+  assert.ok(/const fromLink=openResultView\(\)\|\|openTogetherLink\(\);\s*initLangNote\(\);/.test(APP));
+  assert.equal((APP.match(/initLangNote\(\)/g) || []).length, 2, '정의 한 번, 호출 한 번');
 });
 
 test('안내 줄: 모달이 아니라 문서 흐름 안의 한 줄(맨 위, 줄 전체, 좁으면 줄바꿈), 숨김이 display 에 덮이지 않는다', () => {

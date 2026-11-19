@@ -152,6 +152,6 @@
     POMO_DEF, pomoEvery, pomoNextBreak, pomoReduce,
     dayKey, streakValid, streakBump,
     DECOR, SEASONS, seasonFor, unlockList, nextUnlock,
-    LANGS, langNotice
+    langNotice
   };
 });

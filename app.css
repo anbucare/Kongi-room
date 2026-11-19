@@ -188,10 +188,6 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .langbar-btn:hover{background:var(--soft)}
 .langbar-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
 .langbar-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-/* 윈도 고대비 모드는 배경색을 지우므로, 지금 언어는 시스템 강조색으로 따로 표시 */
-@media (forced-colors:active){
-  .langbar-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}
-}
 /* 한국어가 아닌 브라우저에만 띄우는 안내 한 줄(자동 전환은 하지 않음): 머리글 맨 위, 문서 흐름 안. 글자 --fg / 틀 --panel, 단추 --accent-fg / --accent 로 🌐 선택과 같은 토큰 짝 */
 .langnote{order:-2;flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:2px 16px;padding:4px 4px 4px 14px;border:1px solid var(--muted);border-radius:14px;background:var(--panel);color:var(--fg);font-size:14px;line-height:1.4}
 .langnote-globe{font-size:18px;line-height:1}
@@ -200,6 +196,11 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .langnote-x{margin-left:auto;min-width:44px;min-height:44px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--fg);font:inherit;font-size:18px;cursor:pointer}
 .langnote-x:hover{background:var(--soft)}
 .langnote-btn:focus-visible,.langnote-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 윈도 고대비 모드는 배경색을 지우므로, 지금 언어는 시스템 강조색으로, 안내 줄 단추는 테두리로 따로 표시 */
+@media (forced-colors:active){
+  .langbar-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}
+  .langnote-btn{border:1px solid ButtonText}
+}
 /* 머리글 순서: 문서 순서는 언어 선택이 맨 앞(키보드·화면 낭독이 먼저 닿음), 넓은 화면에서는 이름 → 언어(오른쪽) → 소개 → 버튼 줄 */
 header>.brand{order:0}
 header>.lead{order:2}
@@ -665,6 +666,6 @@ select{min-height:40px}
   body[data-ui="focus"] .panel,body[data-ui="done"] .panel{position:sticky;bottom:8px;z-index:30;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
   .clock{font-size:52px}
 }
-@media (max-width:480px){.langbar{width:100%}.langbar-globe{margin-left:0}.langbar-btn{flex:1}}
+@media (max-width:480px){.langbar{width:100%}.langbar-btn{flex:1}}
 .pixel-cat .bubble{white-space:normal;width:max-content;max-width:min(52cqw,340px);text-align:center;line-height:1.3}
 @media (max-width:720px){.pixel-cat .bubble{max-width:62cqw;font-size:13px}}
