@@ -91,12 +91,37 @@ html,body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 </style>
+<script>
+/* 첫 화면 속도(LCP): ① 방 배경 그림은 CSS 안에 적혀 있어서, 브라우저가 CSS 를 다 받은 뒤에야 알아채고 받기 시작한다.
+   그래서 "처음 그릴 때 보일 그림"을 여기서 먼저 정해 바로 받기 시작한다. 계산은 app.js 의 tod()·테마 규칙과 같다(tests/lcp.test.js 가 맞는지 확인).
+   정해진 값(KONGI_BOOT)은 #scene 안쪽의 짝 스크립트가 첫 그리기 전에 방에 적용한다. 값을 정하지 못하면(저장소 막힘 등) 아무것도 안 한다 = 예전 그대로.
+   ② 글꼴(fonts.css, 조각 14개·약 210 KB)은 브라우저가 가장 높은 우선순위로 받아서 방 그림보다 먼저 대역폭을 가져간다.
+   그래서 fonts.css 는 media="not all" 로 두었다가 방 그림이 도착한 뒤(또는 페이지 load, 늦어도 4초)에 켠다. 켜기 전에는 글자가 기본 글꼴로 보이고(font-display:swap 과 같은 모습), 스크립트를 못 쓰는 환경은 아래 noscript 가 예전처럼 바로 켠다. */
+(function(){
+  var on=function(){var f=document.getElementById('fontsCss');if(f)f.media='all'};
+  try{addEventListener('load',on);setTimeout(on,4000)}catch(e){}
+  try{
+    var g=function(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}};
+    var th=g('theme','room'),o=g('tod','auto'),h=new Date().getHours();
+    if(['room','library','greenhouse','train','cabin'].indexOf(th)<0)th='room';
+    var td=o!=='auto'?o:h>=6&&h<10?'morning':h<17?'day':h<20?'sunset':'night';
+    if(['morning','day','sunset','night'].indexOf(td)<0)return;
+    window.KONGI_BOOT={tod:td,theme:th};
+    var l=document.createElement('link');l.rel='preload';l.as='image';l.type='image/webp';l.setAttribute('fetchpriority','high');
+    l.onload=l.onerror=on;
+    l.href='assets/'+(th!=='room'?'theme_'+th:'room_'+td)+'.webp';
+    document.head.appendChild(l);
+  }catch(e){}
+})();
+</script>
 <!-- 글꼴은 이 사이트가 직접 내보낸다 (Google 서버에 접속하지 않음): fonts.css·fonts/ 는 deploy/fonts/fetch-google-fonts.mjs 가 만든다 -->
-<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="fonts.css" media="not all" id="fontsCss">
+<noscript><link rel="stylesheet" href="fonts.css"></noscript>
 <link rel="sitemap" type="application/xml" title="Sitemap" href="sitemap.xml">
 <link rel="stylesheet" href="app.css">
-<script src="core.js"></script>
-<script src="i18n.js"></script>
+<!-- core.js·i18n.js 는 defer: 첫 그리기를 막지 않는다. 실행 순서는 app.js 앞(문서 순서) 그대로이고, 둘을 쓰는 곳은 app.js 뿐이다 -->
+<script src="core.js" defer></script>
+<script src="i18n.js" defer></script>
 </head>
 <body>
 
@@ -153,6 +178,15 @@ img{max-width:100%}
 
   <main>
     <section class="scene t-day" id="scene" aria-label="고양이가 있는 방" data-i18n-aria="scene.aria">
+<script>
+/* 첫 그리기 전에 맞춰 두기: app.js 는 defer 라 한참 뒤에 돌므로, 그 전까지는 낮 그림·낮 색으로 보이다가 바뀌고 낮 그림을 쓸데없이 받는다.
+   위 head 스크립트가 정한 시간대·공간을 방(#scene)과 본문 색(body[data-tod])에 미리 적용한다 — app.js 가 나중에 같은 값을 다시 적용한다.
+   비 소리(rainy)는 app.js 가 켜야 빗방울이 만들어지므로 여기서 건드리지 않는다. */
+(function(){try{
+  var b=window.KONGI_BOOT,s=document.getElementById('scene');
+  if(b&&s){s.classList.remove('t-day');s.classList.add('t-'+b.tod);s.dataset.theme=b.theme;document.body.dataset.tod=b.tod}
+}catch(e){}})();
+</script>
       <div class="window-rain" id="windowRain">
         <div class="rain" id="rain"></div>
       </div>
@@ -174,20 +208,20 @@ img{max-width:100%}
       <div class="pixel-cat" id="cat" data-pose="sleep" data-spot="sofa" style="left:21%;bottom:25%">
         <div class="bubble" id="bubble" hidden>…</div>
         <div class="cat-tag" id="catTag" hidden></div>
-        <img id="catImg" src="assets/cat_sleep.png" alt="콩이" data-i18n-alt="cat.alt">
+        <img id="catImg" src="assets/cat_sleep.png" alt="콩이" data-i18n-alt="cat.alt" width="260" height="152">
         <div class="zzz"><span>z</span><span>z</span><span>z</span></div>
         <div class="purr" aria-hidden="true"><span></span><span></span><span></span></div>
       </div>
 
       <div id="cushion" aria-hidden="true"></div>
-      <div class="friend-cat" id="friendCat" hidden><img src="assets/cat_sit.png" alt=""><span class="friend-tag" id="friendTag"></span></div>
+      <div class="friend-cat" id="friendCat" hidden><img src="assets/cat_sit.png" alt="" width="260" height="294"><span class="friend-tag" id="friendTag"></span></div>
       <div class="lap-view" id="lapView" aria-hidden="true">
         <div class="lap-blanket"></div>
-        <div class="lap-cat"><img id="lapCatImg" src="assets/cat_sleep.png" alt=""><div class="purr"><span></span><span></span><span></span></div><div class="lap-zzz"><span>z</span><span>z</span><span>z</span></div></div>
+        <div class="lap-cat"><img id="lapCatImg" src="assets/cat_sleep.png" alt="" width="260" height="152"><div class="purr"><span></span><span></span><span></span></div><div class="lap-zzz"><span>z</span><span>z</span><span>z</span></div></div>
         <div class="lap-label" id="lapLabel"></div>
       </div>
       <div id="bowl" title="콩이의 밥그릇" data-i18n-title="bowl.title" aria-hidden="true">
-        <img src="assets/pixel_bowl.png" alt="밥그릇" data-i18n-alt="bowl.alt">
+        <img src="assets/pixel_bowl.png" alt="밥그릇" data-i18n-alt="bowl.alt" width="120" height="75">
       </div>
 
       <div class="caption" id="caption"></div>
@@ -331,11 +365,11 @@ img{max-width:100%}
     <h3 id="themeTitle" data-i18n="theme.title">🏠 내가 머물고 싶은 집중 공간</h3>
     <p data-i18n="theme.sub">오늘의 기분에 맞는 방을 고르세요. 콩이가 그 방으로 따라와요.</p>
     <div class="theme-grid">
-      <button class="theme-card" type="button" data-theme="room" aria-label="콩이의 방" data-i18n-aria="theme.room.name"><img src="assets/theme_room_thumb.webp" alt="" loading="eager" fetchpriority="low" decoding="async" width="320" height="200"><b data-i18n="theme.room.name"></b><small data-i18n="theme.room.desc"></small></button>
-      <button class="theme-card" type="button" data-theme="library" aria-label="심야의 서재" data-i18n-aria="theme.library.name"><img src="assets/theme_library_thumb.webp" alt="" loading="eager" fetchpriority="low" decoding="async" width="320" height="200"><b data-i18n="theme.library.name"></b><small data-i18n="theme.library.desc"></small></button>
-      <button class="theme-card" type="button" data-theme="greenhouse" aria-label="비 내리는 온실 카페" data-i18n-aria="theme.greenhouse.name"><img src="assets/theme_greenhouse_thumb.webp" alt="" loading="eager" fetchpriority="low" decoding="async" width="320" height="200"><b data-i18n="theme.greenhouse.name"></b><small data-i18n="theme.greenhouse.desc"></small></button>
-      <button class="theme-card" type="button" data-theme="train" aria-label="심야 열차의 침대칸" data-i18n-aria="theme.train.name"><img src="assets/theme_train_thumb.webp" alt="" loading="eager" fetchpriority="low" decoding="async" width="320" height="200"><b data-i18n="theme.train.name"></b><small data-i18n="theme.train.desc"></small></button>
-      <button class="theme-card" type="button" data-theme="cabin" aria-label="눈 내리는 산장" data-i18n-aria="theme.cabin.name"><img src="assets/theme_cabin_thumb.webp" alt="" loading="eager" fetchpriority="low" decoding="async" width="320" height="200"><b data-i18n="theme.cabin.name"></b><small data-i18n="theme.cabin.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="room" aria-label="콩이의 방" data-i18n-aria="theme.room.name"><img src="assets/theme_room_thumb.webp" alt="" loading="lazy" decoding="async" width="320" height="200"><b data-i18n="theme.room.name"></b><small data-i18n="theme.room.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="library" aria-label="심야의 서재" data-i18n-aria="theme.library.name"><img src="assets/theme_library_thumb.webp" alt="" loading="lazy" decoding="async" width="320" height="200"><b data-i18n="theme.library.name"></b><small data-i18n="theme.library.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="greenhouse" aria-label="비 내리는 온실 카페" data-i18n-aria="theme.greenhouse.name"><img src="assets/theme_greenhouse_thumb.webp" alt="" loading="lazy" decoding="async" width="320" height="200"><b data-i18n="theme.greenhouse.name"></b><small data-i18n="theme.greenhouse.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="train" aria-label="심야 열차의 침대칸" data-i18n-aria="theme.train.name"><img src="assets/theme_train_thumb.webp" alt="" loading="lazy" decoding="async" width="320" height="200"><b data-i18n="theme.train.name"></b><small data-i18n="theme.train.desc"></small></button>
+      <button class="theme-card" type="button" data-theme="cabin" aria-label="눈 내리는 산장" data-i18n-aria="theme.cabin.name"><img src="assets/theme_cabin_thumb.webp" alt="" loading="lazy" decoding="async" width="320" height="200"><b data-i18n="theme.cabin.name"></b><small data-i18n="theme.cabin.desc"></small></button>
     </div>
     <div class="btn-row"><button class="btn secondary" id="closeTheme" type="button" data-i18n="close">닫기</button></div>
   </div>
