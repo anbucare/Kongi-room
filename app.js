@@ -21,7 +21,8 @@ const SITE_URL='https://kongi-room.anbu-pilot.workers.dev/';
 const LANGS=['ko','en','de'];
 const THEME_IDS=['room','library','greenhouse','train','cabin'];
 let curTheme=(()=>{const v=store.get('theme','room');return THEME_IDS.includes(v)?v:'room'})();
-let lang=(()=>{const l=store.get('lang','ko');return LANGS.includes(l)?l:'ko'})();
+// Saved choice → ?lang= → long-time user (has progress, never chose) = Korean → browser language list → English. The result is saved (rules and tests: core.js).
+let lang=CORE.resolveLang(store,location.search,navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language]);
 const I18N=window.KONGI_I18N||{ko:{}};
 function t(k,vars){const L=I18N[lang]||I18N.ko;let v=null;if(curTheme!=='room'){v=L[k+'@'+curTheme];if(v==null)v=I18N.ko[k+'@'+curTheme]}if(v==null)v=L[k];if(v==null)v=I18N.ko[k];if(v==null)v=k;if(vars)for(const key in vars)v=v.split('{'+key+'}').join(vars[key]);return v}
 const dname=()=>(lang!=='ko'&&petName==='콩이')?'Kongi':petName;
@@ -1916,7 +1917,6 @@ async function shareKakao(){
 function openResultView(){
   const q=new URLSearchParams(location.search);
   if(!q.has('s'))return false;
-  if(LANGS.includes(q.get('lang'))&&store.get('lang',null)==null){lang=q.get('lang');applyLang()}
   const st={sessions:Math.max(0,parseInt(q.get('s'),10)||0),mins:Math.max(0,parseInt(q.get('m'),10)||0),last:Math.max(0,parseInt(q.get('l'),10)||0),stops:0};
   const name=((q.get('n')||'콩이').replace(/[<>]/g,'').slice(0,6)||'콩이').replace(/^콩이$/,dname());
   const todq=['morning','day','sunset','night'].includes(q.get('t'))?q.get('t'):'day';
@@ -2313,7 +2313,6 @@ function scheduleTogether(info){
 }
 function openTogetherLink(){
   const q=new URLSearchParams(location.search);if(!q.has('tg'))return false;
-  if(LANGS.includes(q.get('lang'))&&store.get('lang',null)==null){lang=q.get('lang');applyLang()}
   const st=parseInt(q.get('tg'),36),m=Math.min(180,Math.max(1,parseInt(q.get('tm'),10)||25));
   const name=(q.get('tn')||'').replace(/[<>]/g,'').slice(0,12)||t('tg.friend');
   if(!(st>0)){history.replaceState(null,'',location.pathname);return false}
@@ -2333,7 +2332,7 @@ function applyLang(){
   $$('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh)});
   $$('[data-i18n-alt]').forEach(el=>{el.alt=t(el.dataset.i18nAlt)});
   $$('.presets .chip[data-min]').forEach(c=>{c.textContent=t('minutes',{m:c.dataset.min})});
-  const ls=$('#langSel');if(ls)ls.value=lang;
+  $$('#langPick [data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
   const ni=$('#petName');if(ni&&petName==='콩이'){ni.value=dname()}sizeName();
   $('#rainBtn').textContent=scene.classList.contains('rainy')?t('rain.btnOn'):t('rain.btn');
   const lh=$('#lapHint');if(lh)lh.textContent=fill(t('lap.hint'));
@@ -2354,8 +2353,7 @@ $('#themeBtn').addEventListener('click',()=>openModal('#themeModal'));
 $('#closeTheme').addEventListener('click',()=>hideModal('#themeModal'));
 $$('.theme-card').forEach(c=>c.addEventListener('click',()=>{applyTheme(c.dataset.theme);hideModal('#themeModal');caption('theme.cap');followSound()}));
 $$('.theme-card img').forEach(im=>{const bad=()=>{im.classList.add('broken');const c=im.closest('.theme-card');if(c)c.classList.add('broken')};im.addEventListener('error',bad);if(im.complete&&!im.naturalWidth)bad()});
-const langSel=$('#langSel');
-if(langSel){langSel.addEventListener('change',e=>{const v=e.target.value;if(!LANGS.includes(v))return;lang=v;store.set('lang',v);applyLang()})}
+$$('#langPick [data-lang]').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.lang;if(!LANGS.includes(v)||v===lang)return;lang=v;store.set('lang',v);applyLang()}));
 
 applyTheme(curTheme,{boot:true});applyLang();applyTod();renderLog();renderShelf();renderStatus();
 if(!$('#setupMsg').dataset.tkey)setT('#setupMsg','setup.msg');

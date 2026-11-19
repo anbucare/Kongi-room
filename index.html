@@ -102,6 +102,12 @@ img{max-width:100%}
 
 <div class="app">
   <header>
+    <div class="langbar" id="langPick" role="group" aria-label="Language · Sprache · 언어">
+      <span class="langbar-globe" aria-hidden="true">🌐</span>
+      <button class="langbar-btn" type="button" data-lang="ko" lang="ko" aria-pressed="true">한국어</button>
+      <button class="langbar-btn" type="button" data-lang="en" lang="en" aria-pressed="false">English</button>
+      <button class="langbar-btn" type="button" data-lang="de" lang="de" aria-pressed="false">Deutsch</button>
+    </div>
     <h1 class="brand">
       <span class="sr-only" aria-hidden="true" data-i18n="cat.alt">콩이</span><input id="petName" aria-label="고양이 이름" data-i18n-aria="hdr.nameAria" maxlength="6" value="콩이">
       <span class="suffix" data-i18n="hdr.suffix">네 방</span>
@@ -115,11 +121,6 @@ img{max-width:100%}
         <option value="day" data-i18n="tod.day">낮</option>
         <option value="sunset" data-i18n="tod.sunset">노을</option>
         <option value="night" data-i18n="tod.night">밤</option>
-      </select>
-      <select id="langSel" aria-label="언어" data-i18n-aria="lang.aria">
-        <option value="ko">한국어</option>
-        <option value="en">English</option>
-        <option value="de">Deutsch</option>
       </select>
       <button class="btn secondary" id="themeBtn" type="button" title="집중 공간 테마 고르기" data-i18n-title="theme.title">🏠 집중 공간</button>
       <button class="btn secondary" id="rainBtn" type="button" aria-pressed="false" title="빗소리와 창문 비 효과" data-i18n-title="rain.title">🌧️ 빗소리</button>

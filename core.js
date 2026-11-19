@@ -130,11 +130,43 @@
   }
   function nextUnlock(min) { return unlockList().find((u) => u.min > min) || null; }
 
+  // ---- Which language a visitor starts in ---------------------------------------------------------
+  // Order: the saved choice → ?lang= on the first visit → someone who already has progress but never chose
+  // (they have been using the room in Korean so far, so keep it) → the first of ko/en/de in the browser's
+  // language list (compared by the primary tag: de-AT is German) → English.
+  // The decided value is saved at once, so a later visit is never mistaken for a long-time Korean user
+  // just because progress has been written in the meantime.
+  const LANGS = ['ko', 'en', 'de'];
+  // Keys that exist only once someone has really used the room (the same ones index.html uses to decide
+  // whether there is anything worth carrying over).
+  const PROGRESS_KEYS = ['intimacy', 'log', 'album', 'shelf', 'streak', 'doneTotal'];
+  function langFromList(list) {
+    for (const tag of list || []) {
+      const primary = String(tag || '').toLowerCase().split(/[-_]/)[0];
+      if (LANGS.includes(primary)) return primary;
+    }
+    return null;
+  }
+  // io = { get(key) → stored value (null or undefined when missing), set(key, value) }; the page passes its localStorage wrapper (`store`).
+  function resolveLang(io, search, languages) {
+    const saved = io.get('lang');
+    if (LANGS.includes(saved)) return saved;
+    let fromLink = null;
+    try { fromLink = new URLSearchParams(search || '').get('lang'); } catch (e) { /* no query */ }
+    let lang;
+    if (LANGS.includes(fromLink)) lang = fromLink;
+    else if (PROGRESS_KEYS.some((k) => io.get(k) != null)) lang = 'ko';
+    else lang = langFromList(languages) || 'en';
+    io.set('lang', lang);
+    return lang;
+  }
+
   return {
     XP_RULE, LEVELS, xpForFocus, xpForStop, levelInfo, levelPct,
     TIERS, tierOf, stageFor, fmtDur,
     POMO_DEF, pomoEvery, pomoNextBreak, pomoReduce,
     dayKey, streakValid, streakBump,
-    DECOR, SEASONS, seasonFor, unlockList, nextUnlock
+    DECOR, SEASONS, seasonFor, unlockList, nextUnlock,
+    LANGS, PROGRESS_KEYS, langFromList, resolveLang
   };
 });

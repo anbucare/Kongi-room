@@ -13,7 +13,7 @@ const START = new Date('2026-11-11T10:00:00+01:00');
 
 async function newPage(browser, mobile) {
   // serviceWorkers:'block' — the app shell SW would answer image requests from its cache and bypass page.route (the thumbnail-failure test needs the 404 to reach the page)
-  const ctx = await browser.newContext(Object.assign({ serviceWorkers: 'block' }, mobile ? { ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true } : { viewport: { width: 1280, height: 900 } }));
+  const ctx = await browser.newContext(Object.assign({ serviceWorkers: 'block', locale: 'ko-KR' }, mobile ? { ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true } : { viewport: { width: 1280, height: 900 } }));
   // the treat button pulses and today's item bobs (CSS animations), which Playwright reads as 'not stable': freeze those two in tests
   await ctx.addInitScript(() => { document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); s.textContent = '.btn.big,.daily-item{animation:none!important}'; document.head.appendChild(s); }); });
   const page = await ctx.newPage();
@@ -237,9 +237,9 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   await page.click('#demoBtn'); await page.clock.runFor(31_000); await page.click('#treatBtn'); await page.clock.runFor(6_000); await page.click('#nextBtn');
   await page.fill('#customMin', '5'); await page.click('#startBtn'); await page.clock.runFor(5 * 60_000 + 500); await page.click('#treatBtn'); await page.clock.runFor(6_000); await page.click('#nextBtn');
   for (const l of ['en', 'de']) {
-    await page.selectOption('#langSel', l); await page.clock.runFor(500);
+    await page.click(`#langPick [data-lang="${l}"]`); await page.clock.runFor(500);
     const body = await page.evaluate(() => document.querySelector('.app').innerText);
-    const leak = body.split('\n').filter((ln) => /[\uac00-\ud7a3]/.test(ln) && ln.trim() !== '한국어'); // the language menu lists each language in its own script
+    const leak = body.split('\n').filter((ln) => /[\uac00-\ud7a3]/.test(ln) && !/^(🌐\s*)?한국어(\s+English\s+Deutsch)?$/.test(ln.trim())); // the language picker names each language in its own script
     check(`${l}: 메인 화면에 한글 없음`, leak.length === 0, leak.slice(0, 4).join(' / '));
     await page.click('#albumBtn'); await page.clock.runFor(300);
     const album = await page.evaluate(() => document.querySelector('#albumModal').innerText);
@@ -258,7 +258,7 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
     check(`${l}: 사운드 믹서 한글 없음`, !HANGUL.test(mixer)); await page.keyboard.press('Escape');
     check(`${l}: 문서 제목 번역`, !HANGUL.test(await page.title()), await page.title());
   }
-  await page.selectOption('#langSel', 'ko'); await page.clock.runFor(300);
+  await page.click('#langPick [data-lang="ko"]'); await page.clock.runFor(300);
   check('ko 복귀', (await txt(page, '#lead')).includes('콩이'));
   check('언어 전환 콘솔 오류 없음', errors.length === 0, errors.join(' | '));
   await ctx.close();
@@ -392,6 +392,60 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   check('Esc 뒤 포커스가 연 버튼으로 돌아옴', await page.evaluate(() => document.activeElement && document.activeElement.id) === 'themeBtn');
   check('팝업 시험 콘솔 오류 없음', errors.length === 0, errors.join(' | '));
   await ctx.close();
+}
+
+// ---------- 8. First-visit language and the language picker (🌐 한국어 | English | Deutsch) ----------
+{
+  const TAB2 = ENGINE === webkit ? 'Alt+Tab' : 'Tab'; // Safari's plain Tab skips buttons
+  const open = async (locale, seed, size = { width: 375, height: 812 }) => {
+    const ctx = await browser.newContext({ serviceWorkers: 'block', locale, viewport: size });
+    const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(base, { waitUntil: 'load' });
+    await page.evaluate(() => localStorage.clear());
+    if (seed) await page.evaluate((o) => { for (const k in o) localStorage.setItem(k, JSON.stringify(o[k])); }, seed);
+    await page.reload({ waitUntil: 'load' });
+    const state = await page.evaluate(() => ({
+      html: document.documentElement.lang, stored: localStorage.getItem('lang'),
+      pressed: [...document.querySelectorAll('#langPick [data-lang]')].filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.lang).join(','),
+      lead: document.querySelector('#lead').textContent.slice(0, 14)
+    }));
+    return { ctx, page, errors, state };
+  };
+  for (const [locale, seed, want, label] of [['en-US', null, 'en', '첫 방문 en-US → English'], ['de-DE', null, 'de', '첫 방문 de-DE → Deutsch'], ['ko-KR', null, 'ko', '첫 방문 ko-KR → 한국어'], ['fr-FR', null, 'en', '첫 방문 fr-FR → English'], ['en-US', { intimacy: { xp: 40 }, log: [] }, 'ko', '진행 기록이 있는 en-US(lang 없음) → 한국어 유지']]) {
+    const { ctx, state, errors } = await open(locale, seed);
+    check(label, state.html === want && state.pressed === want && state.stored === JSON.stringify(want) && (want === 'ko') === /[가-힣]/.test(state.lead) && errors.length === 0, JSON.stringify(state) + errors.join('|'));
+    await ctx.close();
+  }
+  for (const size of [{ width: 375, height: 812 }, { width: 1280, height: 800 }]) {
+    const { ctx, page, state } = await open('en-US', null, size);
+    const m = await page.evaluate(() => {
+      const bar = document.querySelector('#langPick'); const r = bar.getBoundingClientRect();
+      const btns = [...bar.querySelectorAll('[data-lang]')].map((b) => { const q = b.getBoundingClientRect(); return [b.lang, Math.round(q.width), Math.round(q.height)]; });
+      const hdr = document.querySelector('header').getBoundingClientRect();
+      return { top: Math.round(r.top - hdr.top), btns, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, role: bar.getAttribute('role'), name: bar.getAttribute('aria-label'), right: Math.round(document.querySelector('.app').getBoundingClientRect().right - r.right) };
+    });
+    check(`${size.width}px: 언어 단추 세 개가 보이고 각각 44px 이상, lang 속성, 그룹 이름 고정`, m.btns.length === 3 && m.btns.every(([l, w, h]) => ['ko', 'en', 'de'].includes(l) && w >= 44 && h >= 44) && m.role === 'group' && m.name === 'Language · Sprache · 언어', JSON.stringify(m));
+    check(`${size.width}px: 가로 스크롤 없음, 언어 선택이 머리글 맨 위`, m.overflow <= 0 && m.top <= 1, JSON.stringify(m));
+    if (size.width > 720) check('넓은 화면: 언어 선택이 본문 오른쪽 끝(오른쪽 위)에 붙음', m.right >= 0 && m.right <= 1, 'gap to content edge ' + m.right);
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await open('en-US', null);
+    const where = () => page.evaluate(() => { const a = document.activeElement; return a && a.closest('#langPick') ? a.dataset.lang : (a && a.id) || a.tagName; });
+    const trail = [];
+    for (let i = 0; i < 4 && !['ko', 'en', 'de'].includes(trail[trail.length - 1]); i++) { await page.keyboard.press(TAB2); trail.push(await where()); }
+    check('키보드: 처음 Tab 이 언어 선택 줄에 닿음', ['ko'].includes(trail[trail.length - 1]), trail.join(','));
+    await page.keyboard.press(TAB2); await page.keyboard.press(TAB2);
+    check('키보드: Tab 으로 한국어 → English → Deutsch', (await where()) === 'de');
+    await page.keyboard.press('Enter');
+    const after = await page.evaluate(() => ({ html: document.documentElement.lang, pressed: [...document.querySelectorAll('#langPick [aria-pressed="true"]')].map((b) => b.dataset.lang).join(','), stored: localStorage.getItem('lang'), focus: document.activeElement && document.activeElement.dataset.lang }));
+    check('키보드: Enter 로 Deutsch 선택 → 화면·aria-pressed·저장 모두 de, 포커스 유지', after.html === 'de' && after.pressed === 'de' && after.stored === '"de"' && after.focus === 'de', JSON.stringify(after));
+    await page.keyboard.press('Shift+' + TAB2); await page.keyboard.press('Space');
+    const back = await page.evaluate(() => document.documentElement.lang + '/' + [...document.querySelectorAll('#langPick [aria-pressed="true"]')].map((b) => b.dataset.lang).join(','));
+    check('키보드: Shift+Tab, Space 로 English 로 되돌림', back === 'en/en', back);
+    await ctx.close();
+  }
 }
 
 await browser.close();
