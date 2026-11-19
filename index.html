@@ -35,7 +35,7 @@
       var has=false;try{has=!!(localStorage.getItem('intimacy')||localStorage.getItem('log')||localStorage.getItem('album'))}catch(e){}
       var ko=(navigator.language||'').indexOf('ko')===0;
       if(!has||confirm(ko?'옛 주소에서 쓰던 콩이와의 기록을 이 주소로 가져올까요? (지금 이 주소의 기록은 바뀌어요)':'Bring your progress from the old address here? (This replaces the progress saved here.)')){
-        try{Object.keys(snap.data).forEach(function(k){localStorage.setItem(k,snap.data[k])});if(!('stats' in snap.data))localStorage.removeItem('stats');if(!has&&!('lang' in snap.data))localStorage.removeItem('lang');ok=true}catch(e){}
+        try{Object.keys(snap.data).forEach(function(k){localStorage.setItem(k,snap.data[k])});if(!('stats' in snap.data))localStorage.removeItem('stats');ok=true}catch(e){}
       }
     }
     try{seen.push(code);localStorage.setItem('carried',JSON.stringify(seen))}catch(e){}
@@ -102,6 +102,12 @@ img{max-width:100%}
 
 <div class="app">
   <header>
+    <div class="langnote" id="langNote" hidden>
+      <span class="langnote-globe" aria-hidden="true">🌐</span>
+      <span class="langnote-item" lang="en"><span>Read in English?</span> <button class="langnote-btn" type="button" data-lang="en" lang="en">English</button></span>
+      <span class="langnote-item" lang="de"><span>Auf Deutsch lesen?</span> <button class="langnote-btn" type="button" data-lang="de" lang="de">Deutsch</button></span>
+      <button class="langnote-x" type="button" aria-label="Keep Korean · Koreanisch behalten · 한국어로 계속"><span aria-hidden="true">✕</span></button>
+    </div>
     <div class="langbar" id="langPick" role="group" aria-label="Language · Sprache · 언어">
       <span class="langbar-globe" aria-hidden="true">🌐</span>
       <button class="langbar-btn" type="button" data-lang="ko" lang="ko" aria-pressed="true">한국어</button>

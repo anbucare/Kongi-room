@@ -21,8 +21,7 @@ const SITE_URL='https://kongi-room.anbu-pilot.workers.dev/';
 const LANGS=['ko','en','de'];
 const THEME_IDS=['room','library','greenhouse','train','cabin'];
 let curTheme=(()=>{const v=store.get('theme','room');return THEME_IDS.includes(v)?v:'room'})();
-// Saved choice → ?lang= → long-time user (has progress, never chose) = Korean → browser language list → English. The result is saved (rules and tests: core.js).
-let lang=CORE.resolveLang(store,location.search,navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language]);
+let lang=(()=>{const l=store.get('lang','ko');return LANGS.includes(l)?l:'ko'})();
 const I18N=window.KONGI_I18N||{ko:{}};
 function t(k,vars){const L=I18N[lang]||I18N.ko;let v=null;if(curTheme!=='room'){v=L[k+'@'+curTheme];if(v==null)v=I18N.ko[k+'@'+curTheme]}if(v==null)v=L[k];if(v==null)v=I18N.ko[k];if(v==null)v=k;if(vars)for(const key in vars)v=v.split('{'+key+'}').join(vars[key]);return v}
 const dname=()=>(lang!=='ko'&&petName==='콩이')?'Kongi':petName;
@@ -1917,6 +1916,7 @@ async function shareKakao(){
 function openResultView(){
   const q=new URLSearchParams(location.search);
   if(!q.has('s'))return false;
+  if(LANGS.includes(q.get('lang'))&&store.get('lang',null)==null){lang=q.get('lang');applyLang()}
   const st={sessions:Math.max(0,parseInt(q.get('s'),10)||0),mins:Math.max(0,parseInt(q.get('m'),10)||0),last:Math.max(0,parseInt(q.get('l'),10)||0),stops:0};
   const name=((q.get('n')||'콩이').replace(/[<>]/g,'').slice(0,6)||'콩이').replace(/^콩이$/,dname());
   const todq=['morning','day','sunset','night'].includes(q.get('t'))?q.get('t'):'day';
@@ -2240,10 +2240,7 @@ function snapshot(){const data={};for(let i=0;i<localStorage.length;i++){const k
 function restore(snap){
   if(!snap||snap.app!=='kongi-room'||!snap.data)throw new Error('bad');
   if(!confirm(t('bk.confirm')))return false;
-  // On a device with no progress yet, any saved lang was only picked from the browser's language when this page opened. A backup made before languages were saved has none, so drop it and let the rule decide again (progress in the backup → Korean).
-  const fresh=!CORE.hasProgress(store);
   Object.keys(snap.data).forEach(k=>{try{localStorage.setItem(k,snap.data[k])}catch(e){}});
-  if(fresh&&!('lang' in snap.data))store.del('lang');
   toast(t('bk.restored'));setTimeout(()=>location.reload(),900);return true;
 }
 function renderBackup(){const l=store.get('lastBackup',null);$('#bkLast').textContent=l?t('bk.lastAt',{d:new Date(l).toLocaleString(lang==='ko'?'ko-KR':lang==='de'?'de-DE':'en-US')}):t('bk.never');$('#bkCode').hidden=true}
@@ -2316,6 +2313,7 @@ function scheduleTogether(info){
 }
 function openTogetherLink(){
   const q=new URLSearchParams(location.search);if(!q.has('tg'))return false;
+  if(LANGS.includes(q.get('lang'))&&store.get('lang',null)==null){lang=q.get('lang');applyLang()}
   const st=parseInt(q.get('tg'),36),m=Math.min(180,Math.max(1,parseInt(q.get('tm'),10)||25));
   const name=(q.get('tn')||'').replace(/[<>]/g,'').slice(0,12)||t('tg.friend');
   if(!(st>0)){history.replaceState(null,'',location.pathname);return false}
@@ -2356,11 +2354,19 @@ $('#themeBtn').addEventListener('click',()=>openModal('#themeModal'));
 $('#closeTheme').addEventListener('click',()=>hideModal('#themeModal'));
 $$('.theme-card').forEach(c=>c.addEventListener('click',()=>{applyTheme(c.dataset.theme);hideModal('#themeModal');caption('theme.cap');followSound()}));
 $$('.theme-card img').forEach(im=>{const bad=()=>{im.classList.add('broken');const c=im.closest('.theme-card');if(c)c.classList.add('broken')};im.addEventListener('error',bad);if(im.complete&&!im.naturalWidth)bad()});
-$$('#langPick [data-lang]').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.lang;if(!LANGS.includes(v)||v===lang)return;lang=v;store.set('lang',v);applyLang()}));
+// ---- Language offer: the room starts in Korean and is never switched by the browser's language (search engines read it with an English browser). A browser that is not Korean gets a one-line offer; picking a language (here or in the 🌐 bar) or closing the line with ✕ saves the choice and the line does not come back. Rules and tests: core.js langNotice.
+const langNote=$('#langNote'),langNoteX=$('#langNote .langnote-x');
+function hideLangNote(focusLang){if(!langNote||langNote.hidden)return;const had=langNote.contains(document.activeElement);langNote.hidden=true;if(had&&focusLang){const b=$('#langPick [data-lang="'+focusLang+'"]');if(b)b.focus()}}
+function chooseLang(v){if(!LANGS.includes(v))return;store.set('lang',v);if(v!==lang){lang=v;applyLang()}hideLangNote(v)}
+$$('#langPick [data-lang],#langNote [data-lang]').forEach(b=>b.addEventListener('click',()=>chooseLang(b.dataset.lang)));
+if(langNoteX)langNoteX.addEventListener('click',()=>chooseLang('ko'));
+function initLangNote(){if(!langNote)return;const order=CORE.langNotice(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language],store.get('lang',null),lang);if(!order)return;order.forEach(l=>{const it=langNote.querySelector('.langnote-item[lang="'+l+'"]');if(it)langNote.insertBefore(it,langNoteX)});langNote.hidden=false}
+// ---- end language offer
 
 applyTheme(curTheme,{boot:true});applyLang();applyTod();renderLog();renderShelf();renderStatus();
 if(!$('#setupMsg').dataset.tkey)setT('#setupMsg','setup.msg');
 const fromLink=openResultView()||openTogetherLink();
+initLangNote();
 if(mix.rain>0||store.get('rain',false)){if(!(mix.rain>0))mix.rain=store.get('rainLvl',0.6);rainVisual(true);$('#rainBtn').textContent=t('rain.btnOn')}
 if(run&&run.state==='focus'){
   const rem=remainOf();

@@ -130,40 +130,20 @@
   }
   function nextUnlock(min) { return unlockList().find((u) => u.min > min) || null; }
 
-  // ---- Which language a visitor starts in ---------------------------------------------------------
-  // Order: the saved choice → ?lang= on the first visit → someone who already has progress but never chose
-  // (they have been using the room in Korean so far, so keep it) → the first of ko/en/de in the browser's
-  // language list (compared by the primary tag: de-AT is German) → English.
-  // The decided value is saved at once, so a later visit is never mistaken for a long-time Korean user
-  // just because progress has been written in the meantime.
-  // A ?lang= link opened by someone who already has progress shows that language for this visit only and is
-  // not saved (as before), so one friend's link can never switch a long-time Korean user for good.
+  // ---- Offering another language ------------------------------------------------------------------
+  // The room always starts in Korean: the saved choice, or a ?lang= link for that visit only. It is never switched
+  // by the browser's language, because search engines read the page with an English browser. A visitor whose
+  // browser is not Korean gets a one-line offer instead; this decides whether to show it and which language
+  // comes first (German first when the browser lists German before English).
   const LANGS = ['ko', 'en', 'de'];
-  // Keys that exist only once someone has really used the room (a superset of the ones index.html uses to
-  // decide whether there is anything worth carrying over: intimacy, log, album, shelf, streak).
-  const PROGRESS_KEYS = ['intimacy', 'log', 'album', 'shelf', 'streak', 'doneTotal'];
-  function langFromList(list) {
-    for (const tag of list || []) {
-      const primary = String(tag || '').toLowerCase().split(/[-_]/)[0];
-      if (LANGS.includes(primary)) return primary;
-    }
-    return null;
-  }
-  function hasProgress(io) { return PROGRESS_KEYS.some((k) => io.get(k) != null); }
-  // io = { get(key) → stored value (null or undefined when missing), set(key, value) }; the page passes its localStorage wrapper (`store`).
-  function resolveLang(io, search, languages) {
-    const saved = io.get('lang');
-    if (LANGS.includes(saved)) return saved;
-    let fromLink = null;
-    try { fromLink = new URLSearchParams(search || '').get('lang'); } catch (e) { /* no query */ }
-    const progress = hasProgress(io);
-    if (LANGS.includes(fromLink)) {
-      if (!progress) io.set('lang', fromLink);
-      return fromLink;
-    }
-    const lang = progress ? 'ko' : langFromList(languages) || 'en';
-    io.set('lang', lang);
-    return lang;
+  const primaryLang = (tag) => String(tag || '').toLowerCase().split(/[-_]/)[0];
+  // saved = the stored lang (any value), current = the language being shown. Returns null or ['en', 'de'] / ['de', 'en'].
+  function langNotice(languages, saved, current) {
+    if (LANGS.includes(saved) || current !== 'ko') return null;
+    const list = Array.from(languages || []).map(primaryLang);
+    if (!list.length || !list[0] || list[0] === 'ko') return null;
+    const en = list.indexOf('en'), de = list.indexOf('de');
+    return de >= 0 && (en < 0 || de < en) ? ['de', 'en'] : ['en', 'de'];
   }
 
   return {
@@ -172,6 +152,6 @@
     POMO_DEF, pomoEvery, pomoNextBreak, pomoReduce,
     dayKey, streakValid, streakBump,
     DECOR, SEASONS, seasonFor, unlockList, nextUnlock,
-    LANGS, PROGRESS_KEYS, langFromList, hasProgress, resolveLang
+    LANGS, langNotice
   };
 });
