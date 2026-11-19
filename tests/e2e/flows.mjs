@@ -237,9 +237,9 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   await page.click('#demoBtn'); await page.clock.runFor(31_000); await page.click('#treatBtn'); await page.clock.runFor(6_000); await page.click('#nextBtn');
   await page.fill('#customMin', '5'); await page.click('#startBtn'); await page.clock.runFor(5 * 60_000 + 500); await page.click('#treatBtn'); await page.clock.runFor(6_000); await page.click('#nextBtn');
   for (const l of ['en', 'de']) {
-    await page.selectOption('#langSel', l); await page.clock.runFor(500);
+    await page.click(`#langPick [data-lang="${l}"]`); await page.clock.runFor(500);
     const body = await page.evaluate(() => document.querySelector('.app').innerText);
-    const leak = body.split('\n').filter((ln) => /[\uac00-\ud7a3]/.test(ln) && ln.trim() !== '한국어'); // the language menu lists each language in its own script
+    const leak = body.split('\n').filter((ln) => /[\uac00-\ud7a3]/.test(ln) && !/^(🌐\s*)?한국어(\s+English\s+Deutsch)?$/.test(ln.trim())); // the language picker names each language in its own script
     check(`${l}: 메인 화면에 한글 없음`, leak.length === 0, leak.slice(0, 4).join(' / '));
     await page.click('#albumBtn'); await page.clock.runFor(300);
     const album = await page.evaluate(() => document.querySelector('#albumModal').innerText);
@@ -258,7 +258,7 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
     check(`${l}: 사운드 믹서 한글 없음`, !HANGUL.test(mixer)); await page.keyboard.press('Escape');
     check(`${l}: 문서 제목 번역`, !HANGUL.test(await page.title()), await page.title());
   }
-  await page.selectOption('#langSel', 'ko'); await page.clock.runFor(300);
+  await page.click('#langPick [data-lang="ko"]'); await page.clock.runFor(300);
   check('ko 복귀', (await txt(page, '#lead')).includes('콩이'));
   check('언어 전환 콘솔 오류 없음', errors.length === 0, errors.join(' | '));
   await ctx.close();
@@ -392,6 +392,157 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   check('Esc 뒤 포커스가 연 버튼으로 돌아옴', await page.evaluate(() => document.activeElement && document.activeElement.id) === 'themeBtn');
   check('팝업 시험 콘솔 오류 없음', errors.length === 0, errors.join(' | '));
   await ctx.close();
+}
+
+// ---------- 8. Language: always starts in Korean, a non-Korean browser gets a one-line offer, the 🌐 한국어 | English | Deutsch bar ----------
+{
+  const TAB2 = ENGINE === webkit ? 'Alt+Tab' : 'Tab'; // Safari's plain Tab skips buttons
+  const open = async (locale, seed, size = { width: 375, height: 812 }, query = '') => {
+    const ctx = await browser.newContext({ serviceWorkers: 'block', locale, viewport: size });
+    const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(base, { waitUntil: 'load' });
+    await page.evaluate(() => localStorage.clear());
+    if (seed) await page.evaluate((o) => { for (const k in o) localStorage.setItem(k, JSON.stringify(o[k])); }, seed);
+    await page.goto(base + query, { waitUntil: 'load' });
+    return { ctx, page, errors };
+  };
+  const read = (page) => page.evaluate(() => {
+    const note = document.querySelector('#langNote');
+    return {
+      html: document.documentElement.lang, stored: localStorage.getItem('lang'),
+      pressed: [...document.querySelectorAll('#langPick [data-lang]')].filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.lang).join(','),
+      note: !note.hidden && note.offsetParent !== null,
+      order: [...note.querySelectorAll('.langnote-item')].map((i) => i.lang).join(','),
+      lead: document.querySelector('#lead').textContent.slice(0, 12)
+    };
+  });
+  const KO = /[가-힣]/;
+  // 8-a. 첫 방문: 어느 브라우저 언어든 화면은 한국어, 아무것도 저장하지 않고, 한국어가 아닌 브라우저에만 안내 줄
+  for (const [locale, order, label] of [['en-US', 'en,de', '첫 방문 en-US'], ['de-DE', 'de,en', '첫 방문 de-DE (독일어가 앞)'], ['fr-FR', 'en,de', '첫 방문 fr-FR']]) {
+    const { ctx, page, errors } = await open(locale);
+    const s = await read(page);
+    check(`${label}: 한국어 화면 + 안내 줄(${order}) + 저장 없음`, s.html === 'ko' && KO.test(s.lead) && s.pressed === 'ko' && s.note && s.order === order && s.stored === null && errors.length === 0, JSON.stringify(s) + errors.join('|'));
+    await ctx.close();
+  }
+  { const { ctx, page } = await open('ko-KR'); const s = await read(page); check('첫 방문 ko-KR: 안내 줄 없음, 한국어, 저장 없음', s.html === 'ko' && !s.note && s.stored === null, JSON.stringify(s)); await ctx.close(); }
+  // 8-b. 저장된 lang 이 있으면 안내 줄이 없고, 브라우저 언어가 저장값을 절대 바꾸지 않는다
+  for (const [locale, seed, want] of [['en-US', { lang: 'ko' }, 'ko'], ['de-DE', { lang: 'en' }, 'en'], ['ko-KR', { lang: 'de' }, 'de'], ['fr-FR', { lang: 'ko', intimacy: { xp: 40 } }, 'ko']]) {
+    const { ctx, page } = await open(locale, seed);
+    const s = await read(page);
+    check(`저장된 lang=${want} + ${locale}: 안내 줄 없음, 화면·저장값 그대로`, s.html === want && s.pressed === want && !s.note && s.stored === JSON.stringify(want), JSON.stringify(s));
+    await ctx.close();
+  }
+  { // 기록은 있고 lang 은 저장된 적 없는 사용자(지금까지 한국어로 쓰던 사람)도 영어 브라우저에서 한국어 그대로
+    const { ctx, page } = await open('en-US', { intimacy: { xp: 40 }, log: [] }); const s = await read(page);
+    check('기록은 있고 lang 이 없는 en-US 사용자: 한국어 그대로, 저장 없음 (안내 줄만)', s.html === 'ko' && s.stored === null && s.note, JSON.stringify(s)); await ctx.close();
+  }
+  // 8-c. ?lang= 링크는 그 방문만 적용(저장 안 함), 그동안 안내 줄은 없고, 링크 없이 다시 열면 한국어 + 안내 줄
+  {
+    const { ctx, page } = await open('en-US', null, { width: 375, height: 812 }, '?s=3&m=75&l=25&n=%EC%BD%A9%EC%9D%B4&t=day&lang=de');
+    const s = await read(page);
+    check('?lang=de 결과 링크: 독일어로 보임, 저장 안 함, 안내 줄 없음', s.html === 'de' && s.pressed === 'de' && s.stored === null && !s.note, JSON.stringify(s));
+    await page.goto(base, { waitUntil: 'load' });
+    const t = await read(page);
+    check('링크 없이 다시 열면 한국어 + 안내 줄', t.html === 'ko' && t.note && t.stored === null, JSON.stringify(t));
+    await ctx.close();
+  }
+  // 8-d. 안내 줄 동작: English → 저장 + 화면 바뀜 + 줄 사라짐 + 새로 열어도 안 나옴
+  {
+    const { ctx, page } = await open('en-US');
+    await page.click('#langNote [data-lang="en"]');
+    const s = await read(page);
+    check('안내 줄 English: 영어 화면, lang=en 저장, 줄 사라짐', s.html === 'en' && s.pressed === 'en' && s.stored === '"en"' && !s.note && !KO.test(s.lead), JSON.stringify(s));
+    await page.reload({ waitUntil: 'load' }); const t = await read(page);
+    check('… 다시 열어도 영어, 안내 줄 없음', t.html === 'en' && !t.note, JSON.stringify(t));
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await open('de-DE');
+    await page.click('#langNote [data-lang="de"]');
+    const s = await read(page);
+    check('안내 줄 Deutsch: 독일어 화면, lang=de 저장, 줄 사라짐', s.html === 'de' && s.pressed === 'de' && s.stored === '"de"' && !s.note, JSON.stringify(s));
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await open('en-US');
+    await page.click('#langNote .langnote-x');
+    const s = await read(page);
+    check('안내 줄 ✕: 한국어 그대로, lang=ko 저장, 줄 사라짐', s.html === 'ko' && s.stored === '"ko"' && !s.note && KO.test(s.lead), JSON.stringify(s));
+    await page.reload({ waitUntil: 'load' }); const t = await read(page);
+    check('… 다시 열어도 한국어, 안내 줄 다시 안 나옴', t.html === 'ko' && !t.note && t.stored === '"ko"', JSON.stringify(t));
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await open('en-US');
+    await page.click('#langPick [data-lang="ko"]');
+    const s = await read(page);
+    check('🌐 선택에서 한국어를 눌러도 선택으로 저장되고 안내 줄 사라짐', s.stored === '"ko"' && !s.note && s.html === 'ko', JSON.stringify(s));
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await open('en-US');
+    await page.click('#langPick [data-lang="de"]');
+    const s = await read(page);
+    check('🌐 선택에서 Deutsch: 독일어 화면, 저장, 안내 줄 사라짐', s.html === 'de' && s.pressed === 'de' && s.stored === '"de"' && !s.note, JSON.stringify(s));
+    await ctx.close();
+  }
+  // 8-e. 크기·위치·가로 스크롤 (휴대폰 375 / PC 1280, 안내 줄이 보이는 en-US 와 안 보이는 ko-KR)
+  for (const size of [{ width: 375, height: 812 }, { width: 1280, height: 800 }]) {
+    for (const locale of ['en-US', 'de-DE', 'ko-KR']) {
+      const { ctx, page } = await open(locale, null, size);
+      const m = await page.evaluate(() => {
+        const rect = (el) => { const q = el.getBoundingClientRect(); return { l: Math.round(q.left), r: Math.round(q.right), t: Math.round(q.top), b: Math.round(q.bottom), w: Math.round(q.width), h: Math.round(q.height) }; };
+        const hdr = rect(document.querySelector('header')); const note = document.querySelector('#langNote'); const bar = rect(document.querySelector('#langPick'));
+        const app = rect(document.querySelector('.app'));
+        const noteShown = !note.hidden && note.offsetParent !== null;
+        const btns = [...document.querySelectorAll('#langPick [data-lang]')].map((b) => [b.lang, rect(b).w, rect(b).h]);
+        const nbtns = noteShown ? [...note.querySelectorAll('button')].map((b) => [b.dataset.lang || 'x', rect(b).w, rect(b).h]) : [];
+        const n = noteShown ? rect(note) : null;
+        return { hdr, bar, app, n, btns, nbtns, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, name: document.querySelector('#langPick').getAttribute('aria-label') };
+      });
+      const tag = `${size.width}px ${locale}`;
+      check(`${tag}: 🌐 선택 단추 세 개 44px 이상, 그룹 이름 고정`, m.btns.length === 3 && m.btns.every(([l, w, h]) => ['ko', 'en', 'de'].includes(l) && w >= 44 && h >= 44) && m.name === 'Language · Sprache · 언어', JSON.stringify(m.btns));
+      check(`${tag}: 가로 스크롤 없음`, m.overflow <= 0, 'overflow ' + m.overflow);
+      if (locale === 'ko-KR') {
+        check(`${tag}: 안내 줄 없으면 🌐 선택이 머리글 맨 위`, m.n === null && m.bar.t - m.hdr.t <= 1, JSON.stringify(m.bar));
+        if (size.width > 720) check(`${tag}: 넓은 화면은 🌐 선택이 본문 오른쪽 끝(오른쪽 위)`, Math.abs(m.app.r - m.bar.r) <= 1, `app ${m.app.r} bar ${m.bar.r}`);
+      } else {
+        check(`${tag}: 안내 줄은 맨 위 한 줄, 🌐 선택은 그 아래, 단추·✕ 44px 이상, 화면 안`, m.n && m.n.t - m.hdr.t <= 1 && m.n.b <= m.bar.t + 1 && m.nbtns.length === 3 && m.nbtns.every(([, w, h]) => w >= 44 && h >= 44) && m.n.l >= 0 && m.n.r <= size.width, JSON.stringify({ n: m.n, bar: m.bar, nbtns: m.nbtns }));
+        check(`${tag}: 안내 줄 높이가 두 줄(100px) 안쪽 — 머리글이 크게 늘지 않음`, m.n && m.n.h <= (size.width < 500 ? 150 : 70), 'note height ' + (m.n && m.n.h));
+      }
+      await ctx.close();
+    }
+  }
+  // 8-f. 키보드: 처음 Tab 이 안내 줄에 닿고(독일어 브라우저는 Deutsch 먼저), Enter 로 고르면 포커스가 🌐 선택의 그 단추로 옮겨 간다
+  {
+    const { ctx, page } = await open('en-US');
+    const where = () => page.evaluate(() => { const a = document.activeElement; return a ? (a.closest('#langNote') ? 'note:' + (a.dataset.lang || 'x') : a.closest('#langPick') ? 'pick:' + a.dataset.lang : a.id || a.tagName) : 'none'; });
+    await page.keyboard.press(TAB2); const first = await where();
+    check('키보드: 처음 Tab 이 안내 줄의 English 에 닿음', first === 'note:en', first);
+    await page.keyboard.press(TAB2); const second = await where();
+    await page.keyboard.press(TAB2); const third = await where();
+    await page.keyboard.press(TAB2); const fourth = await where();
+    check('키보드: Tab 순서 English → Deutsch → ✕ → 🌐 한국어', second === 'note:de' && third === 'note:x' && fourth === 'pick:ko', [second, third, fourth].join(','));
+    await page.keyboard.press(TAB2 === 'Tab' ? 'Shift+Tab' : 'Alt+Shift+Tab'); await page.keyboard.press(TAB2 === 'Tab' ? 'Shift+Tab' : 'Alt+Shift+Tab'); await page.keyboard.press(TAB2 === 'Tab' ? 'Shift+Tab' : 'Alt+Shift+Tab');
+    check('키보드: Shift+Tab 으로 안내 줄 English 로 돌아옴', (await where()) === 'note:en');
+    await page.keyboard.press('Enter');
+    const after = await page.evaluate(() => ({ html: document.documentElement.lang, stored: localStorage.getItem('lang'), note: !document.querySelector('#langNote').hidden, focus: document.activeElement.closest('#langPick') ? document.activeElement.dataset.lang : document.activeElement.id || document.activeElement.tagName }));
+    check('키보드: Enter 로 English 선택 → 영어 화면·저장, 줄 사라짐, 포커스는 🌐 선택의 English', after.html === 'en' && after.stored === '"en"' && !after.note && after.focus === 'en', JSON.stringify(after));
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await open('de-DE');
+    const where = () => page.evaluate(() => { const a = document.activeElement; return a && a.closest('#langNote') ? 'note:' + (a.dataset.lang || 'x') : a && a.closest('#langPick') ? 'pick:' + a.dataset.lang : 'other'; });
+    await page.keyboard.press(TAB2); const first = await where();
+    check('키보드: 독일어 브라우저는 처음 Tab 이 안내 줄의 Deutsch 에 닿음', first === 'note:de', first);
+    await page.keyboard.press(TAB2); await page.keyboard.press(TAB2);
+    check('키보드: ✕ 에 닿음', (await where()) === 'note:x');
+    await page.keyboard.press('Space');
+    const after = await page.evaluate(() => ({ html: document.documentElement.lang, stored: localStorage.getItem('lang'), note: !document.querySelector('#langNote').hidden, focus: document.activeElement.closest('#langPick') ? document.activeElement.dataset.lang : 'other' }));
+    check('키보드: Space 로 ✕ → 한국어 저장, 줄 사라짐, 포커스는 🌐 선택의 한국어', after.html === 'ko' && after.stored === '"ko"' && !after.note && after.focus === 'ko', JSON.stringify(after));
+    await ctx.close();
+  }
 }
 
 await browser.close();

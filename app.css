@@ -181,6 +181,30 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .brand input:focus{outline:none;border-bottom-color:var(--accent)}
 .brand .suffix{font-size:22px}
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* 언어 선택 🌐 한국어 | English | Deutsch — 머리글 맨 위, 다른 버튼과 떨어진 알약 모양. 틀(--panel)·글자(--fg)·선택 칸(--accent / --accent-fg)을 기존 토큰 짝으로만 칠해서 아침·낮·노을·밤·시스템 다크 모두에서 글자 대비 4.5 이상(시험이 계산함) */
+.langbar{order:1;margin-left:auto;display:inline-flex;align-items:center;gap:2px;padding:2px 2px 2px 12px;border:1px solid var(--muted);border-radius:999px;background:var(--panel)}
+.langbar-globe{font-size:18px;line-height:1;margin-right:4px}
+.langbar-btn{min-width:44px;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--fg);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.langbar-btn:hover{background:var(--soft)}
+.langbar-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.langbar-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 한국어가 아닌 브라우저에만 띄우는 안내 한 줄(자동 전환은 하지 않음): 머리글 맨 위, 문서 흐름 안. 글자 --fg / 틀 --panel, 단추 --accent-fg / --accent 로 🌐 선택과 같은 토큰 짝 */
+.langnote{order:-2;flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:2px 16px;padding:4px 4px 4px 14px;border:1px solid var(--muted);border-radius:14px;background:var(--panel);color:var(--fg);font-size:14px;line-height:1.4}
+.langnote-globe{font-size:18px;line-height:1}
+.langnote-item{display:inline-flex;flex-wrap:wrap;align-items:center;gap:0 8px}
+.langnote-btn{min-width:44px;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:var(--accent);color:var(--accent-fg);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.langnote-x{margin-left:auto;min-width:44px;min-height:44px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--fg);font:inherit;font-size:18px;cursor:pointer}
+.langnote-x:hover{background:var(--soft)}
+.langnote-btn:focus-visible,.langnote-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 윈도 고대비 모드는 배경색을 지우므로, 지금 언어는 시스템 강조색으로, 안내 줄 단추는 테두리로 따로 표시 */
+@media (forced-colors:active){
+  .langbar-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}
+  .langnote-btn{border:1px solid ButtonText}
+}
+/* 머리글 순서: 문서 순서는 언어 선택이 맨 앞(키보드·화면 낭독이 먼저 닿음), 넓은 화면에서는 이름 → 언어(오른쪽) → 소개 → 버튼 줄 */
+header>.brand{order:0}
+header>.lead{order:2}
+header>.hdr-right{order:3}
 .today{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 select{font:inherit;font-size:13px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
 main{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px;align-items:start}
@@ -628,6 +652,9 @@ select{min-height:40px}
 /* ===== mobile ===== */
 @media (max-width:720px){
   header{gap:8px}
+  /* 휴대폰: 언어 선택이 첫 줄을 혼자 차지(이름이 옆에 붙지 않게 이름 줄을 가득 채움) */
+  .langbar{order:-1;margin-left:0}
+  header>.brand{flex-basis:100%}
   .hdr-right{margin-left:0;width:100%;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;gap:6px}
   .hdr-right::-webkit-scrollbar{display:none}
   .hdr-right>*{flex:none}
@@ -639,5 +666,6 @@ select{min-height:40px}
   body[data-ui="focus"] .panel,body[data-ui="done"] .panel{position:sticky;bottom:8px;z-index:30;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
   .clock{font-size:52px}
 }
+@media (max-width:480px){.langbar{width:100%}.langbar-btn{flex:1}}
 .pixel-cat .bubble{white-space:normal;width:max-content;max-width:min(52cqw,340px);text-align:center;line-height:1.3}
 @media (max-width:720px){.pixel-cat .bubble{max-width:62cqw;font-size:13px}}

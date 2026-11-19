@@ -1,6 +1,6 @@
 window.KONGI_I18N = {
 ko: {
-  'lang.aria':'언어','hdr.nameAria':'고양이 이름','hdr.suffix':'네 방','hdr.tagline':'· 고양이와 함께하는 집중 타이머',
+  'hdr.nameAria':'고양이 이름','hdr.suffix':'네 방','hdr.tagline':'· 고양이와 함께하는 집중 타이머',
   'hdr.intimacyTitle':'콩이와의 친밀도 및 해금된 행동 보기',
   'tod.aria':'방 시간대','tod.auto':'시간대: 자동','tod.morning':'아침','tod.day':'낮','tod.sunset':'노을','tod.night':'밤',
   'rain.btn':'🌧️ 빗소리','rain.btnOn':'🌧️ 비 내리는 중','rain.title':'빗소리와 창문 비 효과',
@@ -194,7 +194,7 @@ ko: {
   'foot.u0':'11.05 반영했어요: 연속 집중 스트릭 배지, 새 보물 발견 팡파레, 완주 후 자랑 버튼'
 },
 en: {
-  'lang.aria':'Language','hdr.nameAria':"Cat's name",'hdr.suffix':"'s Room",'hdr.tagline':'· a focus timer with a cat',
+  'hdr.nameAria':"Cat's name",'hdr.suffix':"'s Room",'hdr.tagline':'· a focus timer with a cat',
   'hdr.intimacyTitle':'See your bond with Kongi and unlocked behaviors',
   'tod.aria':'Room time of day','tod.auto':'Time: auto','tod.morning':'Morning','tod.day':'Day','tod.sunset':'Sunset','tod.night':'Night',
   'rain.btn':'🌧️ Rain sounds','rain.btnOn':'🌧️ Raining','rain.title':'Rain sounds and rain on the window',
@@ -388,7 +388,7 @@ en: {
   'foot.u0':'Nov 5: daily focus streak badge, new treasure fanfare, and a brag button after each session'
 },
 de: {
-  'lang.aria':'Sprache','hdr.nameAria':'Name der Katze','hdr.suffix':'s Zimmer','hdr.tagline':'· ein Fokus-Timer mit Katze',
+  'hdr.nameAria':'Name der Katze','hdr.suffix':'s Zimmer','hdr.tagline':'· ein Fokus-Timer mit Katze',
   'hdr.intimacyTitle':'Bindung zu Kongi und freigeschaltete Verhaltensweisen ansehen',
   'tod.aria':'Tageszeit im Zimmer','tod.auto':'Tageszeit: automatisch','tod.morning':'Morgen','tod.day':'Tag','tod.sunset':'Abendrot','tod.night':'Nacht',
   'rain.btn':'🌧️ Regen','rain.btnOn':'🌧️ Es regnet','rain.title':'Regengeräusche und Regen am Fenster',
