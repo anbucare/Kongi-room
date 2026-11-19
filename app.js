@@ -2396,6 +2396,6 @@ else{
   }
   show('setup');
 }
-// preload the space thumbnails once the page is idle, so the space picker opens with pictures
-{const pre=()=>{$$('.theme-card img').forEach(im=>{const i=new Image();i.src=im.src})};if(window.requestIdleCallback)requestIdleCallback(pre,{timeout:5000});else setTimeout(pre,3000)}
+// preload the space thumbnails so the space picker opens with pictures: only after the page has fully loaded (the room picture is the biggest thing on the first screen and nothing else may compete with it), then once the browser is idle
+{const pre=()=>{$$('.theme-card img').forEach(im=>{const i=new Image();i.src=im.src})};const idle=()=>{if(window.requestIdleCallback)requestIdleCallback(pre,{timeout:5000});else setTimeout(pre,3000)};if(document.readyState==='complete')idle();else addEventListener('load',idle)}
 })();
