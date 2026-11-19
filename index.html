@@ -35,7 +35,7 @@
       var has=false;try{has=!!(localStorage.getItem('intimacy')||localStorage.getItem('log')||localStorage.getItem('album'))}catch(e){}
       var ko=(navigator.language||'').indexOf('ko')===0;
       if(!has||confirm(ko?'옛 주소에서 쓰던 콩이와의 기록을 이 주소로 가져올까요? (지금 이 주소의 기록은 바뀌어요)':'Bring your progress from the old address here? (This replaces the progress saved here.)')){
-        try{Object.keys(snap.data).forEach(function(k){localStorage.setItem(k,snap.data[k])});if(!('stats' in snap.data))localStorage.removeItem('stats');ok=true}catch(e){}
+        try{Object.keys(snap.data).forEach(function(k){localStorage.setItem(k,snap.data[k])});if(!('stats' in snap.data))localStorage.removeItem('stats');if(!has&&!('lang' in snap.data))localStorage.removeItem('lang');ok=true}catch(e){}
       }
     }
     try{seen.push(code);localStorage.setItem('carried',JSON.stringify(seen))}catch(e){}

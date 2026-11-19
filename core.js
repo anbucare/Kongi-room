@@ -136,9 +136,11 @@
   // language list (compared by the primary tag: de-AT is German) → English.
   // The decided value is saved at once, so a later visit is never mistaken for a long-time Korean user
   // just because progress has been written in the meantime.
+  // A ?lang= link opened by someone who already has progress shows that language for this visit only and is
+  // not saved (as before), so one friend's link can never switch a long-time Korean user for good.
   const LANGS = ['ko', 'en', 'de'];
-  // Keys that exist only once someone has really used the room (the same ones index.html uses to decide
-  // whether there is anything worth carrying over).
+  // Keys that exist only once someone has really used the room (a superset of the ones index.html uses to
+  // decide whether there is anything worth carrying over: intimacy, log, album, shelf, streak).
   const PROGRESS_KEYS = ['intimacy', 'log', 'album', 'shelf', 'streak', 'doneTotal'];
   function langFromList(list) {
     for (const tag of list || []) {
@@ -147,16 +149,19 @@
     }
     return null;
   }
+  function hasProgress(io) { return PROGRESS_KEYS.some((k) => io.get(k) != null); }
   // io = { get(key) → stored value (null or undefined when missing), set(key, value) }; the page passes its localStorage wrapper (`store`).
   function resolveLang(io, search, languages) {
     const saved = io.get('lang');
     if (LANGS.includes(saved)) return saved;
     let fromLink = null;
     try { fromLink = new URLSearchParams(search || '').get('lang'); } catch (e) { /* no query */ }
-    let lang;
-    if (LANGS.includes(fromLink)) lang = fromLink;
-    else if (PROGRESS_KEYS.some((k) => io.get(k) != null)) lang = 'ko';
-    else lang = langFromList(languages) || 'en';
+    const progress = hasProgress(io);
+    if (LANGS.includes(fromLink)) {
+      if (!progress) io.set('lang', fromLink);
+      return fromLink;
+    }
+    const lang = progress ? 'ko' : langFromList(languages) || 'en';
     io.set('lang', lang);
     return lang;
   }
@@ -167,6 +172,6 @@
     POMO_DEF, pomoEvery, pomoNextBreak, pomoReduce,
     dayKey, streakValid, streakBump,
     DECOR, SEASONS, seasonFor, unlockList, nextUnlock,
-    LANGS, PROGRESS_KEYS, langFromList, resolveLang
+    LANGS, PROGRESS_KEYS, langFromList, hasProgress, resolveLang
   };
 });

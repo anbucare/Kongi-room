@@ -188,6 +188,10 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .langbar-btn:hover{background:var(--soft)}
 .langbar-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
 .langbar-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 윈도 고대비 모드는 배경색을 지우므로, 지금 언어는 시스템 강조색으로 따로 표시 */
+@media (forced-colors:active){
+  .langbar-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText}
+}
 /* 머리글 순서: 문서 순서는 언어 선택이 맨 앞(키보드·화면 낭독이 먼저 닿음), 넓은 화면에서는 이름 → 언어(오른쪽) → 소개 → 버튼 줄 */
 header>.brand{order:0}
 header>.lead{order:2}

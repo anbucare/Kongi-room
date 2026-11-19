@@ -48,8 +48,18 @@ test('우선순위 3: 기존 사용자(진행 기록 있음 + lang 없음)는 �
   }
 });
 
-test('?lang= 은 기존 사용자 판정보다 앞선다 (친구가 보낸 링크는 보낸 사람 언어로)', () => {
-  assert.equal(pick({ intimacy: { xp: 9 } }, '?lang=en', ['ko-KR']).lang, 'en');
+test('기존 사용자가 ?lang= 링크를 열면 그 화면만 링크 언어로, 저장은 안 한다 (친구 링크 한 번에 영구히 바뀌면 안 됨)', () => {
+  const r = pick({ intimacy: { xp: 9 } }, '?lang=en', ['ko-KR']);
+  assert.equal(r.lang, 'en', '링크를 보낸 사람 언어로 보임');
+  assert.deepEqual(r.io.writes, [], '저장하지 않음');
+  assert.equal(C.resolveLang(r.io, '', ['en-US']), 'ko', '다음에 링크 없이 열면 여전히 한국어(기존 사용자 규칙)');
+  assert.deepEqual(r.io.writes, [['lang', 'ko']]);
+});
+test('진행 기록이 없는 첫 방문의 ?lang= 은 저장된다 (이후 기록이 쌓여도 그 언어 유지)', () => {
+  const io = fakeIo();
+  assert.equal(C.resolveLang(io, '?lang=de', ['ko-KR']), 'de');
+  io.set('intimacy', { xp: 9 });
+  assert.equal(C.resolveLang(io, '', ['ko-KR']), 'de');
 });
 
 test('진행 기록이 아닌 키(테마·시간대·이름 등)는 기존 사용자로 치지 않는다', () => {
@@ -60,6 +70,7 @@ test('기존 사용자 판정에 쓰는 키는 index.html 초반 스크립트(�
   const m = /if\(!\(data\.intimacy\|\|data\.log\|\|data\.album\|\|data\.shelf\|\|data\.streak\)\)/.exec(HTML);
   assert.ok(m, 'index.html 의 이전 판정 줄을 찾지 못함');
   for (const k of ['intimacy', 'log', 'album', 'shelf', 'streak']) assert.ok(C.PROGRESS_KEYS.includes(k), k + ' 가 PROGRESS_KEYS 에 없음');
+  assert.deepEqual([...C.PROGRESS_KEYS], ['intimacy', 'log', 'album', 'shelf', 'streak', 'doneTotal'], '기존 사용자 판정 키 목록은 바꾸면 안 됨(바꾸려면 이 시험과 datenschutz 확인)');
 });
 
 test('우선순위 4: navigator.languages 에서 ko/en/de 중 처음 맞는 것 (주 언어 태그로 비교)', () => {
@@ -127,6 +138,10 @@ test('app.js 가 시작할 때: 기존 사용자는 en-US 브라우저여도 ko,
   assert.deepEqual(boot({ languages: ['ko-KR'], search: '?s=3&m=75&lang=en' }), { lang: 'en', stored: '"en"' });
 });
 
+test('app.js 가 시작할 때: 기록 있는 사용자의 ?lang= 은 저장되지 않는다', () => {
+  assert.deepEqual(boot({ ls: { intimacy: '{"xp":40}' }, languages: ['ko-KR'], search: '?s=3&m=75&lang=en' }), { lang: 'en', stored: undefined });
+});
+
 test('app.js 가 시작할 때: navigator.languages 가 비면 navigator.language 로', () => {
   assert.equal(boot({ languages: [], language: 'de-DE' }).lang, 'de');
   assert.equal(boot({ languages: undefined, language: 'ko-KR' }).lang, 'ko');
@@ -161,6 +176,56 @@ test('언어 단추를 누르면 그 언어로 바뀌고 저장되며, 지금 �
   buttons[0].dataset.lang = 'fr'; // 사전에 없는 값은 무시
   buttons[0].handlers[0]();
   assert.equal(sandbox.getLang(), 'en');
+});
+
+// ---------- 2-b. 옛 주소 이전·백업 복원: 방금 자동으로 저장된 lang 이 한국어 사용자의 기록을 영어 화면으로 만들면 안 된다 ----------
+function memStorage(initial = {}) {
+  const mem = new Map(Object.entries(initial));
+  return { mem, api: { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k), get length() { return mem.size; }, key: (i) => [...mem.keys()][i] } };
+}
+const RESTORE_SRC = lineOf(APP, /function restore\(snap\)\{[\s\S]*?\n\}/, '백업 복원(restore)');
+function runRestore(local, snapData) {
+  const { mem, api } = memStorage(local);
+  const sandbox = { CORE: C, localStorage: api, confirm: () => true, toast() {}, t: (k) => k, setTimeout() {}, location: { reload() {} } };
+  vm.runInNewContext(STORE_SRC + '\n' + RESTORE_SRC + '\nthis.__r=restore({app:"kongi-room",data:' + JSON.stringify(snapData) + '});', sandbox);
+  return mem;
+}
+const CARRY_SRC = /<script>(\s*\/\* The site moved[\s\S]*?)<\/script>/.exec(HTML);
+async function runCarry(local, snapData) {
+  assert.ok(CARRY_SRC, 'index.html 초반의 옛 주소 이전 스크립트를 찾지 못함');
+  const { mem, api } = memStorage(local);
+  let reloaded = false;
+  const sandbox = {
+    document: { documentElement: { style: {} } }, history: { replaceState() {} }, navigator: { language: 'en-US' }, URLSearchParams, JSON, Object, Promise, Date,
+    location: { hostname: 'kongi-room.anbu-pilot.workers.dev', search: '?carry=ABCD1234', pathname: '/', hash: '', reload() { reloaded = true; }, replace() {} },
+    localStorage: api, confirm: () => true, setTimeout, clearTimeout,
+    fetch: async () => ({ ok: true, json: async () => ({ app: 'kongi-room', data: snapData }) })
+  };
+  vm.runInNewContext(CARRY_SRC[1], sandbox);
+  await new Promise((r) => setTimeout(r, 30));
+  return { mem, reloaded };
+}
+const PROGRESS = { intimacy: '{"xp":40}', log: '[]' };
+
+test('백업 복원: 기록이 없는 새 기기에서 lang 이 없는 옛 백업을 복원하면 자동으로 저장돼 있던 lang 을 지워 한국어가 된다', () => {
+  const mem = runRestore({ lang: '"en"', theme: '"room"' }, PROGRESS); // 이 기기는 en-US 브라우저라 시작할 때 en 이 저장돼 있었음
+  assert.equal(mem.has('lang'), false);
+  assert.deepEqual(boot({ ls: Object.fromEntries(mem), languages: ['en-US'] }), { lang: 'ko', stored: '"ko"' });
+});
+test('백업 복원: 백업에 lang 이 있으면 그대로 쓰고, 이 기기에 기록이 이미 있으면 이 기기의 lang 을 건드리지 않는다', () => {
+  assert.equal(runRestore({ lang: '"en"' }, { ...PROGRESS, lang: '"de"' }).get('lang'), '"de"');
+  assert.equal(runRestore({ lang: '"de"', intimacy: '{"xp":1}' }, PROGRESS).get('lang'), '"de"');
+});
+test('옛 주소 이전(?carry=): 새 주소 첫 로드에서 먼저 저장된 lang 이 이전 데이터를 영어 화면으로 만들지 않는다', async () => {
+  const r = await runCarry({ lang: '"en"', dailySeen: '"x"' }, PROGRESS);
+  assert.equal(r.reloaded, true);
+  assert.equal(r.mem.has('lang'), false, '이전된 기록은 있고 lang 은 없음 → 다음 로드가 기존 사용자 규칙으로 ko');
+  assert.equal(r.mem.get('intimacy'), '{"xp":40}');
+  assert.equal(boot({ ls: Object.fromEntries(r.mem), languages: ['en-US'] }).lang, 'ko');
+});
+test('옛 주소 이전: 가져온 데이터에 lang 이 있으면 그 값을 쓰고, 이 주소에 이미 기록이 있으면 이 주소의 lang 을 건드리지 않는다', async () => {
+  assert.equal((await runCarry({ lang: '"en"' }, { ...PROGRESS, lang: '"de"' })).mem.get('lang'), '"de"');
+  assert.equal((await runCarry({ lang: '"de"', intimacy: '{"xp":1}' }, PROGRESS)).mem.get('lang'), '"de"');
 });
 
 test('옛 #langSel(선택 상자)은 어디에도 남지 않았다', () => {
@@ -260,6 +325,12 @@ test('글자 대비 4.5 이상: 모든 화면 모드(밝음·시스템 다크·d
 test('키보드: 포커스 윤곽이 있고, 눌림 표시 규칙이 마우스 올림 규칙보다 뒤에 있다(올려도 눌린 칸이 안 바뀜)', () => {
   assert.ok(/\.langbar-btn:focus-visible\{[^}]*outline:2px solid var\(--accent\)/.test(CSS));
   assert.ok(CSS.indexOf('.langbar-btn:hover{') < CSS.indexOf('.langbar-btn[aria-pressed="true"]{'));
+});
+
+test('윈도 고대비 모드: 배경색이 지워져도 지금 언어가 시스템 강조색으로 구분된다', () => {
+  const m = /@media \(forced-colors:active\)\{\s*\.langbar-btn\[aria-pressed="true"\]\{([^}]*)\}/.exec(CSS);
+  assert.ok(m, 'forced-colors 규칙');
+  assert.ok(/forced-color-adjust:none/.test(m[1]) && /background:Highlight/.test(m[1]) && /color:HighlightText/.test(m[1]));
 });
 
 test('휴대폰: 언어 선택이 첫 줄을 혼자 차지하고(order:-1, 이름 줄 가득), 가로 스크롤을 만들지 않는다', () => {

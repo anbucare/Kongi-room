@@ -2240,7 +2240,10 @@ function snapshot(){const data={};for(let i=0;i<localStorage.length;i++){const k
 function restore(snap){
   if(!snap||snap.app!=='kongi-room'||!snap.data)throw new Error('bad');
   if(!confirm(t('bk.confirm')))return false;
+  // On a device with no progress yet, any saved lang was only picked from the browser's language when this page opened. A backup made before languages were saved has none, so drop it and let the rule decide again (progress in the backup → Korean).
+  const fresh=!CORE.hasProgress(store);
   Object.keys(snap.data).forEach(k=>{try{localStorage.setItem(k,snap.data[k])}catch(e){}});
+  if(fresh&&!('lang' in snap.data))store.del('lang');
   toast(t('bk.restored'));setTimeout(()=>location.reload(),900);return true;
 }
 function renderBackup(){const l=store.get('lastBackup',null);$('#bkLast').textContent=l?t('bk.lastAt',{d:new Date(l).toLocaleString(lang==='ko'?'ko-KR':lang==='de'?'de-DE':'en-US')}):t('bk.never');$('#bkCode').hidden=true}
