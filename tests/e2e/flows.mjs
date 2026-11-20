@@ -545,6 +545,46 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   }
 }
 
+// ---------- 10. 첫 그리기 자리 예약 (CLS): 상태줄은 글자가 채워지기 전에도 채운 뒤와 비슷한 높이·칸 위치를 차지한다 ----------
+// app.css 의 `.js .statusbar:not(.ready)` 숫자는 한국어·처음 방문 화면의 실측값이다. 글을 고쳐 칸 높이가 달라지면 여기서 어긋남이 드러난다.
+// 총 높이만 보면 줄별 오차가 서로 상쇄되므로, 칸마다 위쪽 위치(= 줄 높이의 누적)도 따로 본다. 폭 3군데(넓은 화면·3열·2열) 모두.
+const RESERVE_TOL = 15;
+for (const [label, mobile, width] of [['데스크톱 1280', false, 1280], ['태블릿 768(3열)', false, 768], ['모바일 390(2열)', true, 390]]) {
+  const { ctx, page } = await newPage(browser, mobile);
+  if (!mobile && width !== 1280) { await page.setViewportSize({ width, height: 900 }); await page.waitForTimeout(100); }
+  const r = await page.evaluate(() => {
+    const sb = document.getElementById('statusbar');
+    const measure = () => { const top = sb.getBoundingClientRect().top; return { h: Math.round(sb.getBoundingClientRect().height), tops: [...sb.children].map((e) => Math.round(e.getBoundingClientRect().top - top)) }; };
+    const natural = measure(), hadReady = sb.classList.contains('ready');
+    sb.classList.remove('ready'); const reserved = measure(); sb.classList.add('ready');
+    return { js: document.documentElement.classList.contains('js'), hadReady, natural, reserved };
+  });
+  const dh = Math.abs(r.natural.h - r.reserved.h), dt = Math.max(...r.natural.tops.map((t, i) => Math.abs(t - r.reserved.tops[i])));
+  check(`자리 예약(${label}): <html class="js">, 채운 뒤 .ready 가 붙음`, r.js && r.hadReady, JSON.stringify({ js: r.js, hadReady: r.hadReady }));
+  check(`자리 예약(${label}): 총 높이 차이 ${RESERVE_TOL}px 이내`, dh <= RESERVE_TOL, `예약 ${r.reserved.h} · 채운 뒤 ${r.natural.h}`);
+  check(`자리 예약(${label}): 칸마다 위쪽 위치 차이 ${RESERVE_TOL}px 이내`, dt <= RESERVE_TOL, `예약 ${r.reserved.tops} · 채운 뒤 ${r.natural.tops}`);
+  await ctx.close();
+}
+// 실제로 재 본다: 자바스크립트를 0.3초 늦게 받아 "먼저 그리고 나중에 채우는" 경우를 만들고(그래야 매번 같은 결과) layout-shift 합계를 잰다.
+// 모바일 390 · 한국어 · 처음 방문: 예약 전 0.30 → 예약 후 약 0.085. 데스크톱(오른쪽 패널)·영어(언어 안내 줄)는 아직 남아 있어 여기서 보지 않는다.
+// layout-shift 는 크롬 계열만 지원한다(WebKit 은 건너뜀).
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', locale: 'ko-KR' });
+  await ctx.addInitScript(() => {
+    window.__ls = 0;
+    try { new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__ls += e.value; }).observe({ type: 'layout-shift', buffered: true }); } catch (e) { window.__ls = -1; }
+  });
+  const page = await ctx.newPage();
+  await page.route('**/app.js', async (route) => { await new Promise((r) => setTimeout(r, 300)); await route.fallback(); });
+  await page.goto(base, { waitUntil: 'load' });
+  await page.waitForTimeout(1500);
+  const supported = await page.evaluate(() => 'PerformanceObserver' in window && PerformanceObserver.supportedEntryTypes.includes('layout-shift'));
+  const ls = await page.evaluate(() => window.__ls);
+  if (!supported) check('첫 화면 밀림(CLS) 모바일 390 한국어: 이 엔진은 layout-shift 를 지원하지 않아 건너뜀', true, ENGINE.name());
+  else check('첫 화면 밀림(CLS) 모바일 390 한국어(자바스크립트 0.3초 늦게): 0.15 이하', ls >= 0 && ls <= 0.15, 'CLS ' + ls.toFixed(4));
+  await ctx.close();
+}
+
 await browser.close();
 fs.writeFileSync(OUT + 'results.json', JSON.stringify(results, null, 1));
 console.log(`\n${results.length - fails}/${results.length} checks passed`);

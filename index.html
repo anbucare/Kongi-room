@@ -98,6 +98,9 @@ img{max-width:100%}
    ② 글꼴(fonts.css, 조각 14개·약 210 KB)은 브라우저가 가장 높은 우선순위로 받아서 방 그림보다 먼저 대역폭을 가져간다.
    그래서 fonts.css 는 media="not all" 로 두었다가 방 그림이 도착한 뒤(또는 페이지 load, 늦어도 4초)에 켠다. 켜기 전에는 글자가 기본 글꼴로 보이고(font-display:swap 과 같은 모습), 스크립트를 못 쓰는 환경은 아래 noscript 가 예전처럼 바로 켠다. */
 (function(){
+  /* 첫 그리기 자리 예약: 상태줄(#statusbar)은 app.js 가 글자를 채우기 전에 먼저 그려져서, 채워지는 순간 아래 화면 전체가 밀렸다(CLS).
+     .js 는 "자바스크립트가 켜져 있다"는 표시 — app.css 의 `.js .statusbar:not(.ready)` 가 채워지기 전에만 자리를 잡아 둔다(채운 뒤 .ready 로 풀림). 스크립트를 못 쓰면 예약하지 않는다 = 예전 그대로 */
+  try{document.documentElement.classList.add('js')}catch(e){}
   var on=function(){var f=document.getElementById('fontsCss');if(f)f.media='all'};
   try{addEventListener('load',on);setTimeout(on,4000)}catch(e){}
   try{
@@ -144,7 +147,7 @@ img{max-width:100%}
       <span class="suffix" data-i18n="hdr.suffix">네 방</span>
       <span class="sr-only" data-i18n="hdr.tagline">· 고양이와 함께하는 집중 타이머</span>
     </h1>
-    <p class="lead" id="lead"><b data-i18n="lead.what">고양이 콩이와 함께 25분 집중하고, 끝나면 간식을 주며 친해지는 방이에요.</b> <span data-i18n="lead.how">시간을 고르고 시작 → 집중이 끝나면 간식 주기 → 쌓인 XP로 레벨이 오르면 콩이가 새 행동을 보여줘요.</span></p>
+    <p class="lead" id="lead"><b data-i18n="lead.what">고양이 콩이와 함께 25분 집중하고, 끝나면 간식을 주며 친해지는 방이에요.</b> <span data-i18n="lead.how">① 시간 고르고 시작 → ② 집중이 끝나면 간식 주기 → ③ 집중한 분만큼 XP가 쌓여 레벨이 오르면 콩이가 새 행동을 보여주고 방이 꾸며져요.</span></p>
     <div class="hdr-right">
       <select id="todSel" aria-label="방 시간대" data-i18n-aria="tod.aria">
         <option value="auto" data-i18n="tod.auto">시간대: 자동</option>
