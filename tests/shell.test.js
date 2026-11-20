@@ -52,3 +52,10 @@ test('결제·계정 기능이 없고, 만든 사람과 메일 연락처가 푸�
   assert.ok(!/stripe\.com|paypal\.com|checkout|price_|구매하기|결제하기|회원가입|type="password"/i.test(html), '결제·계정 흔적');
   assert.ok(/가입 없이|no sign-up|ohne Anmeldung/i.test(html + read('i18n.js')), '계정 없는 무료 타이머 안내');
 });
+
+test('몰입 단계 목록(#stages)은 list-style:none + flex 라서 Safari 가 목록 의미를 지운다 → role="list" 로 되살린다 (Modern Web Guidance 2차)', () => {
+  const html = read('index.html');
+  const css = read('app.css');
+  assert.match(css, /\.stages\{[^}]*display:flex[^}]*list-style:none/, '.stages 가 flex + list-style:none 이다');
+  assert.match(html, /<ol class="stages" id="stages" role="list"/, '#stages 에 role="list"');
+});
