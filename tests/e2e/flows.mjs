@@ -421,7 +421,7 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   for (const locale of ['en-US', 'de-DE', 'fr-FR', 'ko-KR']) {
     const { ctx, page, errors } = await open(locale);
     const s = await read(page);
-    check(`첫 방문 ${locale}: 한국어 화면, 저장 없음, 안내 줄 없음, 단추 한국어·ENG·DEU(lang·aria-label 있음)`, s.html === 'ko' && KO.test(s.lead) && s.pressed === 'ko' && s.stored === null && !s.note && s.labels === LABELS && errors.length === 0, JSON.stringify(s) + errors.join('|'));
+    check(`첫 방문 ${locale}: 한국어 화면, 저장 없음, 안내 줄 없음, 단추 한국어·ENG·DEU(lang 있음, ENG·DEU 는 aria-label English·Deutsch)`, s.html === 'ko' && KO.test(s.lead) && s.pressed === 'ko' && s.stored === null && !s.note && s.labels === LABELS && errors.length === 0, JSON.stringify(s) + errors.join('|'));
     await ctx.close();
   }
   // 8-b. 저장된 lang 이 있으면 그대로, 브라우저 언어가 저장값을 절대 바꾸지 않는다
@@ -468,7 +468,7 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
         const hdr = rect(document.querySelector('header')); const bar = rect(document.querySelector('#langPick'));
         const app = rect(document.querySelector('.app'));
         const btns = [...document.querySelectorAll('#langPick [data-lang]')].map((b) => [b.lang, rect(b).w, rect(b).h]);
-        // 단추 글자가 몇 줄인지(줄바꿈 감시: WebKit 은 한글을 글자 사이에서 꺾을 수 있음): 글자 범위의 줄 상자 수
+        // 단추 글자가 몇 줄인지(줄바꿈 감시: 한글은 어느 엔진에서나 글자 사이에서 꺾일 수 있음): 글자 범위의 줄 상자 수
         const lines = [...document.querySelectorAll('#langPick [data-lang]')].map((b) => { const r = document.createRange(); r.selectNodeContents(b); return new Set([...r.getClientRects()].map((q) => Math.round(q.top))).size; });
         return { hdr, bar, app, btns, lines, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, name: document.querySelector('#langPick').getAttribute('aria-label') };
       });

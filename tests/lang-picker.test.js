@@ -88,11 +88,11 @@ test('시작할 때: 저장된 lang 은 브라우저 언어와 상관없이 그�
   assert.deepEqual(plain(kept.writes), [], '저장된 값을 다시 쓰지도 않음');
 });
 
-// 브라우저 언어를 읽는 방법들: navigator.language(s), navigator?.language, navigator['language'], const {language}=navigator, Intl 의 resolvedOptions().locale
-const READS_BROWSER_LANG = /navigator\s*(\?\.|\.|\[\s*['"`])\s*languages?\b|\{[^}]*\blanguages?\b[^}]*\}\s*=\s*navigator\b|resolvedOptions\(\)\s*\??\.\s*locale/;
+// 브라우저 언어를 읽는 방법들: navigator.language(s), navigator?.language, navigator['language'], navigator?.['language'], window['navigator'].language, const {language}=navigator(줄이 나뉘어도), Intl 의 resolvedOptions().locale
+const READS_BROWSER_LANG = /navigator\s*(\?\.\s*\[|\?\.|\.|\[)\s*['"`]?\s*languages?\b|\{[^}]*\blanguages?\b[^}]*\}\s*=\s*navigator\b|['"`]navigator['"`]\s*\]\s*\??\.\s*languages?\b|resolvedOptions\(\)\s*\??\.\s*locale/;
 
 test('브라우저 언어를 읽는 코드를 찾는 정규식이 읽는 방법 여러 가지를 잡는다 (시험이 허술하지 않음)', () => {
-  for (const code of ["navigator.language", "navigator . languages[0]", "navigator?.language", "navigator['language']", 'navigator["languages"]', "const {language}=navigator", "const { languages } = navigator", "Intl.DateTimeFormat().resolvedOptions().locale"]) assert.ok(READS_BROWSER_LANG.test(code), code);
+  for (const code of ["navigator.language", "navigator . languages[0]", "navigator?.language", "navigator['language']", 'navigator["languages"]', "navigator?.['language']", "window['navigator'].language", "navigator\n.language", "const {language}=navigator", "const { languages } = navigator", "const {\n  language\n} = navigator", "Intl.DateTimeFormat().resolvedOptions().locale"]) assert.ok(READS_BROWSER_LANG.test(code), JSON.stringify(code));
   for (const code of ["navigator.serviceWorker", "navigator.clipboard.writeText", "lang=localStorage.getItem('lang')"]) assert.ok(!READS_BROWSER_LANG.test(code), code);
 });
 
@@ -100,7 +100,13 @@ test('방의 언어를 정하는 코드는 브라우저 언어를 읽지 않는�
   const files = shippedFiles();
   for (const f of ['index.html', 'app.js', 'core.js', 'i18n.js', 'sw.js']) assert.ok(files.includes(f), f + ' 도 검사 대상이어야 함');
   const hits = [];
-  for (const f of files) for (const line of read(f).split('\n')) if (READS_BROWSER_LANG.test(line)) hits.push([f, line.trim()]);
+  for (const f of files) {
+    const text = read(f);
+    for (const m of text.matchAll(new RegExp(READS_BROWSER_LANG.source, 'g'))) { // 파일 전체를 훑어 줄이 나뉜 코드도 잡고, 찾은 자리의 줄을 적는다
+      const start = text.lastIndexOf('\n', m.index) + 1, end = text.indexOf('\n', m.index);
+      hits.push([f, text.slice(start, end < 0 ? undefined : end).trim()]);
+    }
+  }
   // 예외 한 곳: index.html 머리의 ?carry= 처리 — 옛 주소에서 기록을 가져올지 묻는 확인창 문구를 한국어/영어로 고를 뿐, 방 화면 언어·저장값과 무관
   assert.deepEqual(hits, [['index.html', "var ko=(navigator.language||'').indexOf('ko')===0;"]], '허용한 한 곳 말고 브라우저 언어를 읽는 곳이 생김');
   const html = read('index.html');
