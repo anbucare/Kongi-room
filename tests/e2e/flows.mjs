@@ -545,6 +545,22 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   }
 }
 
+// ---------- 10. 첫 그리기 자리 예약 (CLS): 상태줄은 글자가 채워지기 전에도 채운 뒤와 비슷한 높이를 차지한다 ----------
+// app.css 의 `.js .statusbar:not(.ready)` 숫자는 한국어·처음 방문 화면의 실측값이다. 글을 고쳐 칸 높이가 달라지면 여기서 어긋남이 드러난다.
+for (const [label, mobile, tol] of [['데스크톱 1280', false, 20], ['모바일 390', true, 20]]) {
+  const { ctx, page } = await newPage(browser, mobile);
+  const r = await page.evaluate(() => {
+    const sb = document.getElementById('statusbar');
+    const natural = sb.getBoundingClientRect().height;
+    const hadReady = sb.classList.contains('ready');
+    sb.classList.remove('ready'); const reserved = sb.getBoundingClientRect().height; sb.classList.add('ready');
+    return { js: document.documentElement.classList.contains('js'), hadReady, natural: Math.round(natural), reserved: Math.round(reserved) };
+  });
+  check(`자리 예약(${label}): <html class="js">, 채운 뒤 .ready 가 붙음`, r.js && r.hadReady, JSON.stringify(r));
+  check(`자리 예약(${label}): 예약 높이와 채운 뒤 높이 차이 ${tol}px 이내`, Math.abs(r.natural - r.reserved) <= tol, `예약 ${r.reserved} · 채운 뒤 ${r.natural}`);
+  await ctx.close();
+}
+
 await browser.close();
 fs.writeFileSync(OUT + 'results.json', JSON.stringify(results, null, 1));
 console.log(`\n${results.length - fails}/${results.length} checks passed`);
