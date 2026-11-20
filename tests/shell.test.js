@@ -73,6 +73,16 @@ test('첫 그리기 자리 예약(CLS): <html> 에 js 표시, 채운 뒤 .ready,
   assert.match(css, /\.js \.statusbar:not\(\.ready\)\{grid-template-rows:\d+px;align-content:start\}/, '넓은 화면 예약');
   assert.match(css, /@media \(max-width:900px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:(\d+px ?){3}\}\}/, '900px 이하 3줄 예약');
   assert.match(css, /@media \(max-width:520px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:(\d+px ?){4}\}\}/, '520px 이하 4줄 예약');
+  // 숫자가 터무니없이 바뀌지 않았는지(칸 높이는 글을 고치면 달라지므로 정확한 값은 e2e 가 실제 화면으로 확인한다): 줄 수·한 줄 범위·합계
+  const rows = (re) => (re.exec(css)[1].trim().split(/\s+/)).map((v) => parseInt(v, 10));
+  const wide = rows(/\.js \.statusbar:not\(\.ready\)\{grid-template-rows:([^;}]*);align-content/);
+  const mid = rows(/@media \(max-width:900px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:([^}]*)\}\}/);
+  const narrow = rows(/@media \(max-width:520px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:([^}]*)\}\}/);
+  assert.equal(wide.length, 1); assert.equal(mid.length, 3); assert.equal(narrow.length, 4);
+  for (const v of [...wide, ...mid, ...narrow]) assert.ok(v >= 50 && v <= 90, '한 줄 예약 높이 50~90px: ' + v);
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  assert.ok(sum(mid) + 2 * 8 >= 170 && sum(mid) + 2 * 8 <= 230, '3열 합계(줄 사이 8px 포함) 170~230px: ' + sum(mid));
+  assert.ok(sum(narrow) + 3 * 6 >= 225 && sum(narrow) + 3 * 6 <= 290, '2열 합계(줄 사이 6px 포함) 225~290px: ' + sum(narrow));
   const loose = [...css.matchAll(/\.statusbar\{[^}]*grid-template-rows/g)];
   assert.equal(loose.length, 0, '.ready 없이 .statusbar 줄 높이를 고정하는 규칙이 없다');
 });
