@@ -101,6 +101,9 @@ img{max-width:100%}
   /* 첫 그리기 자리 예약: 상태줄(#statusbar)은 app.js 가 글자를 채우기 전에 먼저 그려져서, 채워지는 순간 아래 화면 전체가 밀렸다(CLS).
      .js 는 "자바스크립트가 켜져 있다"는 표시 — app.css 의 `.js .statusbar:not(.ready)` 가 채워지기 전에만 자리를 잡아 둔다(채운 뒤 .ready 로 풀림). 스크립트를 못 쓰면 예약하지 않는다 = 예전 그대로 */
   try{document.documentElement.classList.add('js')}catch(e){}
+  /* 시작 패널(#panel)은 app.js 가 안을 다 채울 때까지 보이지 않게 숨긴다(자리는 그대로) — 채워지는 동안 안쪽 칸이 아래로 밀리던 것을 막는다. 보여 주는 표시는 app.js 끝의 `app-ready`.
+     app.js 가 늦거나 멈춰도 패널이 영영 안 보이지 않도록 3초 뒤에는 무조건 보여 준다(그 경우는 예전처럼 채워지며 밀림) */
+  try{setTimeout(function(){document.documentElement.classList.add('app-ready')},3000)}catch(e){}
   var on=function(){var f=document.getElementById('fontsCss');if(f)f.media='all'};
   try{addEventListener('load',on);setTimeout(on,4000)}catch(e){}
   try{
