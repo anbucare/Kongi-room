@@ -513,6 +513,11 @@ button.stat:hover{transform:translateY(-1px);border-color:var(--accent)}
 .js .statusbar:not(.ready){grid-template-rows:78px;align-content:start}
 @media (max-width:900px){.js .statusbar:not(.ready){grid-template-rows:68px 58px 62px}}
 @media (max-width:520px){.js .statusbar:not(.ready){grid-template-rows:63px 53px 53px 68px}}
+/* 준비 전 숨김 (CLS): app.js 가 화면을 채우기 전에 먼저 그려지는 두 곳을 `app-ready` 가 붙을 때까지 보이지 않게 둔다. 자리는 그대로(visibility 는 크기를 바꾸지 않음)라서 방 그림(LCP)·머리글·상태줄 위치는 변하지 않는다.
+   ① 장면 안 핫스팟 단추 6개(.hotspot): 위치는 JS 가 정하므로 그 전에는 전부 장면 왼쪽 위 구석에 겹쳐 있다가 흩어졌다 — 첫 화면 밀림의 가장 큰 원인(데스크톱 0.31 → 핫스팟만 숨기면 0.08). 아직 눌러도 동작하지 않는 단추라 숨겨도 잃는 것이 없다.
+   ② 시작 패널(#panel): JS 가 안(오늘의 방 줄·타이머 설명·포모도로 줄·안내 문장)을 채우며 142px 늘어난다. 채워질 때까지 숨겨서 안쪽 칸이 아래로 밀리는 것을 막는다(0.08 → 0.04). 대표님 결정(2026-11-20, 선택지 A).
+   채워진 뒤 `app-ready` 가 붙으면 바로 보인다(app.js 끝, 안전장치: index.html head 의 3초 타이머). 자바스크립트를 못 쓰는 환경(.js 없음)은 숨기지 않는다 = 예전 그대로 */
+.js:not(.app-ready) #panel,.js:not(.app-ready) .hotspot{visibility:hidden}
 
 /* ===== room hotspots: visible, ≥44px, react on tap ===== */
 .hotspot{position:absolute;z-index:15;transform:translate(-50%,-50%);width:max(44px,6.2cqw);height:max(44px,6.2cqw);padding:0;border-radius:50%;cursor:pointer;

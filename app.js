@@ -2397,6 +2397,7 @@ else{
   }
   show('setup');
 }
+document.documentElement.classList.add('app-ready'); // 시작 패널(#panel) 숨김 해제 — app.css 의 `.js:not(.app-ready) #panel` (안을 다 채운 뒤에 보여 줘서 칸이 아래로 밀리지 않게)
 // preload the space thumbnails so the space picker opens with pictures: only after the page has fully loaded (the room picture is the biggest thing on the first screen and nothing else may compete with it), then once the browser is idle
 {const pre=()=>{$$('.theme-card img').forEach(im=>{const i=new Image();i.src=im.src})};const idle=()=>{if(window.requestIdleCallback)requestIdleCallback(pre,{timeout:5000});else setTimeout(pre,3000)};if(document.readyState==='complete')idle();else addEventListener('load',idle)}
 })();
