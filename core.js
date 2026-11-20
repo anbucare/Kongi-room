@@ -130,28 +130,11 @@
   }
   function nextUnlock(min) { return unlockList().find((u) => u.min > min) || null; }
 
-  // ---- Offering another language ------------------------------------------------------------------
-  // The room always starts in Korean: the saved choice, or a ?lang= link for that visit only. It is never switched
-  // by the browser's language, because search engines read the page with an English browser. A visitor whose
-  // browser is not Korean gets a one-line offer instead; this decides whether to show it and which language
-  // comes first (German first when the browser lists German before English).
-  const LANGS = ['ko', 'en', 'de'];
-  const primaryLang = (tag) => String(tag || '').toLowerCase().split(/[-_]/)[0];
-  // saved = the stored lang (any value), current = the language being shown. Returns null or ['en', 'de'] / ['de', 'en'].
-  function langNotice(languages, saved, current) {
-    if (LANGS.includes(saved) || current !== 'ko') return null;
-    const list = Array.from(languages || []).map(primaryLang);
-    if (!list.length || !list[0] || list[0] === 'ko') return null;
-    const en = list.indexOf('en'), de = list.indexOf('de');
-    return de >= 0 && (en < 0 || de < en) ? ['de', 'en'] : ['en', 'de'];
-  }
-
   return {
     XP_RULE, LEVELS, xpForFocus, xpForStop, levelInfo, levelPct,
     TIERS, tierOf, stageFor, fmtDur,
     POMO_DEF, pomoEvery, pomoNextBreak, pomoReduce,
     dayKey, streakValid, streakBump,
-    DECOR, SEASONS, seasonFor, unlockList, nextUnlock,
-    langNotice
+    DECOR, SEASONS, seasonFor, unlockList, nextUnlock
   };
 });

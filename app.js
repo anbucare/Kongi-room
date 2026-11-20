@@ -2354,19 +2354,14 @@ $('#themeBtn').addEventListener('click',()=>openModal('#themeModal'));
 $('#closeTheme').addEventListener('click',()=>hideModal('#themeModal'));
 $$('.theme-card').forEach(c=>c.addEventListener('click',()=>{applyTheme(c.dataset.theme);hideModal('#themeModal');caption('theme.cap');followSound()}));
 $$('.theme-card img').forEach(im=>{const bad=()=>{im.classList.add('broken');const c=im.closest('.theme-card');if(c)c.classList.add('broken')};im.addEventListener('error',bad);if(im.complete&&!im.naturalWidth)bad()});
-// ---- Language offer: the room starts in Korean and is never switched by the browser's language (search engines read it with an English browser). A browser that is not Korean gets a one-line offer; picking a language (here or in the 🌐 bar) or closing the line with ✕ saves the choice and the line does not come back. Rules and tests: core.js langNotice.
-const langNote=$('#langNote'),langNoteX=$('#langNote .langnote-x');
-function hideLangNote(focusLang){if(!langNote||langNote.hidden)return;const had=langNote.contains(document.activeElement);langNote.hidden=true;if(had&&focusLang){const b=$('#langPick [data-lang="'+focusLang+'"]');if(b)b.focus()}}
-function chooseLang(v){if(!LANGS.includes(v))return;store.set('lang',v);if(v!==lang){lang=v;applyLang()}hideLangNote(v)}
-$$('#langPick [data-lang],#langNote [data-lang]').forEach(b=>b.addEventListener('click',()=>chooseLang(b.dataset.lang)));
-if(langNoteX)langNoteX.addEventListener('click',()=>chooseLang('ko'));
-function initLangNote(){if(!langNote)return;const order=CORE.langNotice(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language],store.get('lang',null),lang);if(!order)return;order.forEach(l=>{const it=langNote.querySelector('.langnote-item[lang="'+l+'"]');if(it)langNote.insertBefore(it,langNoteX)});langNote.hidden=false}
-// ---- end language offer
+// ---- Language choice: the room starts in Korean (saved lang, or a ?lang= link for that visit only) and is never switched by the browser's language (search engines read it with an English browser). The 🌐 한국어 · ENG · DEU bar saves the choice.
+function chooseLang(v){if(!LANGS.includes(v))return;store.set('lang',v);if(v!==lang){lang=v;applyLang()}}
+$$('#langPick [data-lang]').forEach(b=>b.addEventListener('click',()=>chooseLang(b.dataset.lang)));
+// ---- end language choice
 
 applyTheme(curTheme,{boot:true});applyLang();applyTod();renderLog();renderShelf();renderStatus();
 if(!$('#setupMsg').dataset.tkey)setT('#setupMsg','setup.msg');
 const fromLink=openResultView()||openTogetherLink();
-initLangNote();
 if(mix.rain>0||store.get('rain',false)){if(!(mix.rain>0))mix.rain=store.get('rainLvl',0.6);rainVisual(true);$('#rainBtn').textContent=t('rain.btnOn')}
 if(run&&run.state==='focus'){
   const rem=remainOf();

@@ -127,17 +127,11 @@ img{max-width:100%}
 
 <div class="app">
   <header>
-    <div class="langnote" id="langNote" hidden>
-      <span class="langnote-globe" aria-hidden="true">🌐</span>
-      <span class="langnote-item" lang="en"><span>Read in English?</span> <button class="langnote-btn" type="button" data-lang="en" lang="en">English</button></span>
-      <span class="langnote-item" lang="de"><span>Auf Deutsch lesen?</span> <button class="langnote-btn" type="button" data-lang="de" lang="de">Deutsch</button></span>
-      <button class="langnote-x" type="button" aria-label="Keep Korean · Koreanisch behalten · 한국어로 계속"><span aria-hidden="true">✕</span></button>
-    </div>
     <div class="langbar" id="langPick" role="group" aria-label="Language · Sprache · 언어">
       <span class="langbar-globe" aria-hidden="true">🌐</span>
       <button class="langbar-btn" type="button" data-lang="ko" lang="ko" aria-pressed="true">한국어</button>
-      <button class="langbar-btn" type="button" data-lang="en" lang="en" aria-pressed="false">English</button>
-      <button class="langbar-btn" type="button" data-lang="de" lang="de" aria-pressed="false">Deutsch</button>
+      <button class="langbar-btn" type="button" data-lang="en" lang="en" aria-label="English" aria-pressed="false">ENG</button>
+      <button class="langbar-btn" type="button" data-lang="de" lang="de" aria-label="Deutsch" aria-pressed="false">DEU</button>
     </div>
     <h1 class="brand">
       <span class="sr-only" aria-hidden="true" data-i18n="cat.alt">콩이</span><input id="petName" aria-label="고양이 이름" data-i18n-aria="hdr.nameAria" maxlength="6" value="콩이">
