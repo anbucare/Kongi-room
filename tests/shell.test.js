@@ -97,3 +97,13 @@ test('소개 글(.lead)의 HTML 기본 문구는 i18n.js 한국어 문구와 같
     assert.equal(m[1].replace(/\s+/g, ' ').trim(), String(ko[key]).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(), key + ' 의 HTML 기본 문구가 i18n.js 한국어와 다르다');
   }
 });
+
+test('준비 전 숨김(CLS): .hotspot·#panel 은 app-ready 전에만 숨고, app.js 가 끝에서 app-ready 를 붙이고, head 에 3초 안전장치가 있다 (Modern Web Guidance 2차)', () => {
+  const html = read('index.html'), css = read('app.css'), app = read('app.js');
+  assert.match(css, /\.js:not\(\.app-ready\) #panel,\.js:not\(\.app-ready\) \.hotspot\{visibility:hidden\}/, '준비 전 숨김 규칙');
+  // 숨김은 반드시 `.js:not(.app-ready)` 안에서만: 그 밖에서 #panel·.hotspot 을 숨기면 자바스크립트가 꺼진 환경·준비된 뒤에도 사라진다
+  const outside = css.replace(/\.js:not\(\.app-ready\)[^{]*\{visibility:hidden\}/g, '');
+  assert.ok(!/(^|[}\s,])(#panel|\.hotspot)\s*\{[^}]*visibility\s*:\s*hidden/m.test(outside), '#panel·.hotspot 을 .app-ready 조건 없이 숨기는 규칙이 없다');
+  assert.match(app, /show\('setup'\);\n\}\ndocument\.documentElement\.classList\.add\('app-ready'\)/, '초기 그리기가 끝난 뒤 app-ready');
+  assert.match(html, /setTimeout\(function\(\)\{document\.documentElement\.classList\.add\('app-ready'\)\},3000\)/, 'head 3초 안전장치');
+});
