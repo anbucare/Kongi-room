@@ -468,26 +468,29 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
         const hdr = rect(document.querySelector('header')); const bar = rect(document.querySelector('#langPick'));
         const app = rect(document.querySelector('.app'));
         const btns = [...document.querySelectorAll('#langPick [data-lang]')].map((b) => [b.lang, rect(b).w, rect(b).h]);
-        return { hdr, bar, app, btns, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, name: document.querySelector('#langPick').getAttribute('aria-label') };
+        // 단추 글자가 몇 줄인지(줄바꿈 감시: WebKit 은 한글을 글자 사이에서 꺾을 수 있음): 글자 범위의 줄 상자 수
+        const lines = [...document.querySelectorAll('#langPick [data-lang]')].map((b) => { const r = document.createRange(); r.selectNodeContents(b); return new Set([...r.getClientRects()].map((q) => Math.round(q.top))).size; });
+        return { hdr, bar, app, btns, lines, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, name: document.querySelector('#langPick').getAttribute('aria-label') };
       });
       const tag = `${size.width}px ${locale}`;
       check(`${tag}: 🌐 단추 세 개 44px 이상, 그룹 이름 고정`, m.btns.length === 3 && m.btns.every(([l, w, h]) => ['ko', 'en', 'de'].includes(l) && w >= 44 && h >= 44) && m.name === 'Language · Sprache · 언어', JSON.stringify(m.btns));
       check(`${tag}: 가로 스크롤 없음`, m.overflow <= 0, 'overflow ' + m.overflow);
+      check(`${tag}: 단추 글자가 모두 한 줄(한국어·ENG·DEU 가 꺾이지 않음)`, m.lines.length === 3 && m.lines.every((n) => n === 1), JSON.stringify(m.lines));
       check(`${tag}: 🌐 줄은 머리글 맨 위 한 줄(높이 56px 안쪽), 화면 안`, m.bar.t - m.hdr.t <= 1 && m.bar.h <= 56 && m.bar.l >= 0 && m.bar.r <= size.width, JSON.stringify(m.bar));
       if (size.width > 720) check(`${tag}: 넓은 화면은 🌐 줄이 본문 오른쪽 끝(오른쪽 위)`, Math.abs(m.app.r - m.bar.r) <= 1, `app ${m.app.r} bar ${m.bar.r}`);
       await ctx.close();
     }
   }
-  // 8-f. 접근성 이름 (getByRole·ariaSnapshot 이 브라우저의 계산값을 읽음): 그룹 Language · Sprache · 언어 안에 한국어(눌림)·English·Deutsch, 보이는 글자 ENG·DEU 가 이름 안에 들어 있음(WCAG 2.5.3)
+  // 8-f. 접근성 이름 (Playwright 의 접근성 이름 계산: getByRole·ariaSnapshot — 브라우저 엔진 자체의 접근성 트리는 아님): 그룹 Language · Sprache · 언어 안에 한국어(눌림)·English·Deutsch, 보이는 글자 ENG·DEU 가 이름 안에 들어 있음(WCAG 2.5.3)
   {
     const { ctx, page } = await open('en-US');
     const grp = page.getByRole('group', { name: 'Language · Sprache · 언어', exact: true });
     const one = async (name, pressed) => (await grp.getByRole('button', { name, exact: true, pressed }).count()) === 1;
     check('접근성: 그룹 안에 한국어(눌림)·English·Deutsch 단추', (await grp.count()) === 1 && await one('한국어', true) && await one('English', false) && await one('Deutsch', false));
-    // 접근성 이름은 브라우저가 계산한 값(ariaSnapshot 의 button "이름")을 읽고, 보이는 글자는 화면(DOM)에서 읽어 맞춘다
+    // 접근성 이름은 Playwright 가 계산한 값(ariaSnapshot 의 button "이름", aria-label 속성을 직접 읽지 않음)을 쓰고, 보이는 글자는 화면(DOM)에서 읽어 맞춘다
     const computed = [...(await grp.ariaSnapshot()).matchAll(/button "([^"]*)"/g)].map((m) => m[1]);
     const visible = await page.evaluate(() => [...document.querySelectorAll('#langPick [data-lang]')].map((b) => b.textContent.trim()));
-    check('WCAG 2.5.3: 브라우저가 계산한 이름(한국어·English·Deutsch) 안에 보이는 글자(한국어·ENG·DEU)가 들어 있음 (대소문자 무시)', computed.join() === '한국어,English,Deutsch' && visible.join() === '한국어,ENG,DEU' && visible.every((v, i) => computed[i].toLowerCase().includes(v.toLowerCase())), JSON.stringify({ computed, visible }));
+    check('WCAG 2.5.3: 접근성 이름 계산값(한국어·English·Deutsch) 안에 보이는 글자(한국어·ENG·DEU)가 들어 있음 (대소문자 무시)', computed.join() === '한국어,English,Deutsch' && visible.join() === '한국어,ENG,DEU' && visible.every((v, i) => computed[i].toLowerCase().includes(v.toLowerCase())), JSON.stringify({ computed, visible }));
     await grp.getByRole('button', { name: 'English', exact: true }).click();
     check('접근성: ENG 를 누르면 English 가 눌림으로 바뀜', await one('English', true) && await one('한국어', false) && await one('Deutsch', false));
     await ctx.close();

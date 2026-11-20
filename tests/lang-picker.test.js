@@ -20,7 +20,7 @@ const plain = (x) => JSON.parse(JSON.stringify(x)); // vm 안에서 만든 값�
 // ---------- 1. 안내 줄은 없다 ----------
 // 시험(tests/)과 문서(docs/)를 뺀, 아래 확장자의 글자 파일 전부(index.html·법적 고지 쪽 html·worker/ 포함).
 // 숨김 폴더(.git·.claude 의 다른 작업 폴더 복사본 등)와 node_modules 는 보지 않는다.
-const TEXT_FILE = /\.(html|js|mjs|cjs|css|json|jsonc|xml|txt|md|webmanifest|toml|yml|yaml|sh|svg)$/;
+const TEXT_FILE = /\.(html|js|mjs|cjs|jsx|ts|mts|cts|tsx|css|json|jsonc|xml|txt|md|webmanifest|toml|yml|yaml|sh|svg)$/;
 function shippedFiles(dir = '') {
   const out = [];
   for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
@@ -32,13 +32,13 @@ function shippedFiles(dir = '') {
   return out;
 }
 
-test('안내 줄은 어느 파일에도 없다: #langNote · .langnote · langNotice · Read in English · Auf Deutsch lesen', () => {
+test('안내 줄은 어느 파일에도 없다: #langNote · .langnote · langNotice · Read in English · Auf Deutsch lesen · 닫기 문구', () => {
   const files = shippedFiles();
   for (const f of ['index.html', 'app.js', 'app.css', 'core.js', 'i18n.js', 'sw.js']) assert.ok(files.includes(f), f + ' 도 검사 대상이어야 함');
   for (const f of files) {
     const s = read(f);
     assert.ok(!/langnot(e|ice)/i.test(s), f + ' 에 langNote·.langnote·langNotice(initLangNote·hideLangNote 포함)가 남음');
-    assert.ok(!/Read in English|Auf Deutsch lesen/i.test(s), f + ' 에 안내 줄 문구가 남음');
+    assert.ok(!/Read in English|Auf Deutsch lesen|Keep Korean|Koreanisch behalten/i.test(s), f + ' 에 안내 줄 문구가 남음');
   }
 });
 
@@ -88,16 +88,27 @@ test('시작할 때: 저장된 lang 은 브라우저 언어와 상관없이 그�
   assert.deepEqual(plain(kept.writes), [], '저장된 값을 다시 쓰지도 않음');
 });
 
-test('방의 언어를 정하는 코드는 브라우저 언어(navigator.language·languages)를 읽지 않는다: 사이트 전체에서 읽는 곳은 옛 주소 기록 가져오기 확인창 한 곳뿐', () => {
+// 브라우저 언어를 읽는 방법들: navigator.language(s), navigator?.language, navigator['language'], const {language}=navigator, Intl 의 resolvedOptions().locale
+const READS_BROWSER_LANG = /navigator\s*(\?\.|\.|\[\s*['"`])\s*languages?\b|\{[^}]*\blanguages?\b[^}]*\}\s*=\s*navigator\b|resolvedOptions\(\)\s*\??\.\s*locale/;
+
+test('브라우저 언어를 읽는 코드를 찾는 정규식이 읽는 방법 여러 가지를 잡는다 (시험이 허술하지 않음)', () => {
+  for (const code of ["navigator.language", "navigator . languages[0]", "navigator?.language", "navigator['language']", 'navigator["languages"]', "const {language}=navigator", "const { languages } = navigator", "Intl.DateTimeFormat().resolvedOptions().locale"]) assert.ok(READS_BROWSER_LANG.test(code), code);
+  for (const code of ["navigator.serviceWorker", "navigator.clipboard.writeText", "lang=localStorage.getItem('lang')"]) assert.ok(!READS_BROWSER_LANG.test(code), code);
+});
+
+test('방의 언어를 정하는 코드는 브라우저 언어를 읽지 않는다: 사이트 전체에서 읽는 곳은 옛 주소 기록 가져오기 확인창 한 곳뿐', () => {
   const files = shippedFiles();
   for (const f of ['index.html', 'app.js', 'core.js', 'i18n.js', 'sw.js']) assert.ok(files.includes(f), f + ' 도 검사 대상이어야 함');
   const hits = [];
-  for (const f of files) for (const m of read(f).matchAll(/[^\n]*navigator\s*\.\s*languages?\b[^\n]*/g)) hits.push([f, m[0].trim()]);
+  for (const f of files) for (const line of read(f).split('\n')) if (READS_BROWSER_LANG.test(line)) hits.push([f, line.trim()]);
   // 예외 한 곳: index.html 머리의 ?carry= 처리 — 옛 주소에서 기록을 가져올지 묻는 확인창 문구를 한국어/영어로 고를 뿐, 방 화면 언어·저장값과 무관
   assert.deepEqual(hits, [['index.html', "var ko=(navigator.language||'').indexOf('ko')===0;"]], '허용한 한 곳 말고 브라우저 언어를 읽는 곳이 생김');
   const html = read('index.html');
-  assert.ok(html.indexOf("fetch('/api/backup/'+code)") < html.indexOf("var ko=(navigator.language"), '그 한 곳은 ?carry= 기록 가져오기 안에 있음');
-  assert.ok(/confirm\(ko\?'옛 주소/.test(html), '쓰임새는 확인창 문구 선택뿐');
+  const fetchAt = html.indexOf("fetch('/api/backup/'+code)");
+  assert.ok(fetchAt >= 0, '?carry= 기록 가져오기(fetch /api/backup/) 코드를 index.html 에서 찾지 못함');
+  const block = html.slice(html.lastIndexOf('<script', fetchAt), html.indexOf('</script>', fetchAt));
+  assert.ok(block.includes("var ko=(navigator.language||'').indexOf('ko')===0;"), '그 한 곳은 ?carry= 기록 가져오기 스크립트 안에 있음');
+  assert.ok(/confirm\(ko\?'옛 주소/.test(block), '쓰임새는 확인창 문구 선택뿐');
 });
 
 test('?lang= 링크는 저장하지 않고 그 방문만 적용한다 (결과 보기·함께 집중 링크, 저장된 lang 이 없을 때만)', () => {
