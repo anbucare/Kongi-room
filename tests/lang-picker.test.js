@@ -18,14 +18,16 @@ const CORE_SRC = read('core.js');
 const plain = (x) => JSON.parse(JSON.stringify(x)); // vm 안에서 만든 값은 다른 영역이라 그대로는 deepEqual 이 다르다고 봄
 
 // ---------- 1. 안내 줄은 없다 ----------
-// 시험(tests/)과 문서(docs/)를 뺀 모든 글자 파일. 숨김 폴더(.git·.claude 의 다른 작업 폴더 복사본 등)와 node_modules 는 보지 않는다.
+// 시험(tests/)과 문서(docs/)를 뺀, 아래 확장자의 글자 파일 전부(index.html·법적 고지 쪽 html·worker/ 포함).
+// 숨김 폴더(.git·.claude 의 다른 작업 폴더 복사본 등)와 node_modules 는 보지 않는다.
+const TEXT_FILE = /\.(html|js|mjs|cjs|css|json|jsonc|xml|txt|md|webmanifest|toml|yml|yaml|sh|svg)$/;
 function shippedFiles(dir = '') {
   const out = [];
   for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     if (e.name.startsWith('.') || ['node_modules', 'tests', 'docs'].includes(e.name)) continue;
     const rel = path.join(dir, e.name);
     if (e.isDirectory()) out.push(...shippedFiles(rel));
-    else if (/\.(html|js|mjs|css|json|xml|txt|webmanifest|toml|svg)$/.test(e.name)) out.push(rel);
+    else if (TEXT_FILE.test(e.name)) out.push(rel);
   }
   return out;
 }
@@ -36,7 +38,7 @@ test('안내 줄은 어느 파일에도 없다: #langNote · .langnote · langNo
   for (const f of files) {
     const s = read(f);
     assert.ok(!/langnot(e|ice)/i.test(s), f + ' 에 langNote·.langnote·langNotice(initLangNote·hideLangNote 포함)가 남음');
-    assert.ok(!/Read in English|Auf Deutsch lesen/.test(s), f + ' 에 안내 줄 문구가 남음');
+    assert.ok(!/Read in English|Auf Deutsch lesen/i.test(s), f + ' 에 안내 줄 문구가 남음');
   }
 });
 
@@ -86,8 +88,16 @@ test('시작할 때: 저장된 lang 은 브라우저 언어와 상관없이 그�
   assert.deepEqual(plain(kept.writes), [], '저장된 값을 다시 쓰지도 않음');
 });
 
-test('app.js·core.js·i18n.js·sw.js 어디에서도 브라우저 언어(navigator.language·languages)를 읽지 않는다', () => {
-  for (const f of ['app.js', 'core.js', 'i18n.js', 'sw.js']) assert.ok(!/navigator\.languages?\b/.test(read(f)), f + ' 이 브라우저 언어를 읽음');
+test('방의 언어를 정하는 코드는 브라우저 언어(navigator.language·languages)를 읽지 않는다: 사이트 전체에서 읽는 곳은 옛 주소 기록 가져오기 확인창 한 곳뿐', () => {
+  const files = shippedFiles();
+  for (const f of ['index.html', 'app.js', 'core.js', 'i18n.js', 'sw.js']) assert.ok(files.includes(f), f + ' 도 검사 대상이어야 함');
+  const hits = [];
+  for (const f of files) for (const m of read(f).matchAll(/[^\n]*navigator\s*\.\s*languages?\b[^\n]*/g)) hits.push([f, m[0].trim()]);
+  // 예외 한 곳: index.html 머리의 ?carry= 처리 — 옛 주소에서 기록을 가져올지 묻는 확인창 문구를 한국어/영어로 고를 뿐, 방 화면 언어·저장값과 무관
+  assert.deepEqual(hits, [['index.html', "var ko=(navigator.language||'').indexOf('ko')===0;"]], '허용한 한 곳 말고 브라우저 언어를 읽는 곳이 생김');
+  const html = read('index.html');
+  assert.ok(html.indexOf("fetch('/api/backup/'+code)") < html.indexOf("var ko=(navigator.language"), '그 한 곳은 ?carry= 기록 가져오기 안에 있음');
+  assert.ok(/confirm\(ko\?'옛 주소/.test(html), '쓰임새는 확인창 문구 선택뿐');
 });
 
 test('?lang= 링크는 저장하지 않고 그 방문만 적용한다 (결과 보기·함께 집중 링크, 저장된 lang 이 없을 때만)', () => {
@@ -112,10 +122,10 @@ function room({ mem = new Map() } = {}) {
   return { calls, btn, mem, getLang: sandbox.getLang };
 }
 
-test('열기만 해서는 아무것도 저장하지 않고 화면을 다시 그리지도 않는다 (한국어 그대로)', () => {
+test('열기만 해서는 아무것도 저장하지 않는다 (한국어 그대로)', () => {
   const r = room();
   assert.deepEqual(plain(r.calls.writes), []);
-  assert.equal(r.calls.applied, 0);
+  assert.equal(r.mem.size, 0);
   assert.equal(r.getLang(), 'ko');
 });
 

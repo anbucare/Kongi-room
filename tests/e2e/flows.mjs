@@ -478,14 +478,16 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
       await ctx.close();
     }
   }
-  // 8-f. 접근성 이름 (브라우저가 계산한 이름): 그룹 Language · Sprache · 언어 안에 한국어(눌림)·English·Deutsch, 보이는 글자 ENG·DEU 가 이름 안에 들어 있음(WCAG 2.5.3)
+  // 8-f. 접근성 이름 (getByRole·ariaSnapshot 이 브라우저의 계산값을 읽음): 그룹 Language · Sprache · 언어 안에 한국어(눌림)·English·Deutsch, 보이는 글자 ENG·DEU 가 이름 안에 들어 있음(WCAG 2.5.3)
   {
     const { ctx, page } = await open('en-US');
     const grp = page.getByRole('group', { name: 'Language · Sprache · 언어', exact: true });
     const one = async (name, pressed) => (await grp.getByRole('button', { name, exact: true, pressed }).count()) === 1;
     check('접근성: 그룹 안에 한국어(눌림)·English·Deutsch 단추', (await grp.count()) === 1 && await one('한국어', true) && await one('English', false) && await one('Deutsch', false));
-    const names = await page.evaluate(() => [...document.querySelectorAll('#langPick [data-lang]')].map((b) => [b.textContent.trim(), b.getAttribute('aria-label') || b.textContent.trim()]));
-    check('WCAG 2.5.3: 보이는 글자(한국어·ENG·DEU)가 접근성 이름 안에 들어 있음 (대소문자 무시)', names.length === 3 && names.every(([vis, nm]) => nm.toLowerCase().includes(vis.toLowerCase())), JSON.stringify(names));
+    // 접근성 이름은 브라우저가 계산한 값(ariaSnapshot 의 button "이름")을 읽고, 보이는 글자는 화면(DOM)에서 읽어 맞춘다
+    const computed = [...(await grp.ariaSnapshot()).matchAll(/button "([^"]*)"/g)].map((m) => m[1]);
+    const visible = await page.evaluate(() => [...document.querySelectorAll('#langPick [data-lang]')].map((b) => b.textContent.trim()));
+    check('WCAG 2.5.3: 브라우저가 계산한 이름(한국어·English·Deutsch) 안에 보이는 글자(한국어·ENG·DEU)가 들어 있음 (대소문자 무시)', computed.join() === '한국어,English,Deutsch' && visible.join() === '한국어,ENG,DEU' && visible.every((v, i) => computed[i].toLowerCase().includes(v.toLowerCase())), JSON.stringify({ computed, visible }));
     await grp.getByRole('button', { name: 'English', exact: true }).click();
     check('접근성: ENG 를 누르면 English 가 눌림으로 바뀜', await one('English', true) && await one('한국어', false) && await one('Deutsch', false));
     await ctx.close();
