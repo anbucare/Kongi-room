@@ -515,6 +515,80 @@ console.log('engine: ' + ENGINE.name() + ' ' + browser.version());
   }
 }
 
+// ---------- 10. 첫 그리기 자리 예약 (CLS): 상태줄은 글자가 채워지기 전에도 채운 뒤와 비슷한 높이·칸 위치를 차지한다 ----------
+// app.css 의 `.js .statusbar:not(.ready)` 숫자는 한국어·처음 방문 화면의 실측값이다. 글을 고쳐 칸 높이가 달라지면 여기서 어긋남이 드러난다.
+// 총 높이만 보면 줄별 오차가 서로 상쇄되므로, 칸마다 위쪽 위치(= 줄 높이의 누적)도 따로 본다. 폭 3군데(넓은 화면·3열·2열) 모두.
+const RESERVE_TOL = 15;
+for (const [label, mobile, width] of [['데스크톱 1280', false, 1280], ['태블릿 768(3열)', false, 768], ['모바일 390(2열)', true, 390]]) {
+  const { ctx, page } = await newPage(browser, mobile);
+  if (!mobile && width !== 1280) { await page.setViewportSize({ width, height: 900 }); await page.waitForTimeout(100); }
+  const r = await page.evaluate(() => {
+    const sb = document.getElementById('statusbar');
+    const measure = () => { const top = sb.getBoundingClientRect().top; return { h: Math.round(sb.getBoundingClientRect().height), tops: [...sb.children].map((e) => Math.round(e.getBoundingClientRect().top - top)) }; };
+    const natural = measure(), hadReady = sb.classList.contains('ready');
+    sb.classList.remove('ready'); const reserved = measure(); sb.classList.add('ready');
+    return { js: document.documentElement.classList.contains('js'), hadReady, natural, reserved };
+  });
+  const dh = Math.abs(r.natural.h - r.reserved.h), dt = Math.max(...r.natural.tops.map((t, i) => Math.abs(t - r.reserved.tops[i])));
+  check(`자리 예약(${label}): <html class="js">, 채운 뒤 .ready 가 붙음`, r.js && r.hadReady, JSON.stringify({ js: r.js, hadReady: r.hadReady }));
+  check(`자리 예약(${label}): 총 높이 차이 ${RESERVE_TOL}px 이내`, dh <= RESERVE_TOL, `예약 ${r.reserved.h} · 채운 뒤 ${r.natural.h}`);
+  check(`자리 예약(${label}): 칸마다 위쪽 위치 차이 ${RESERVE_TOL}px 이내`, dt <= RESERVE_TOL, `예약 ${r.reserved.tops} · 채운 뒤 ${r.natural.tops}`);
+  await ctx.close();
+}
+// 실제로 재 본다: 자바스크립트를 0.3초 늦게 받아 "먼저 그리고 나중에 채우는" 경우를 만들고(그래야 매번 같은 결과) layout-shift 합계를 잰다.
+// 한국어 · 처음 방문. 이전: 모바일 0.30 · 데스크톱 0.35 → 지금: 모바일 약 0.014 · 데스크톱 약 0.037. (영어의 언어 안내 줄은 따로 처리되는 중이라 여기서 보지 않는다)
+// layout-shift 는 크롬 계열만 지원한다(WebKit 은 건너뜀).
+for (const [label, vw, vh] of [['모바일 390', 390, 844], ['데스크톱 1280', 1280, 800]]) {
+  const ctx = await browser.newContext({ viewport: { width: vw, height: vh }, serviceWorkers: 'block', locale: 'ko-KR' });
+  await ctx.addInitScript(() => {
+    window.__ls = 0;
+    try { new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__ls += e.value; }).observe({ type: 'layout-shift', buffered: true }); } catch (e) { window.__ls = -1; }
+  });
+  const page = await ctx.newPage();
+  await page.route('**/app.js', async (route) => { await new Promise((r) => setTimeout(r, 300)); await route.fallback(); });
+  await page.goto(base, { waitUntil: 'load' });
+  await page.waitForTimeout(1500);
+  const supported = await page.evaluate(() => 'PerformanceObserver' in window && PerformanceObserver.supportedEntryTypes.includes('layout-shift'));
+  const ls = await page.evaluate(() => window.__ls);
+  if (!supported) check(`첫 화면 밀림(CLS) ${label} 한국어: 이 엔진은 layout-shift 를 지원하지 않아 건너뜀`, true, ENGINE.name());
+  else check(`첫 화면 밀림(CLS) ${label} 한국어(자바스크립트 0.3초 늦게): 0.1 이하`, ls >= 0 && ls <= 0.1, 'CLS ' + ls.toFixed(4));
+  await ctx.close();
+}
+// 준비 전 숨김: 핫스팟 6개·시작 패널은 `app-ready` 전에는 숨고(자리는 그대로), 준비된 뒤·자바스크립트가 꺼진 환경·app.js 가 오지 않는 경우(3초 뒤)에는 보인다
+{
+  const { ctx, page } = await newPage(browser, false);
+  const r = await page.evaluate(() => {
+    const h = document.documentElement, panel = document.getElementById('panel');
+    const snap = () => ({ panel: getComputedStyle(panel).visibility, hs: [...document.querySelectorAll('.hotspot')].map((e) => getComputedStyle(e).visibility), panelH: Math.round(panel.getBoundingClientRect().height), footer: getComputedStyle(document.querySelector('footer')).visibility });
+    const ready = h.classList.contains('app-ready'), after = snap();
+    h.classList.remove('app-ready'); const before = snap(); h.classList.add('app-ready');
+    return { ready, after, before };
+  });
+  check('준비 전 숨김: 앱이 준비되면 <html class="app-ready">, 패널·핫스팟 6개가 보임', r.ready && r.after.panel === 'visible' && r.after.hs.length === 6 && r.after.hs.every((v) => v === 'visible'), JSON.stringify(r.after));
+  check('준비 전 숨김: app-ready 가 없으면 패널·핫스팟이 숨고, 패널 높이(자리)는 그대로, 바닥글은 보임', r.before.panel === 'hidden' && r.before.hs.every((v) => v === 'hidden') && r.before.panelH === r.after.panelH && r.before.footer === 'visible', JSON.stringify(r.before));
+  await ctx.close();
+}
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block', javaScriptEnabled: false });
+  const page = await ctx.newPage();
+  await page.goto(base, { waitUntil: 'load' });
+  const hidden = await page.locator('#panel').isVisible();
+  check('준비 전 숨김: 자바스크립트가 꺼진 환경은 숨기지 않음(패널이 보임, 예전 그대로)', hidden === true);
+  await ctx.close();
+}
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block', locale: 'ko-KR' });
+  const page = await ctx.newPage();
+  await page.route('**/app.js', (route) => route.abort());
+  await page.goto(base, { waitUntil: 'load' });
+  await page.waitForTimeout(1000);
+  const early = await page.locator('#panel').isVisible();
+  await page.waitForTimeout(2600);
+  const late = await page.locator('#panel').isVisible();
+  check('준비 전 숨김 안전장치: app.js 가 오지 않아도 3초 안에 패널이 다시 보임(1초엔 숨김)', early === false && late === true, `1초 ${early} · 3.6초 ${late}`);
+  await ctx.close();
+}
+
 await browser.close();
 fs.writeFileSync(OUT + 'results.json', JSON.stringify(results, null, 1));
 console.log(`\n${results.length - fails}/${results.length} checks passed`);

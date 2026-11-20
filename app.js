@@ -1019,6 +1019,7 @@ function todayTotals(){
   return {sessions:real.length,demos:demos.length,stops:parts.length,sec:real.reduce((a,b)=>a+secOf(b),0)+parts.reduce((a,b)=>a+secOf(b),0),partSec:parts.reduce((a,b)=>a+secOf(b),0),demoSec:demos.reduce((a,b)=>a+secOf(b),0)};
 }
 function renderStatus(){
+  const statusEl=$('#statusbar');if(statusEl)statusEl.classList.add('ready'); // 채운 뒤에는 app.css 의 첫 그리기 자리 예약이 풀린다(.js .statusbar:not(.ready))
   const cur=getIntimacy(),info=getLevelInfo(cur.xp),next=INTIMACY_LEVELS[info.level];
   const lv=$('#lvLabel');if(lv)lv.textContent=`${info.icon} Lv.${info.level} ${t(info.name)}`;
   const pct=next?Math.min(100,Math.round((cur.xp-info.minXp)/(info.maxXp-info.minXp)*100)):100;
@@ -2391,6 +2392,7 @@ else{
   }
   show('setup');
 }
+document.documentElement.classList.add('app-ready'); // 시작 패널(#panel) 숨김 해제 — app.css 의 `.js:not(.app-ready) #panel` (안을 다 채운 뒤에 보여 줘서 칸이 아래로 밀리지 않게)
 // preload the space thumbnails so the space picker opens with pictures: only after the page has fully loaded (the room picture is the biggest thing on the first screen and nothing else may compete with it), then once the browser is idle
 {const pre=()=>{$$('.theme-card img').forEach(im=>{const i=new Image();i.src=im.src})};const idle=()=>{if(window.requestIdleCallback)requestIdleCallback(pre,{timeout:5000});else setTimeout(pre,3000)};if(document.readyState==='complete')idle();else addEventListener('load',idle)}
 })();

@@ -59,3 +59,51 @@ test('몰입 단계 목록(#stages)은 list-style:none + flex 라서 Safari 가 
   assert.match(css, /\.stages\{[^}]*display:flex[^}]*list-style:none/, '.stages 가 flex + list-style:none 이다');
   assert.match(html, /<ol class="stages" id="stages" role="list"/, '#stages 에 role="list"');
 });
+
+test('app.js·core.js·i18n.js·sw.js 가 문법 오류 없이 읽힌다 (한 곳이 깨지면 앱 전체가 멈춘다 — 단위 시험은 app.js 를 읽지 않아 놓칠 수 있다)', () => {
+  const vm = require('node:vm');
+  for (const f of ['app.js', 'core.js', 'i18n.js', 'sw.js']) assert.doesNotThrow(() => new vm.Script(read(f), { filename: f }), f + ' 문법');
+});
+
+test('첫 그리기 자리 예약(CLS): <html> 에 js 표시, 채운 뒤 .ready, app.css 에 폭별 줄 높이 예약 (Modern Web Guidance 2차)', () => {
+  const html = read('index.html'), css = read('app.css'), app = read('app.js');
+  assert.match(html, /document\.documentElement\.classList\.add\('js'\)/, 'head 스크립트가 js 표시를 붙인다');
+  assert.match(app, /function renderStatus\(\)\{\s*const statusEl=\$\('#statusbar'\);if\(statusEl\)statusEl\.classList\.add\('ready'\)/, 'renderStatus 가 .ready 를 붙인다');
+  // 예약은 "자바스크립트가 켜져 있고 아직 채우기 전"에만: .js ... :not(.ready) 가 아닌 규칙으로 .statusbar 의 높이를 건드리면 채운 뒤 모습이 바뀐다
+  assert.match(css, /\.js \.statusbar:not\(\.ready\)\{grid-template-rows:\d+px;align-content:start\}/, '넓은 화면 예약');
+  assert.match(css, /@media \(max-width:900px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:(\d+px ?){3}\}\}/, '900px 이하 3줄 예약');
+  assert.match(css, /@media \(max-width:520px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:(\d+px ?){4}\}\}/, '520px 이하 4줄 예약');
+  // 숫자가 터무니없이 바뀌지 않았는지(칸 높이는 글을 고치면 달라지므로 정확한 값은 e2e 가 실제 화면으로 확인한다): 줄 수·한 줄 범위·합계
+  const rows = (re) => (re.exec(css)[1].trim().split(/\s+/)).map((v) => parseInt(v, 10));
+  const wide = rows(/\.js \.statusbar:not\(\.ready\)\{grid-template-rows:([^;}]*);align-content/);
+  const mid = rows(/@media \(max-width:900px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:([^}]*)\}\}/);
+  const narrow = rows(/@media \(max-width:520px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:([^}]*)\}\}/);
+  assert.equal(wide.length, 1); assert.equal(mid.length, 3); assert.equal(narrow.length, 4);
+  for (const v of [...wide, ...mid, ...narrow]) assert.ok(v >= 50 && v <= 90, '한 줄 예약 높이 50~90px: ' + v);
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  assert.ok(sum(mid) + 2 * 8 >= 170 && sum(mid) + 2 * 8 <= 230, '3열 합계(줄 사이 8px 포함) 170~230px: ' + sum(mid));
+  assert.ok(sum(narrow) + 3 * 6 >= 225 && sum(narrow) + 3 * 6 <= 290, '2열 합계(줄 사이 6px 포함) 225~290px: ' + sum(narrow));
+  const loose = [...css.matchAll(/\.statusbar\{[^}]*grid-template-rows/g)];
+  assert.equal(loose.length, 0, '.ready 없이 .statusbar 줄 높이를 고정하는 규칙이 없다');
+});
+
+test('소개 글(.lead)의 HTML 기본 문구는 i18n.js 한국어 문구와 같다 — 다르면 자바스크립트가 문구를 바꾸는 순간 글줄 수가 달라져 아래 화면이 밀린다 (CLS)', () => {
+  const html = read('index.html');
+  const w = {}; new Function('window', read('i18n.js'))(w);
+  const ko = w.KONGI_I18N.ko;
+  for (const key of ['lead.what', 'lead.how']) {
+    const m = new RegExp('data-i18n="' + key.replace('.', '\\.') + '">([^<]*)<').exec(html);
+    assert.ok(m, key + ' 요소를 index.html 에서 찾지 못함');
+    assert.equal(m[1].replace(/\s+/g, ' ').trim(), String(ko[key]).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(), key + ' 의 HTML 기본 문구가 i18n.js 한국어와 다르다');
+  }
+});
+
+test('준비 전 숨김(CLS): .hotspot·#panel 은 app-ready 전에만 숨고, app.js 가 끝에서 app-ready 를 붙이고, head 에 3초 안전장치가 있다 (Modern Web Guidance 2차)', () => {
+  const html = read('index.html'), css = read('app.css'), app = read('app.js');
+  assert.match(css, /\.js:not\(\.app-ready\) #panel,\.js:not\(\.app-ready\) \.hotspot\{visibility:hidden\}/, '준비 전 숨김 규칙');
+  // 숨김은 반드시 `.js:not(.app-ready)` 안에서만: 그 밖에서 #panel·.hotspot 을 숨기면 자바스크립트가 꺼진 환경·준비된 뒤에도 사라진다
+  const outside = css.replace(/\.js:not\(\.app-ready\)[^{]*\{visibility:hidden\}/g, '');
+  assert.ok(!/(^|[}\s,])(#panel|\.hotspot)\s*\{[^}]*visibility\s*:\s*hidden/m.test(outside), '#panel·.hotspot 을 .app-ready 조건 없이 숨기는 규칙이 없다');
+  assert.match(app, /show\('setup'\);\n\}\ndocument\.documentElement\.classList\.add\('app-ready'\)/, '초기 그리기가 끝난 뒤 app-ready');
+  assert.match(html, /setTimeout\(function\(\)\{document\.documentElement\.classList\.add\('app-ready'\)\},3000\)/, 'head 3초 안전장치');
+});

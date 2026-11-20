@@ -348,7 +348,7 @@ test('휴대폰: 언어 선택이 첫 줄을 차지하고(order:-1, 이름 줄 �
 });
 
 // ---------- 5. 서비스 워커 ----------
-test('sw.js 캐시 이름은 kongi-v47 이상 (index.html·app.js·app.css·core.js 가 바뀜)', () => {
+test('sw.js 캐시 이름은 kongi-v50 이상 (index.html·app.js·app.css·core.js 가 바뀜; main 이 v49 까지 올라가 있어 v50)', () => {
   const m = /const VERSION = 'kongi-v(\d+)'/.exec(read('sw.js'));
-  assert.ok(m && +m[1] >= 47, '버전 ' + (m && m[1]));
+  assert.ok(m && +m[1] >= 50, '버전 ' + (m && m[1]));
 });
