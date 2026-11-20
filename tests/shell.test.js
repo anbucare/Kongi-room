@@ -59,3 +59,31 @@ test('몰입 단계 목록(#stages)은 list-style:none + flex 라서 Safari 가 
   assert.match(css, /\.stages\{[^}]*display:flex[^}]*list-style:none/, '.stages 가 flex + list-style:none 이다');
   assert.match(html, /<ol class="stages" id="stages" role="list"/, '#stages 에 role="list"');
 });
+
+test('app.js·core.js·i18n.js·sw.js 가 문법 오류 없이 읽힌다 (한 곳이 깨지면 앱 전체가 멈춘다 — 단위 시험은 app.js 를 읽지 않아 놓칠 수 있다)', () => {
+  const vm = require('node:vm');
+  for (const f of ['app.js', 'core.js', 'i18n.js', 'sw.js']) assert.doesNotThrow(() => new vm.Script(read(f), { filename: f }), f + ' 문법');
+});
+
+test('첫 그리기 자리 예약(CLS): <html> 에 js 표시, 채운 뒤 .ready, app.css 에 폭별 줄 높이 예약 (Modern Web Guidance 2차)', () => {
+  const html = read('index.html'), css = read('app.css'), app = read('app.js');
+  assert.match(html, /document\.documentElement\.classList\.add\('js'\)/, 'head 스크립트가 js 표시를 붙인다');
+  assert.match(app, /function renderStatus\(\)\{\s*const statusEl=\$\('#statusbar'\);if\(statusEl\)statusEl\.classList\.add\('ready'\)/, 'renderStatus 가 .ready 를 붙인다');
+  // 예약은 "자바스크립트가 켜져 있고 아직 채우기 전"에만: .js ... :not(.ready) 가 아닌 규칙으로 .statusbar 의 높이를 건드리면 채운 뒤 모습이 바뀐다
+  assert.match(css, /\.js \.statusbar:not\(\.ready\)\{grid-template-rows:\d+px;align-content:start\}/, '넓은 화면 예약');
+  assert.match(css, /@media \(max-width:900px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:(\d+px ?){3}\}\}/, '900px 이하 3줄 예약');
+  assert.match(css, /@media \(max-width:520px\)\{\.js \.statusbar:not\(\.ready\)\{grid-template-rows:(\d+px ?){4}\}\}/, '520px 이하 4줄 예약');
+  const loose = [...css.matchAll(/\.statusbar\{[^}]*grid-template-rows/g)];
+  assert.equal(loose.length, 0, '.ready 없이 .statusbar 줄 높이를 고정하는 규칙이 없다');
+});
+
+test('소개 글(.lead)의 HTML 기본 문구는 i18n.js 한국어 문구와 같다 — 다르면 자바스크립트가 문구를 바꾸는 순간 글줄 수가 달라져 아래 화면이 밀린다 (CLS)', () => {
+  const html = read('index.html');
+  const w = {}; new Function('window', read('i18n.js'))(w);
+  const ko = w.KONGI_I18N.ko;
+  for (const key of ['lead.what', 'lead.how']) {
+    const m = new RegExp('data-i18n="' + key.replace('.', '\\.') + '">([^<]*)<').exec(html);
+    assert.ok(m, key + ' 요소를 index.html 에서 찾지 못함');
+    assert.equal(m[1].replace(/\s+/g, ' ').trim(), String(ko[key]).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(), key + ' 의 HTML 기본 문구가 i18n.js 한국어와 다르다');
+  }
+});

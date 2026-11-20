@@ -506,6 +506,13 @@ button.stat:hover{transform:translateY(-1px);border-color:var(--accent)}
 .stat-unlock .stat-top{color:var(--brown)}
 @media (max-width:900px){.statusbar{grid-template-columns:repeat(3,minmax(0,1fr))}.stat-lv{grid-column:1/-1}}
 @media (max-width:520px){.statusbar{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.stat{padding:7px 10px;min-height:52px}.stat-top{font-size:13px}.stat-sub{font-size:11px}}
+/* 첫 그리기 자리 예약 (Modern Web Guidance 2차, CLS): 상태줄은 처음에 아이콘만 있다가 app.js 가 글자를 채우면 칸마다 높이가 커져, 상태줄 아래 화면 전체와 칸 자체가 밀렸다.
+   채우기 전에만(.ready 가 붙기 전, 자바스크립트가 켜진 곳에서만) 폭별로 "채운 뒤의 줄 높이"를 미리 잡는다. 채운 뒤에는 풀려서 예전 높이 그대로(보이는 모습 변화 없음).
+   값 = 자바스크립트가 채운 뒤 줄 높이의 크롬 실측(한국어, 처음 방문 ↔ 단골 방문 사이): 넓은 화면 한 줄 83↔73 / ~900px 이하 3칸: 68·58·(58~73) / 520px 이하 2칸: 63·53·53·68.
+   위에서 아래로 갈수록 좁은 폭이 덮어쓴다. 글을 고쳐 칸 높이가 달라지면 이 숫자도 맞춘다(tests/e2e/flows.mjs 의 '자리 예약' 확인이 어긋남을 알려 줌) */
+.js .statusbar:not(.ready){grid-template-rows:78px;align-content:start}
+@media (max-width:900px){.js .statusbar:not(.ready){grid-template-rows:68px 58px 62px}}
+@media (max-width:520px){.js .statusbar:not(.ready){grid-template-rows:63px 53px 53px 68px}}
 
 /* ===== room hotspots: visible, ≥44px, react on tap ===== */
 .hotspot{position:absolute;z-index:15;transform:translate(-50%,-50%);width:max(44px,6.2cqw);height:max(44px,6.2cqw);padding:0;border-radius:50%;cursor:pointer;
